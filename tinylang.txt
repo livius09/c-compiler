@@ -26,11 +26,12 @@ data tipes:
     un64[]
 
 
-let         //declare vars
-function    //declare functions parameter
-return      //retunrs from a function
-while(c)    //while condition true
-for(declaration; c; operation;)
+let             //declare vars
+function(){}    //declare functions parameter
+return          //retunrs from a function
+while(c){}      //while condition true
+for(declaration; c; operation;){}
+if(c){}
 
 
 operations:
@@ -48,5 +49,5 @@ exp:
         return a+b;
     }
 
-    n64 erg = plus(e,u);
+    let n64 erg = plus(e,u);
     
