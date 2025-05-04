@@ -11,15 +11,13 @@ def evaluator(a:list) -> list:
     print(a)
     brakets= None
     high_p = None
+    prio = ["*", "/"]
     
     
     for i in range(len(a)):         #werer is a braket in the equation
         if(isinstance(a[i],list)):
-            brakets=i
-            break
-
-    if brakets != None:
-        a[brakets] = evaluator(a[brakets])[0]  #solve the braket 
+            a[brakets] = evaluator(a[brakets])[0]
+            return evaluator(a)
     
     for i in range(len(a)):     #find a * or /
         if(a[i] in prio):

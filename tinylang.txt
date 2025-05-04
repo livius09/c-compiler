@@ -42,8 +42,9 @@ operations:
 
 
 exp:
-    let e = 1+4;
-    let u = e+1;
+
+    let n8 e = 1+4;
+    let n8 u = e+1;
 
     func plus(n64 a,n64 b){
         return a+b;
