@@ -1,70 +1,78 @@
 #better
 #tokenizer
 out=[]
-operations=["+","-","*","/","=",";"]
-comands = ["let", "return","for","while","function",]
+operations=["+","-","*","/","="]
+comands = ["let", "return","for","while","func",]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 
 with open("input.txt","r") as raw:
-    line = raw.read()
+    read = raw.read()
 
 
-i=0
-tokenln=[]
-while i < len(line):
-    
-    if(line[i].isspace()):
-        i+=1
-        continue
-
-    if line[i] == ";":
-        out.append(tokenln)
-        tokenln=[]
-        i+=1
-        continue
-
-    if(line[i].isalpha()):
-        s=""
-        while(line[i].isalnum() and i < len(line)):
-            s+= line[i]
+def tokenize(line,):
+    i=0
+    tokenln=[]
+    while i < len(line):
+        
+        if(line[i].isspace()):
             i+=1
-
-        if(s in comands):
-            tokenln.append(s.capitalize())
             continue
 
-        if (s in types):
-            if line[i] =="[":
-                tokenln.append(f"TYPE({s}[])")
+        if line[i] == ";":
+            out.append(tokenln)
+            tokenln=[]
+            i+=1
+            continue
+        if line[i] =="{":
+            i+=1
+            out.append(tokenln)
+            out.append("{")
+            out.append(tokenln)
+        
+        if(line[i].isalpha()):
+            s=""
+            while(line[i].isalnum() and i < len(line)):
+                s+= line[i]
                 i+=1
-                si=""
-                while(line[i].isdigit() and i < len(line)):
-                    si+=line[i]
+
+            if(s in comands):
+                tokenln.append(s.capitalize())
+                continue
+
+            if (s in types):
+                if line[i] =="[":
+                    tokenln.append(f"TYPE({s}[])")
                     i+=1
-                tokenln.append(f"SIZE({si})")
+                    si=""
+                    while(line[i].isdigit() and i < len(line)):
+                        si+=line[i]
+                        i+=1
+                    tokenln.append(f"SIZE({si})")
 
-            tokenln.append(f"TYPE({s})")
+                tokenln.append(f"TYPE({s})")
+                continue
+                
+            tokenln.append(f"IDENTIFIER({s})")
+
             continue
-            
-        tokenln.append(f"IDENTIFIER({s})")
 
-        continue
+        if (line[i].isdigit()):
+            num=""
+            while(line[i].isdigit() and i < len(line)):
+                num= num+line[i]
+                i+=1
+            tokenln.append(f"INTEGER({num})")
+            continue
 
-    if (line[i].isdigit()):
-        num=""
-        while(line[i].isdigit() and i < len(line)):
-            num= num+line[i]
-            i+=1
-        tokenln.append(f"INTEGER({num})")
-        continue
-
-    if (line[i] in operations):
-        tokenln.append(line[i])
-    
-    
+        if (line[i] in operations):
+            tokenln.append(line[i])
+        
+        
 
 
-    i+=1
+        i+=1
+
+    return out
     
             
 
@@ -72,4 +80,4 @@ while i < len(line):
 
 
 with open("output.txt", "w") as file:
-    file.write(str(out))
+    file.write(str(tokenize(read)))
