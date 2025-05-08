@@ -1,10 +1,4 @@
 
-let n64[4] e = [1,2,3,4];
-let n64 x =5+34*3;
-let n64 x2 =6+x;
-let n64 y = 5 * 2;
-let n64 u = 21111 +1;
-
 func plus(n64 a, n64 b) {
     return a + b;
 }

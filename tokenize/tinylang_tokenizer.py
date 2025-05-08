@@ -5,7 +5,7 @@ operations=["+","-","*","/","="]
 comands = ["let", "return","for","while","func",]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 
-with open("input.txt","r") as raw:
+with open("tokenize/input.txt","r") as raw:
     read = raw.read()
 
 
@@ -24,10 +24,16 @@ def tokenize(line,):
             i+=1
             continue
         if line[i] =="{":
-            i+=1
             out.append(tokenln)
             out.append("{")
+            tokenln=[]
+
+        if line[i] =="}":
             out.append(tokenln)
+            out.append("}")
+            tokenln=[]
+            
+            
         
         if(line[i].isalpha()):
             s=""

@@ -1,0 +1,1 @@
+[['Func', 'IDENTIFIER(plus)', 'TYPE(n64)', 'IDENTIFIER(a)', 'TYPE(n64)', 'IDENTIFIER(b)'], '{', ['Return', 'IDENTIFIER(a)', '+', 'IDENTIFIER(b)'], '}']
