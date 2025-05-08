@@ -23,15 +23,22 @@ def tokenize(line,):
             tokenln=[]
             i+=1
             continue
+        
         if line[i] =="{":
-            out.append(tokenln)
+            if tokenln != []:
+                out.append(tokenln)
             out.append("{")
             tokenln=[]
+            i+=1
+            continue
 
         if line[i] =="}":
-            out.append(tokenln)
+            if tokenln != []:
+                out.append(tokenln)
             out.append("}")
             tokenln=[]
+            i+=1
+            continue
             
             
         
@@ -47,18 +54,18 @@ def tokenize(line,):
 
             if (s in types):
                 if line[i] =="[":
-                    tokenln.append(f"TYPE({s}[])")
+                    tokenln.append(f"TYPE>{s}[]")
                     i+=1
                     si=""
                     while(line[i].isdigit() and i < len(line)):
                         si+=line[i]
                         i+=1
-                    tokenln.append(f"SIZE({si})")
+                    tokenln.append(f"SIZE>{si}")
 
-                tokenln.append(f"TYPE({s})")
+                tokenln.append(f"TYPE>{s}")
                 continue
                 
-            tokenln.append(f"IDENTIFIER({s})")
+            tokenln.append(f"IDENTIFIER>{s}")
 
             continue
 
@@ -67,7 +74,7 @@ def tokenize(line,):
             while(line[i].isdigit() and i < len(line)):
                 num= num+line[i]
                 i+=1
-            tokenln.append(f"INTEGER({num})")
+            tokenln.append(f"INTEGER>{num}")
             continue
 
         if (line[i] in operations):
@@ -85,5 +92,5 @@ def tokenize(line,):
 
 
 
-with open("output.txt", "w") as file:
+with open("tokenize/output.txt", "w") as file:
     file.write(str(tokenize(read)))
