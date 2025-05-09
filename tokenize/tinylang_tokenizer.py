@@ -9,7 +9,7 @@ with open("tokenize/input.txt","r") as raw:
     read = raw.read()
 
 
-def tokenize(line,):
+def tokenize(line):
     i=0
     tokenln=[]
     while i < len(line):
