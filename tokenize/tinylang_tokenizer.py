@@ -5,11 +5,11 @@ operations=["+","-","*","/","="]
 comands = ["let", "return","for","while","func",]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 
-with open("input.txt","r") as raw:
+with open("tokenize/input.txt","r") as raw:
     read = raw.read()
 
 
-def tokenize(line,):
+def tokenize(line):
     i=0
     tokenln=[]
     while i < len(line):
@@ -23,11 +23,24 @@ def tokenize(line,):
             tokenln=[]
             i+=1
             continue
+        
         if line[i] =="{":
-            i+=1
-            out.append(tokenln)
+            if tokenln != []:
+                out.append(tokenln)
             out.append("{")
-            out.append(tokenln)
+            tokenln=[]
+            i+=1
+            continue
+
+        if line[i] =="}":
+            if tokenln != []:
+                out.append(tokenln)
+            out.append("}")
+            tokenln=[]
+            i+=1
+            continue
+            
+            
         
         if(line[i].isalpha()):
             s=""
@@ -41,18 +54,18 @@ def tokenize(line,):
 
             if (s in types):
                 if line[i] =="[":
-                    tokenln.append(f"TYPE({s}[])")
+                    tokenln.append(f"TYPE>{s}[]")
                     i+=1
                     si=""
                     while(line[i].isdigit() and i < len(line)):
                         si+=line[i]
                         i+=1
-                    tokenln.append(f"SIZE({si})")
+                    tokenln.append(f"SIZE>{si}")
 
-                tokenln.append(f"TYPE({s})")
+                tokenln.append(f"TYPE>{s}")
                 continue
                 
-            tokenln.append(f"IDENTIFIER({s})")
+            tokenln.append(f"IDENTIFIER>{s}")
 
             continue
 
@@ -61,7 +74,7 @@ def tokenize(line,):
             while(line[i].isdigit() and i < len(line)):
                 num= num+line[i]
                 i+=1
-            tokenln.append(f"INTEGER({num})")
+            tokenln.append(f"INTEGER>{num}")
             continue
 
         if (line[i] in operations):
@@ -79,5 +92,5 @@ def tokenize(line,):
 
 
 
-with open("output.txt", "w") as file:
+with open("tokenize/output.txt", "w") as file:
     file.write(str(tokenize(read)))

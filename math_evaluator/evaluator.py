@@ -16,7 +16,7 @@ def evaluator(a:list) -> list:
     
     for i in range(len(a)):         #werer is a braket in the equation
         if(isinstance(a[i],list)):
-            a[brakets] = evaluator(a[brakets])[0]
+            a[i] = evaluator(a[i])[0]
             return evaluator(a)
     
     for i in range(len(a)):     #find a * or /
