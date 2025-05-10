@@ -25,19 +25,22 @@
 # ['Return', 'IDENTIFIER>a'], 
 # '}']
 
-with open("tokenize/input.txt","r") as raw:
+with open("tokenize/output.txt","r") as raw:
     read = raw.read()
 
 def parse(line):
   perations=["+","-","*","/","="]
   out = []
   i=1
-  while (i < len(raw)):
+  tmp = {}
+  while (i < len(line)):
+    
     
     match line[i]:
+        
        
       case "let":
-        tmp = {}
+        
         tmp["type"] = "letdec"
         tmp["var_type"] = line[i][1].split(">")[1]
         tmp["name"] = line[i][2].split(">")[1]
@@ -53,16 +56,21 @@ def parse(line):
           elif  math_part[0].startswith("INTEGER>"):
             value["type"] = "INTEGER"
             value["val"] = int(math_part[0].split(">")[1])
-
+          
+          tmp["val"] = value
         else:
           value["type"] = "BINARY_EXP"
           value["op"] = math_part[1]
           value["left"] = math_part[0].split(">")[1]
           value["right"] = math_part[2].split(">")[1]
+          tmp["val"] = value
+    i+=1
+  return tmp
+  
           
-          
+lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1']]       
         
-              
+print(parse(lal))              
             
      
     
