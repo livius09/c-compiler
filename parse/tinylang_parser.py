@@ -18,6 +18,24 @@
   }
 ]
 
+#FunctionDeclaration(
+#    name = "plus",
+#    parameters = [
+#        Parameter(type="n64", name="a"),
+#        Parameter(type="n64", name="b")
+#    ],
+#    body = [
+#        ReturnStatement(
+#            value = BinaryExpression(
+#                left = Identifier("a"),
+#                operator = "+",
+#                right = Identifier("b")
+#            )
+#        )
+#    ]
+#)
+
+
 #[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'], 
 # ['Let', 'TYPE>n64', 'IDENTIFIER>x2', '=', 'INTEGER>6', '+', 'IDENTIFIER>x'], 
 # ['Func', 'IDENTIFIER>plus', 'TYPE>n64', 'IDENTIFIER>a'], 
@@ -29,16 +47,19 @@ with open("tokenize/output.txt","r") as raw:
     read = raw.read()
 
 def parse(line):
-  perations=["+","-","*","/","="]
+  operations=["+","-","*","/","="]
   out = []
   i=1
-  tmp = {}
+  
   while (i < len(line)):
     
-    
-    match line[i]:
+    tmp = {}
+    match line[i][1]:
         
+      case "}":
+        break
        
+      
       case "let":
         
         tmp["type"] = "letdec"
@@ -46,7 +67,7 @@ def parse(line):
         tmp["name"] = line[i][2].split(">")[1]
 
         value={}
-        math_part=line.split("=")[1]
+        math_part = line.split("=")[1]
 
         if len(math_part) == 1:
           if math_part[0].startswith("IDENTIFIER>"):
@@ -64,11 +85,24 @@ def parse(line):
           value["left"] = math_part[0].split(">")[1]
           value["right"] = math_part[2].split(">")[1]
           tmp["val"] = value
+        
+      case "func":
+        
+        tmp["type"] = "function_dec"
+        tmp["name"] = line[i][2]
+        tmp["parameter"]=[]
+        for a in range(1,int(len(line[i])-2),2):
+          tmp["parameter"].append({"type":line[i][a],"name":line[i][a+1]})
+
+        tmp["body"] = parse(line[i+1:])
+       
+
+    out.append(tmp)   
     i+=1
-  return tmp
+  return out
   
           
-lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1']]       
+lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'],['Let', 'TYPE>n64', 'IDENTIFIER>y', '=', 'INTEGER>1']]       
         
 print(parse(lal))              
             

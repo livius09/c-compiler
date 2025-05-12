@@ -47,6 +47,17 @@ def tokenize(line):
             while(line[i].isalnum() and i < len(line)):
                 s+= line[i]
                 i+=1
+            if s == "func":
+                tokenln.append(s.capitalize())
+                b=""
+                while(line[i].isalnum() and i < len(line)):
+                    b+= line[i]
+                    i+=1
+
+                tokenln.append(f"NAME>{b}")
+
+                
+                
 
             if(s in comands):
                 tokenln.append(s.capitalize())
