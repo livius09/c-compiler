@@ -43,8 +43,8 @@
 # ['Return', 'IDENTIFIER>a'], 
 # '}']
 
-with open("tokenize/output.txt","r") as raw:
-    read = raw.read()
+#with open("tokenize/output.txt","r") as raw:
+#    read = raw.read()
 
 def parse(line):
   operations=["+","-","*","/","="]
@@ -92,7 +92,7 @@ def parse(line):
         tmp["name"] = line[i][2]
         tmp["parameter"]=[]
         for a in range(1,int(len(line[i])-2),2):
-          tmp["parameter"].append({"type":line[i][a],"name":line[i][a+1]})
+          tmp["parameter"].append({"type":line[i][a].split(">")[1],"name":line[i][a+1].split("")[1]})
 
         tmp["body"] = parse(line[i+1:])
        
