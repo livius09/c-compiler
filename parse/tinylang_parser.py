@@ -80,11 +80,7 @@ def parse(line):
           
           tmp["val"] = value
         else:
-          value["type"] = "BINARY_EXP"
-          value["op"] = math_part[1]
-          value["left"] = math_part[0].split(">")[1]
-          value["right"] = math_part[2].split(">")[1]
-          tmp["val"] = value
+          tmp["val"]=par(math_part)
         
       case "func":
         
@@ -95,6 +91,15 @@ def parse(line):
           tmp["parameter"].append({"type":line[i][a].split(">")[1],"name":line[i][a+1].split("")[1]})
 
         tmp["body"] = parse(line[i+1:])
+
+      case "return":
+        tmp["type"]="return"
+        tmp["val"] = par(line[i][2:])
+
+      case "if":
+          
+          
+
        
 
     out.append(tmp)   
@@ -110,6 +115,9 @@ print(parse(lal))
     
       
 
+def par(a:list):
+  pass
+   
 
 
 

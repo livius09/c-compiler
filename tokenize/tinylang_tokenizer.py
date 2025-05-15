@@ -1,7 +1,7 @@
 #better
 #tokenizer
 out=[]
-operations=["+","-","*","/","="]
+operations=["+","-","*","/","=","<",">"]
 comands = ["let", "return","for","while","func",]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 

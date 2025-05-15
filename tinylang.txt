@@ -7,12 +7,13 @@ data tipes:
     n16
     n32
     n64
-    char //n8 whit special treatment
+    
 
     un8 //unsinged number amout of bits
     un16
     un32
     un64
+    char //n8 whit special treatment
 
     n8[x]    //arr how big each element is x is the size
     n16[]
