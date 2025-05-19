@@ -97,6 +97,10 @@ def parse(line):
         tmp["val"] = par(line[i][2:])
 
       case "if":
+        tmp["type"] = "IF"
+        tmp["left"] = line[i][1].split(">")[1]
+        tmp["op"] = line[i][2]
+        tmp["right"] = line[i][3].split(">")
           
           
 

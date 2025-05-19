@@ -2,7 +2,7 @@
 #tokenizer
 out=[]
 operations=["+","-","*","/","=","<",">"]
-comands = ["let", "return","for","while","func",]
+comands = ["let", "return","for","while","func","if"]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 
 with open("tokenize/input.txt","r") as raw:
