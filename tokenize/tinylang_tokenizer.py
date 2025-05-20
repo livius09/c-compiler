@@ -2,7 +2,7 @@
 #tokenizer
 out=[]
 operations=["+","-","*","/","=","<",">"]
-comands = ["let", "return","for","while","func","if"]
+comands = ["let", "return","for","while","if"]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 
 with open("tokenize/input.txt","r") as raw:
@@ -16,6 +16,11 @@ def tokenize(line):
         
         if(line[i].isspace()):
             i+=1
+            continue
+
+        if(line[i] == ","):
+            i+=1
+            tokenln.append(",")
             continue
 
         if line[i] == ";":
@@ -47,7 +52,9 @@ def tokenize(line):
             while(line[i].isalnum() and i < len(line)):
                 s+= line[i]
                 i+=1
+                
             if s == "func":
+                i+=1
                 tokenln.append(s.capitalize())
                 b=""
                 while(line[i].isalnum() and i < len(line)):
@@ -55,6 +62,7 @@ def tokenize(line):
                     i+=1
 
                 tokenln.append(f"NAME>{b}")
+                continue
 
                 
                 
@@ -75,6 +83,12 @@ def tokenize(line):
 
                 tokenln.append(f"TYPE>{s}")
                 continue
+
+            if line[i+1] == "(":
+                i+=1
+                tokenln.append(f"FUNCT>{s}")
+                continue
+
                 
             tokenln.append(f"IDENTIFIER>{s}")
 

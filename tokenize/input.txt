@@ -10,3 +10,7 @@ if(1 < 2){
 func plus(n64 a) {
     return a;
 }
+
+x = plus(1);
+
+plus(1);

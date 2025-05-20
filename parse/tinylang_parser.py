@@ -1,3 +1,6 @@
+import json
+
+
 #parser
 [
   {
@@ -49,12 +52,12 @@
 def parse(line):
   operations=["+","-","*","/","="]
   out = []
-  i=1
+  i=0
   
   while (i < len(line)):
     
     tmp = {}
-    match line[i][1]:
+    match line[i][0]:
         
       case "}":
         break
@@ -64,7 +67,7 @@ def parse(line):
         
         tmp["type"] = "letdec"
         tmp["var_type"] = line[i][1].split(">")[1]
-        tmp["name"] = line[i][2].split(">")[1]
+        math_part = line[i][line[i].index('=') + 1:]
 
         value={}
         math_part = line.split("=")[1]
@@ -80,7 +83,7 @@ def parse(line):
           
           tmp["val"] = value
         else:
-          tmp["val"]=par(math_part)
+          tmp["val"]=parM(math_part)
         
       case "func":
         
@@ -88,97 +91,86 @@ def parse(line):
         tmp["name"] = line[i][2]
         tmp["parameter"]=[]
         for a in range(1,int(len(line[i])-2),2):
-          tmp["parameter"].append({"type":line[i][a].split(">")[1],"name":line[i][a+1].split("")[1]})
+          tmp["para"].append({"type":line[i][a].split(">")[1],"name":line[i][a+1].split(">")[1]})
 
         tmp["body"] = parse(line[i+1:])
 
       case "return":
         tmp["type"]="return"
-        tmp["val"] = par(line[i][2:])
+        tmp["val"] = parM(line[i][2:])
 
       case "if":
         tmp["type"] = "IF"
-        tmp["left"] = line[i][1].split(">")[1]
-        tmp["op"] = line[i][2]
-        tmp["right"] = line[i][3].split(">")
-          
-          
+        tmp["epx"]=parM(line[i+1:])
+        tmp["body"]=parse(line[i+1:])
+
+    if line[i][0].startswith("IDENTIFIER>"):
+      tmp["type"] = "asing"
+      tmp["val"]=parM(line[i][2:])
+    
+    if line[i][0].startswith("FUNCT>"):
+      tmp["type"] = "fcall"
+      tmp["para"]=[]
+
+      ofset=0
+      while(ofset<(len(line[i])-1)):
+        pass
+         
 
        
 
-    out.append(tmp)   
     i+=1
+    out.append(tmp)
   return out
   
           
 lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'],['Let', 'TYPE>n64', 'IDENTIFIER>y', '=', 'INTEGER>1']]       
-        
-print(parse(lal))              
-            
-     
-    
-      
 
-def par(a:list):
-  pass
-   
+
+print(parse(lal)[1].items())
 
 
 
-
-
-
-
-
-
-def evaluator(a:list) -> list:
-    print(a)
-    brakets= None
-    high_p = None
-    prio = ["*", "/"]
-    
-    
-    for i in range(len(a)):         #werer is a braket in the equation
-        if(isinstance(a[i],list)):
-            a[i] = evaluator(a[i])[0]
-            return evaluator(a)
-    
-    for i in range(len(a)):     #find a * or /
-        if(a[i] in prio):
-            high_p = i
-            break
-
-    if high_p != None:          #solve that * or /
-        if a[high_p]=="*":
-            v= a[high_p+1] * a[high_p-1]
-        elif (a[high_p]=="/"):
-                v= a[high_p+1] / a[high_p-1]
+def parM(tokens):
+    def parse_primary(token):
+        if token.startswith("INTEGER>"):
+            return {"type": "Literal", "value": int(token.split(">")[1])}
+        elif token.startswith("IDENTIFIER>"):
+            return {"type": "Identifier", "name": token.split(">")[1]}
         else:
-            raise ArithmeticError
-        a.pop(high_p+1)
-        a[high_p] = v
-        a.pop(high_p-1)
-    else:                       #if no * or / is found search for an + or -
-        for i in range(len(a)):
-            if a[i] == "+":
-                a[i] = a[i+1] + a[i-1]
+            raise ValueError(f"Unexpected token: {token}")
 
-                a.pop(i+1)
-                a.pop(i-1)
+    def parse_expression(tokens, precedence=0):
+        if not tokens:
+            return None
+
+        left = parse_primary(tokens.pop(0))
+
+        while tokens:
+            op = tokens[0]
+            op_prec = get_precedence(op)
+
+            if op_prec < precedence:
                 break
 
-            elif a[i] == "-":
-                a[i] = a[i+1] - a[i-1]
+            tokens.pop(0)  # remove operator
+            right = parse_expression(tokens, op_prec + 1)
 
-                a.pop(i+1)
-                a.pop(i-1)
-                break
-    print(a)
-    try:
-        if len(a) == 1:
-            return a
-    except:
-        return a
-    
-    print(a)
-    evaluator(a)
+            left = {
+                "type": "BinaryExpression",
+                "operator": op,
+                "left": left,
+                "right": right
+            }
+
+        return left
+
+    def get_precedence(op):
+        if op in ("*", "/"):
+            return 2
+        elif op in ("+", "-"):
+            return 1
+        return 0
+
+    # make a copy of the list to avoid modifying the original
+    return parse_expression(tokens[:])
