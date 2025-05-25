@@ -7,19 +7,101 @@ import json
     "type": "LetDeclaration",
     "var_type": "n32",
     "name": "x",
-    "value": {
+    "val": {
       "type": "Literal",
-      "value": 5
+      "val": 5
     }
   },
   {
     "type": "ReturnStatement",
-    "value": {
+    "val": {
       "type": "Identifier",
       "name": "x"
     }
   }
 ]
+
+#not mine
+def parM(tokens: list):
+    def parse_primary(token):
+        if token.startswith("INTEGER>"):
+            return {"type": "Literal", "val": int(token.split(">")[1])}
+        elif token.startswith("IDENTIFIER>"):
+            return {"type": "Identifier", "name": token.split(">")[1]}
+        else:
+            raise ValueError(f"Unexpected token: {token}")
+
+    def get_precedence(op):
+        return {
+            '+': 1,
+            '-': 1,
+            '*': 2,
+            '/': 2,
+        }.get(op, -1)  # Unknown operators = very low precedence
+
+    def fold_constants(left, op, right):
+        # If both sides are integer literals: constant fold
+        if left["type"] == "Literal" and right["type"] == "Literal":
+            a, b = left["val"], right["val"]
+            result = None
+            if op == '+':
+                result = a + b
+            elif op == '-':
+                result = a - b
+            elif op == '*':
+                result = a * b
+            elif op == '/':
+                result = a // b if b != 0 else 0
+            return {"type": "Literal", "val": result}
+
+        # Algebraic simplification with 0 or 1
+        if op == '+' and right["type"] == "Literal" and right["val"] == 0:
+            return left
+        if op == '+' and left["type"] == "Literal" and left["val"] == 0:
+            return right
+
+        if op == '-' and right["type"] == "Literal" and right["val"] == 0:
+            return left
+
+        if op == '*' and ((left["type"] == "Literal" and left["val"] == 0) or
+                          (right["type"] == "Literal" and right["val"] == 0)):
+            return {"type": "Literal", "val": 0}
+
+        if op == '*' and right["type"] == "Literal" and right["val"] == 1:
+            return left
+        if op == '*' and left["type"] == "Literal" and left["val"] == 1:
+            return right
+
+        if op == '/' and right["type"] == "Literal" and right["val"] == 1:
+            return left
+
+        # Not foldable
+        return {
+            "type": "BinaryExpression",
+            "operator": op,
+            "left": left,
+            "right": right
+        }
+
+    def parse_expression(tokens, precedence=0):
+        if not tokens:
+            return None
+
+        left = parse_primary(tokens.pop(0))
+
+        while tokens:
+            op = tokens[0]
+            op_prec = get_precedence(op)
+            if op_prec < precedence:
+                break
+
+            tokens.pop(0)  # consume the operator
+            right = parse_expression(tokens, op_prec + 1)
+            left = fold_constants(left, op, right)
+
+        return left
+
+    return parse_expression(tokens[:])  # Copy list to avoid modifying input
 
 #FunctionDeclaration(
 #    name = "plus",
@@ -49,15 +131,14 @@ import json
 #with open("tokenize/output.txt","r") as raw:
 #    read = raw.read()
 
-def parse(line):
-  operations=["+","-","*","/","="]
+def parse(line:list[list[str]]):
   out = []
   i=0
   
   while (i < len(line)):
     
     tmp = {}
-    match line[i][0]:
+    match line[i][0].lower():
         
       case "}":
         break
@@ -66,11 +147,12 @@ def parse(line):
       case "let":
         
         tmp["type"] = "letdec"
+        tmp["name"] = line[i][2].split(">")[1]
         tmp["var_type"] = line[i][1].split(">")[1]
+
         math_part = line[i][line[i].index('=') + 1:]
 
         value={}
-        math_part = line.split("=")[1]
 
         if len(math_part) == 1:
           if math_part[0].startswith("IDENTIFIER>"):
@@ -104,73 +186,42 @@ def parse(line):
         tmp["epx"]=parM(line[i+1:])
         tmp["body"]=parse(line[i+1:])
 
-    if line[i][0].startswith("IDENTIFIER>"):
+    if line[i][0].startswith("IDENTIFIER>"):  #parse normal expresions 
       tmp["type"] = "asing"
+      tmp["name"] = line[i][0].split(">")[1]
       tmp["val"]=parM(line[i][2:])
     
-    if line[i][0].startswith("FUNCT>"):
+    if line[i][0].startswith("FUNCT>"):  # parse standalone function calls
       tmp["type"] = "fcall"
-      tmp["para"]=[]
+      tmp["name"] = line[i][0].split(">")[1]  # Extract function name
+      tmp["para"] = []
 
-      ofset=0
-      while(ofset<(len(line[i])-1)):
-        pass
+      j = 1
+      current_param = []
+
+      while j < len(line[i]):
+          if line[i][j] == ",":
+              tmp["para"].append(parM(current_param))
+              current_param = []
+          else:
+              current_param.append(line[i][j])
+          j += 1
+
+      if current_param:
+          tmp["para"].append(parM(current_param))
+
          
-
-       
-
     i+=1
     out.append(tmp)
+
   return out
   
           
 lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'],['Let', 'TYPE>n64', 'IDENTIFIER>y', '=', 'INTEGER>1']]       
+lol=[['IDENTIFIER>y', '=','IDENTIFIER>y',"+", 'INTEGER>1',"*", 'INTEGER>1']]
+
+print(parse(lol))
 
 
-print(parse(lal)[1].items())
 
 
-
-def parM(tokens):
-    def parse_primary(token):
-        if token.startswith("INTEGER>"):
-            return {"type": "Literal", "value": int(token.split(">")[1])}
-        elif token.startswith("IDENTIFIER>"):
-            return {"type": "Identifier", "name": token.split(">")[1]}
-        else:
-            raise ValueError(f"Unexpected token: {token}")
-
-    def parse_expression(tokens, precedence=0):
-        if not tokens:
-            return None
-
-        left = parse_primary(tokens.pop(0))
-
-        while tokens:
-            op = tokens[0]
-            op_prec = get_precedence(op)
-
-            if op_prec < precedence:
-                break
-
-            tokens.pop(0)  # remove operator
-            right = parse_expression(tokens, op_prec + 1)
-
-            left = {
-                "type": "BinaryExpression",
-                "operator": op,
-                "left": left,
-                "right": right
-            }
-
-        return left
-
-    def get_precedence(op):
-        if op in ("*", "/"):
-            return 2
-        elif op in ("+", "-"):
-            return 1
-        return 0
-
-    # make a copy of the list to avoid modifying the original
-    return parse_expression(tokens[:])

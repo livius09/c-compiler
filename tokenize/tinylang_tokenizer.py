@@ -9,7 +9,7 @@ with open("tokenize/input.txt","r") as raw:
     read = raw.read()
 
 
-def tokenize(line):
+def tokenize(line:str):
     i=0
     tokenln=[]
     while i < len(line):
@@ -52,6 +52,16 @@ def tokenize(line):
             while(line[i].isalnum() and i < len(line)):
                 s+= line[i]
                 i+=1
+
+            if line[i]=="+" and line[i+1] == "+":
+                i+=2
+                #'IDENTIFIER>x2', '=', 'INTEGER>6', '+', 'IDENTIFIER>x'
+                tokenln.append(f"IDENTIFIER>{s}")
+                tokenln.append("=")
+                tokenln.append(f"IDENTIFIER>{s}")
+                tokenln.append("+")
+                tokenln.append("INTEGER>1")
+
                 
             if s == "func":
                 i+=1
