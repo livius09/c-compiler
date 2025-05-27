@@ -16,16 +16,16 @@
 
 
 def gen(a:list[dict]):
-    vars={}         #x:n8
-    functions={}    #print:[char[],n64]
-    data=[]
-    text=[]
-    regs= ["edi","esi","edx","ecx","r8d","r9d"]
+    vars={}         #x:n8    contains the var name as key and type as value
+    functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
+    data=[]         #data section of asm
+    text=[]         #text section so the actual executed asm
+    regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 
     for node in a:
         match node["type"]:
-
-            case "letdec":
+            
+            case "letdec":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
                 identify =node["name"]
                 vartype = node["vartype"]
                 if identify in vars.keys():
@@ -37,7 +37,7 @@ def gen(a:list[dict]):
                 if node["val"]["type"] == "Literal":
                     data.append(f"{node["name"]} dq {node["val"]["val"]}")
 
-            case "asing":
+            case "asing":    #genreate code for the normal "x=y+1" statements
                 name = node["name"]
                 if name in vars.keys():
                     if node["val"]["type"] == "Literal":
@@ -47,7 +47,7 @@ def gen(a:list[dict]):
                 else:
                     raise SyntaxError("variable has not been declared")
 
-            case "fcall":
+            case "fcall":    #genertate code for function calls and checking the parameter types
                 fname = node["name"]
                 if fname in functions.keys():
                     params = node["para"]
@@ -79,7 +79,7 @@ def gen(a:list[dict]):
                 else:
                     raise SyntaxError(f"functions {fname} has not been declared")
                 
-            case "function_dec":
+            case "function_dec":    
 
                 if len(params) > len(regs):
                     raise SyntaxError("to many args")
