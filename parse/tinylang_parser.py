@@ -77,7 +77,7 @@ def parM(tokens: list):
 
         # Not foldable
         return {
-            "type": "BinaryExpression",
+            "type": "BinExp",
             "operator": op,
             "left": left,
             "right": right
@@ -221,7 +221,3 @@ lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'],['Let', 'TYPE>n64', '
 lol=[['IDENTIFIER>y', '=','IDENTIFIER>y',"+", 'INTEGER>1',"*", 'INTEGER>1']]
 
 print(parse(lol))
-
-
-
-
