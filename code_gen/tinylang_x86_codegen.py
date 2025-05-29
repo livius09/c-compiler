@@ -13,11 +13,11 @@
 #edx 
 #esi 
 #edi
+vars={}         #x:n8    contains the var name as key and type as value
+functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 
 
 def gen(a:list[dict]):
-    vars={}         #x:n8    contains the var name as key and type as value
-    functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
     data=[]         #data section of asm
     text=[]         #text section so the actual executed asm
     regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
@@ -39,9 +39,16 @@ def gen(a:list[dict]):
 
             case "asing":    #genreate code for the normal "x=y+1" statements
                 name = node["name"]
+                curtype = node["val"]["type"]
                 if name in vars.keys():
-                    if node["val"]["type"] == "Literal":
-                        text.append(f"mov [{name}] {node["val"]["val"]}")
+                    if curtype == "Literal":
+                        text.append(f"mov [{name}] , {node["val"]["val"]}")
+                    elif curtype == "BinExp":
+                        pass
+                    
+                    elif curtype == "Identifier":
+                        text.append(f"mov eax , [{node["val"]["name"]}]")
+                        text.append(f"mov [{node["name"]}] , eax")
 
 
                 else:
@@ -57,7 +64,7 @@ def gen(a:list[dict]):
 
                         curtype = params[i]["type"]
 
-                        if curtype == "BinaryExpression":
+                        if curtype == "BinExp":
                             pass
                         elif curtype == "Identifier":
                             
@@ -74,20 +81,21 @@ def gen(a:list[dict]):
                             text.append(f"mov {regs[i]} {params[i]["val"]}")
 
 
+                    else:
+                        raise SyntaxError(f"functions {fname} has not been declared")
 
 
-                else:
-                    raise SyntaxError(f"functions {fname} has not been declared")
                 
-            case "function_dec":    
+            case "function_dec":
 
                 if len(params) > len(regs):
                     raise SyntaxError("to many args")
-            
+             
+init = {'type': 'asing', 'name': 'y', 'val': {'type': 'BinExp', 'operator': '+', 'left': {'type': 'Identifier', 'name': 'y'}, 'right': {'type': 'Literal', 'val': 1}}}          
 
-            
+def formulate_math(node:dict):
+    if node["left"] == "BinExp":
+        formulate_math(node["left"])
 
-
-
-def formulate_math(a:dict):
-    pass
+    if node["right"] == "BinExp":
+        formulate_math(node["right"])
