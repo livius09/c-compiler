@@ -37,7 +37,7 @@ def parM(tokens: list):
             '-': 1,
             '*': 2,
             '/': 2,
-        }.get(op, -1)  # Unknown operators = very low precedence
+        }.get(op, -1)  # Unknown ops = very low precedence
 
     def fold_constants(left, op, right):
         # If both sides are integer literals: constant fold
@@ -78,7 +78,7 @@ def parM(tokens: list):
         # Not foldable
         return {
             "type": "BinExp",
-            "operator": op,
+            "op": op,
             "left": left,
             "right": right
         }
@@ -95,7 +95,7 @@ def parM(tokens: list):
             if op_prec < precedence:
                 break
 
-            tokens.pop(0)  # consume the operator
+            tokens.pop(0)  # consume the op
             right = parse_expression(tokens, op_prec + 1)
             left = fold_constants(left, op, right)
 
@@ -113,7 +113,7 @@ def parM(tokens: list):
 #        ReturnStatement(
 #            value = BinaryExpression(
 #                left = Identifier("a"),
-#                operator = "+",
+#                op = "+",
 #                right = Identifier("b")
 #            )
 #        )
