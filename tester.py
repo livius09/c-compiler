@@ -1,9 +1,8 @@
-i=2
+import sys
+i=1.1
+a=11
+arr=[1,2,3]
 
-match i:
-    case 1:
-        print(3)
-    case 2:
-        print("hello")
-
-print(3)
+print(sys.getsizeof(i))
+print(sys.getsizeof(a))
+print(sys.getsizeof(arr))

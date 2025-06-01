@@ -1,8 +1,8 @@
 #better
 #tokenizer
 out=[]
-operations=["+","-","*","/","=","<",">"]
-comands = ["let", "return","for","while","if"]
+operations=["+","-","*","/","=","<",">","=="]
+comands = ["let", "return","for","while","break","if","else","func"]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
 
 with open("tokenize/input.txt","r") as raw:
@@ -113,7 +113,11 @@ def tokenize(line:str):
             continue
 
         if (line[i] in operations):
-            tokenln.append(line[i])
+            if line[i+1] == "=":
+                tokenln.append(line[i]+"=")
+                i+=1
+            else:    
+                tokenln.append(line[i])
         
         
 
