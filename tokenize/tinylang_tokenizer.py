@@ -28,6 +28,14 @@ def tokenize(line:str):
             tokenln=[]
             i+=1
             continue
+
+        if line[i] == "(":
+            tokenln.append("(")
+            i+=1
+        
+        if line[i] == ")":
+            tokenln.append(")")
+            i+=1
         
         if line[i] =="{":
             if tokenln != []:
@@ -55,13 +63,30 @@ def tokenize(line:str):
 
             if line[i]=="+" and line[i+1] == "+":
                 i+=2
-                #'IDENTIFIER>x2', '=', 'INTEGER>6', '+', 'IDENTIFIER>x'
+                #for da i++
+                #'IDENTIFIER>i', '=','IDENTIFIER>i','+','INTEGER>1'
                 tokenln.append(f"IDENTIFIER>{s}")
                 tokenln.append("=")
                 tokenln.append(f"IDENTIFIER>{s}")
                 tokenln.append("+")
                 tokenln.append("INTEGER>1")
 
+            elif line[i]=="-" and line[i+1] == "-":
+                i+=2
+                #for da i--
+                #'IDENTIFIER>i', '=','IDENTIFIER>i','-','INTEGER>1'
+                tokenln.append(f"IDENTIFIER>{s}")
+                tokenln.append("=")
+                tokenln.append(f"IDENTIFIER>{s}")
+                tokenln.append("-")
+                tokenln.append("INTEGER>1")
+
+            if s == "for":
+                tokenln.append("for")
+                i+=1
+                out.append(tokenln)
+                tokenln=[]
+                continue
                 
             if s == "func":
                 i+=1
@@ -94,9 +119,10 @@ def tokenize(line:str):
                 tokenln.append(f"TYPE>{s}")
                 continue
 
-            if line[i+1] == "(":
+            if line[i] == "(":
                 i+=1
                 tokenln.append(f"FUNCT>{s}")
+                tokenln.append("(")
                 continue
 
                 
@@ -129,7 +155,10 @@ def tokenize(line:str):
             
 
 
-
-
+lig = tokenize(read)
 with open("tokenize/output.txt", "w") as file:
-    file.write(str(tokenize(read)))
+    file.write(str(lig))
+
+with open("tokenize/readable_out.txt", "w") as file:
+    for line in lig:
+        file.write(str(line)+"\n")

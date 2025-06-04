@@ -1,4 +1,4 @@
-def formulate_math(node:dict):
+def formulate_math(node:dict, context="asing"): #asing, cond
     nodetype = node['type']
 
     if nodetype == "Identifier":
@@ -8,15 +8,15 @@ def formulate_math(node:dict):
         return [f"mov rax {node['val']}"]
     
     if nodetype == "Fcall":
-        return formulate_fcals(node)
+        return formulate_fcals(node,context)
 
     if nodetype == "BinExp":
         code = []
         cmpops=["==","!=","<",">","<=",">="]
 
-        code += formulate_math(node['left'])
+        code += formulate_math(node['left'],context)
         code.append("push rax")
-        code += formulate_math(node['right'])
+        code += formulate_math(node['right'],context)
         code.append("pop rbx")
 
         op = node['op']
@@ -37,7 +37,18 @@ def formulate_math(node:dict):
                         ])
         elif op in cmpops:
             code.append("cmp rax rbx")
-
+            if context == "asing":
+                set_instr = {
+                        "==": "sete al",
+                        "!=": "setne al",
+                        "<": "setl al",
+                        "<=": "setle al",
+                        ">": "setg al",
+                        ">=": "setge al"
+                    }[op]
+                code.append(f"{set_instr}")
+                code.append("movzx rax, al")
+            
         else:
             raise SyntaxError("uknown operation: "+op)
         
@@ -100,7 +111,13 @@ functions={}    #print:[char[],n64]    contains the function name as key and the
 regs= ['edi","esi","edx","ecx","r8d","r9d']    #the regs for giving over function arguments
 data=[]         #data section of asm
 
-glabelc=0
+
+def label_gen():
+    num = 0
+    while True:
+        yield num
+        num+=1 
+
 iflockup={"==": "jne",
           "!=": "je" ,
           "<" : "jle",
@@ -172,11 +189,11 @@ def gen(a:list[dict]):
                     text.extend(gen(node["body"]))
             
             case "if":
-                global glabelc
-                text.extend(formulate_math(node["exp"]))
+                
+                text.extend(formulate_math(node["exp"],"cond"))
 
-                lnum = glabelc
-                glabelc+=1
+                lnum = next(label_gen)
+                
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
                 
@@ -186,12 +203,10 @@ def gen(a:list[dict]):
                 
 
             case "if_else":
-                text.extend(formulate_math(node["exp"]))
-                endl = glabelc
-                glabelc+=1
-
-                elsel= glabelc
-                glabelc+=1
+                text.extend(formulate_math(node["exp"],"cond"))
+                endl = label_gen()
+                
+                elsel= label_gen()
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
                 text.extend(gen(node["body"]))
@@ -201,6 +216,9 @@ def gen(a:list[dict]):
                 text.extend(gen(node["else_body"]))
 
                 text.append(f".L{endl}:")
+
+            case "while":
+                pass
 
     return text
 
