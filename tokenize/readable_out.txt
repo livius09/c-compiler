@@ -1,6 +1,6 @@
 ['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1']
 ['Let', 'TYPE>n64', 'IDENTIFIER>x2', '=', 'INTEGER>6', '+', 'IDENTIFIER>x']
-['If', '(', 'INTEGER>1', '==', 'INTEGER>2', ')']
+['if', 'INTEGER>1', '==', 'INTEGER>2']
 {
 ['IDENTIFIER>x', '=', 'INTEGER>1']
 }
@@ -9,20 +9,20 @@
 ['IDENTIFIER>x', '=', 'INTEGER>2']
 ['IDENTIFIER>x', '=', 'IDENTIFIER>x2']
 }
-['While', '(', 'IDENTIFIER>x', '==', 'INTEGER>1', ')']
+['if', '(', 'IDENTIFIER>x', '==', 'INTEGER>1']
 {
-['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1', 'IDENTIFIER>x']
+['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1']
 }
 ['for']
 ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0']
 ['IDENTIFIER>i', '=', 'INTEGER>4']
-['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1', 'IDENTIFIER>i']
-[')']
+['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1']
 {
-['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1', 'IDENTIFIER>x']
+['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1']
 }
-['Func', 'NAME>plus', '(', 'TYPE>n64', 'IDENTIFIER>a', ')']
+['func', 'NAME>plus', '(', 'TYPE>n64', 'IDENTIFIER>a']
 {
 ['Return', 'IDENTIFIER>a']
 }
 ['IDENTIFIER>x', '=', 'FUNCT>plus', '(', 'INTEGER>1', ')', '+', 'INTEGER>4']
+['FUNCT>plus', '(', 'INTEGER>1', ')']

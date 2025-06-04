@@ -32,10 +32,15 @@ def tokenize(line:str):
         if line[i] == "(":
             tokenln.append("(")
             i+=1
+            continue
         
         if line[i] == ")":
-            tokenln.append(")")
+            while (line[i+1].isspace()):
+                i+=1
+            if line[i+1] != "{":
+                tokenln.append(")")
             i+=1
+            continue
         
         if line[i] =="{":
             if tokenln != []:
@@ -70,6 +75,7 @@ def tokenize(line:str):
                 tokenln.append(f"IDENTIFIER>{s}")
                 tokenln.append("+")
                 tokenln.append("INTEGER>1")
+                continue
 
             elif line[i]=="-" and line[i+1] == "-":
                 i+=2
@@ -80,6 +86,7 @@ def tokenize(line:str):
                 tokenln.append(f"IDENTIFIER>{s}")
                 tokenln.append("-")
                 tokenln.append("INTEGER>1")
+                continue
 
             if s == "for":
                 tokenln.append("for")
@@ -87,10 +94,20 @@ def tokenize(line:str):
                 out.append(tokenln)
                 tokenln=[]
                 continue
+
+            if s == "if":
+                tokenln.append("if")
+                i+=1
+                continue
+
+            if s == "while":
+                tokenln.append("if")
+                i+=1
+                continue
                 
             if s == "func":
                 i+=1
-                tokenln.append(s.capitalize())
+                tokenln.append("func")
                 b=""
                 while(line[i].isalnum() and i < len(line)):
                     b+= line[i]

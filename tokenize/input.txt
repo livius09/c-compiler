@@ -1,6 +1,6 @@
 
 let n64 x = 1;
-let n64 x2 =6+x;
+let n64 x2 = 6 + x;
 
 if(1 == 2){
     x = 1;
@@ -17,7 +17,7 @@ for(let n8 i = 0; i!=4; i++;){
     x++;
 }
 
-func plus(n64 a) {
+func plus(n64 a)        {
     return a;
 }
 
