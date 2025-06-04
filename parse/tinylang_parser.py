@@ -162,73 +162,87 @@ def parse(line: list[list[str]]):
       consumed = 1  # by default, assume we consume this line
 
       match line[i][0].lower():
-          case "}":
-              break
+        case "}":
+            break
 
-          case "let":
-              tmp["type"] = "letdec"
-              tmp["name"] = line[i][2].split(">")[1]
-              tmp["var_type"] = line[i][1].split(">")[1]
+        case "let":
+            tmp["type"] = "letdec"
+            tmp["name"] = line[i][2].split(">")[1]
+            tmp["var_type"] = line[i][1].split(">")[1]
 
-              math_part = line[i][line[i].index('=') + 1:]
+            math_part = line[i][line[i].index('=') + 1:]
 
-              if len(math_part) == 1:
-                  value = {}
-                  if math_part[0].startswith("IDENTIFIER>"):
-                      value["type"] = "IDENTIFIER"
-                      value["name"] = math_part[0].split(">")[1]
-                  elif math_part[0].startswith("INTEGER>"):
-                      value["type"] = "INTEGER"
-                      value["val"] = int(math_part[0].split(">")[1])
-                  tmp["val"] = value
-              else:
-                  tmp["val"] = parM(math_part)
+            if len(math_part) == 1:
+                value = {}
+                if math_part[0].startswith("IDENTIFIER>"):
+                    value["type"] = "IDENTIFIER"
+                    value["name"] = math_part[0].split(">")[1]
+                elif math_part[0].startswith("INTEGER>"):
+                    value["type"] = "INTEGER"
+                    value["val"] = int(math_part[0].split(">")[1])
+                tmp["val"] = value
+            else:
+                tmp["val"] = parM(math_part)
 
-          case "func":
-              tmp["type"] = "function_dec"
-              tmp["name"] = line[i][2]
-              tmp["parameter"] = []
-              for a in range(1, len(line[i]) - 2, 2):
-                  tmp["parameter"].append({
-                      "type": line[i][a].split(">")[1],
-                      "name": line[i][a+1].split(">")[1]
-                  })
+        case "func":
+            tmp["type"] = "function_dec"
+            tmp["name"] = line[i][2]
+            tmp["parameter"] = []
+            for a in range(1, len(line[i]) - 2, 2):
+                tmp["parameter"].append({
+                    "type": line[i][a].split(">")[1],
+                    "name": line[i][a+1].split(">")[1]
+                })
 
-              body, body_consumed = parse(line[i+1:])
-              tmp["body"] = body
-              consumed += body_consumed
+            body, body_consumed = parse(line[i+1:])
+            tmp["body"] = body
+            consumed += body_consumed
 
-          case "return":
-              tmp["type"] = "return"
-              tmp["val"] = parM(line[i][2:])
+        case "return":
+            tmp["type"] = "return"
+            tmp["val"] = parM(line[i][2:])
 
-          case "if":
-              tmp["type"] = "if"
-              tmp["exp"] = parM(line[i][1:])
-              body, body_consumed = parse(line[i+2:])
-              tmp["body"] = body
-              consumed += 2 + body_consumed  # +2 for 'If' line and '{' line
+        case "if":
+            tmp["type"] = "if"
+            tmp["exp"] = parM(line[i][1:])
+            body, body_consumed = parse(line[i+2:])
+            tmp["body"] = body
+            consumed += 2 + body_consumed  # +2 for 'If' line and '{' line
+        
+        case "while":
+            tmp["type"]="while"
+            tmp["exp"] = parM(line[i][1:])
+            body, body_consumed = parse(line[i+2:])
+            tmp["body"] = body
+            consumed += 2 + body_consumed  # +2 for 'while' line and '{' line
+        
+        case "for":
+            tmp["type"] = "for"
+            
+        
 
-          case _:
-              if line[i][0].startswith("IDENTIFIER>"):
-                  tmp["type"] = "asing"
-                  tmp["name"] = line[i][0].split(">")[1]
-                  tmp["val"] = parM(line[i][2:])
-              elif line[i][0].startswith("FUNCT>"):
-                  tmp["type"] = "fcall"
-                  tmp["name"] = line[i][0].split(">")[1]
-                  tmp["para"] = []
-                  j = 1
-                  current_param = []
-                  while j < len(line[i]):
-                      if line[i][j] == ",":
-                          tmp["para"].append(parM(current_param))
-                          current_param = []
-                      else:
-                          current_param.append(line[i][j])
-                      j += 1
-                  if current_param:
-                      tmp["para"].append(parM(current_param))
+
+
+        case _:
+            if line[i][0].startswith("IDENTIFIER>"):
+                tmp["type"] = "asing"
+                tmp["name"] = line[i][0].split(">")[1]
+                tmp["val"] = parM(line[i][2:])
+            elif line[i][0].startswith("FUNCT>"):
+                tmp["type"] = "fcall"
+                tmp["name"] = line[i][0].split(">")[1]
+                tmp["para"] = []
+                j = 1
+                current_param = []
+                while j < len(line[i]):
+                    if line[i][j] == ",":
+                        tmp["para"].append(parM(current_param))
+                        current_param = []
+                    else:
+                        current_param.append(line[i][j])
+                    j += 1
+                if current_param:
+                    tmp["para"].append(parM(current_param))
 
       out.append(tmp)
       i += consumed
@@ -240,6 +254,7 @@ def parse(line: list[list[str]]):
 lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'],['Let', 'TYPE>n64', 'IDENTIFIER>y', '=', 'INTEGER>1']]       
 lol=[['IDENTIFIER>y', '=','IDENTIFIER>y',"+", 'INTEGER>1',"*", 'INTEGER>1']]
 lla=[['If', 'IDENTIFIER>x', '==', 'INTEGER>2'], '{', ['IDENTIFIER>x', '=', 'INTEGER>1',"+",'INTEGER>1'], '}']
+tw=[['While', 'IDENTIFIER>x', '==', 'INTEGER>1'], '{', ['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1'], '}', ['Func', 'NAME>plus', 'TYPE>n64', 'IDENTIFIER>a'], '{', ['Return', 'IDENTIFIER>a'], '}', ['IDENTIFIER>x', '=', 'IDENTIFIER>plus', 'INTEGER>1']]
 
 out,lines=parse(lla)
 print(out)
