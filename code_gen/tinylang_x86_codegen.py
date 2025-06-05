@@ -192,7 +192,7 @@ def gen(a:list[dict]):
                 
                 text.extend(formulate_math(node["exp"],"cond"))
 
-                lnum = next(label_gen)
+                lnum = label_gen
                 
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
