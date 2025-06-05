@@ -218,6 +218,17 @@ def parse(line: list[list[str]]):
         
         case "for":
             tmp["type"] = "for"
+
+            tmp["init"] , xyz = parse(line[i+1])
+            tmp["exp"] = parM(line[i+2:])
+            tmp["incexp"] = parM(line[i+2])
+            
+            tmp["body"], body_consumed = parse(line[i+4:])
+
+            consume+= body_consumed + 5
+
+
+
             
         
 

@@ -17,7 +17,7 @@ for(let n8 i = 0; i!=4; i++;){
     x++;
 }
 
-func plus(n64 a)        {
+func plus(n64 a){
     return a;
 }
 
