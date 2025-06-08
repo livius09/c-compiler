@@ -7,7 +7,7 @@
     "var_type": "n32",
     "name": "x",
     "val": {
-      "type": "Literal",
+      "type": "literal",
       "val": 5
     }
   },
@@ -22,10 +22,9 @@
 
 #not mine
 def parM(tokens: list):
-    print(tokens)
     def parse_primary(token):
         if token.startswith("INTEGER>"):
-            return {"type": "Literal", "val": int(token.split(">")[1])}
+            return {"type": "literal", "val": int(token.split(">")[1])}
         elif token.startswith("IDENTIFIER>"):
             return {"type": "Identifier", "name": token.split(">")[1]}
         else:
@@ -33,6 +32,8 @@ def parM(tokens: list):
 
     def get_precedence(op):
         return {
+            '<=':1,
+            '>=':1,
             '!=':1,
             '==':1,
             '!': 1,
@@ -47,7 +48,7 @@ def parM(tokens: list):
 
     def fold_constants(left, op, right):
     # If both sides are integer literals: constant fold
-      if left["type"] == "Literal" and right["type"] == "Literal":
+      if left["type"] == "literal" and right["type"] == "literal":
           a, b = left["val"], right["val"]
           result = None
           if op ==   '+':
@@ -73,27 +74,27 @@ def parM(tokens: list):
 
           # Return folded literal if result was computed
           if result is not None:
-              return {"type": "Literal", "val": result}
+              return {"type": "literal", "val": result}
 
       # Algebraic simplification with 0 or 1
-      if op == '+' and right["type"] == "Literal" and right["val"] == 0:
+      if op == '+' and right["type"] == "literal" and right["val"] == 0:
           return left
-      if op == '+' and left["type"] == "Literal" and left["val"] == 0:
+      if op == '+' and left["type"] == "literal" and left["val"] == 0:
           return right
 
-      if op == '-' and right["type"] == "Literal" and right["val"] == 0:
+      if op == '-' and right["type"] == "literal" and right["val"] == 0:
           return left
 
-      if op == '*' and ((left["type"] == "Literal" and left["val"] == 0) or
-                        (right["type"] == "Literal" and right["val"] == 0)):
-          return {"type": "Literal", "val": 0}
+      if op == '*' and ((left["type"] == "literal" and left["val"] == 0) or
+                        (right["type"] == "literal" and right["val"] == 0)):
+          return {"type": "literal", "val": 0}
 
-      if op == '*' and right["type"] == "Literal" and right["val"] == 1:
+      if op == '*' and right["type"] == "literal" and right["val"] == 1:
           return left
-      if op == '*' and left["type"] == "Literal" and left["val"] == 1:
+      if op == '*' and left["type"] == "literal" and left["val"] == 1:
           return right
 
-      if op == '/' and right["type"] == "Literal" and right["val"] == 1:
+      if op == '/' and right["type"] == "literal" and right["val"] == 1:
           return left
 
       # Not foldable
@@ -153,119 +154,130 @@ def parM(tokens: list):
 #with open("tokenize/output.txt","r") as raw:
 #    read = raw.read()
 
+
+
+
+
+
+
+
+
+
 def parse(line: list[list[str]]):
-  out = []
-  i = 0
+    out = []
+    i = 0
 
-  while i < len(line):
-      tmp = {}
-      consumed = 1  # by default, assume we consume this line
+    while i < len(line):
+        tmp = {}
+        consumed = 1  # by default, assume we consume this line
 
-      match line[i][0].lower():
-        case "}":
-            break
+        match line[i][0].lower():
+            case "}":
+                break
 
-        case "let":
-            tmp["type"] = "letdec"
-            tmp["name"] = line[i][2].split(">")[1]
-            tmp["var_type"] = line[i][1].split(">")[1]
+            case "let":
+                tmp["type"] = "letdec"
+                tmp["name"] = line[i][2].split(">")[1]
+                tmp["var_type"] = line[i][1].split(">")[1]
 
-            math_part = line[i][line[i].index('=') + 1:]
+                math_part = line[i][line[i].index('=') + 1:]
 
-            if len(math_part) == 1:
-                value = {}
-                if math_part[0].startswith("IDENTIFIER>"):
-                    value["type"] = "IDENTIFIER"
-                    value["name"] = math_part[0].split(">")[1]
-                elif math_part[0].startswith("INTEGER>"):
-                    value["type"] = "INTEGER"
-                    value["val"] = int(math_part[0].split(">")[1])
-                tmp["val"] = value
-            else:
-                tmp["val"] = parM(math_part)
+                if len(math_part) == 1:
+                    value = {}
+                    if math_part[0].startswith("IDENTIFIER>"):
+                        value["type"] = "literal"
+                        value["name"] = math_part[0].split(">")[1]
+                    elif math_part[0].startswith("INTEGER>"):
+                        value["type"] = "literal"
+                        value["val"] = int(math_part[0].split(">")[1])
+                    tmp["val"] = value
+                else:
+                    tmp["val"] = parM(math_part)
 
-        case "func":
-            tmp["type"] = "function_dec"
-            tmp["name"] = line[i][2]
-            tmp["parameter"] = []
-            for a in range(1, len(line[i]) - 2, 2):
-                tmp["parameter"].append({
-                    "type": line[i][a].split(">")[1],
-                    "name": line[i][a+1].split(">")[1]
-                })
+            case "func":
+                tmp["type"] = "function_dec"
+                tmp["name"] = line[i][2]
+                tmp["parameter"] = []
+                for a in range(1, len(line[i]) - 2, 2):
+                    tmp["parameter"].append({
+                        "type": line[i][a].split(">")[1],
+                        "name": line[i][a+1].split(">")[1]
+                    })
 
-            body, body_consumed = parse(line[i+1:])
-            tmp["body"] = body
-            consumed += body_consumed
+                body, body_consumed = parse(line[i+1:])
+                tmp["body"] = body
+                consumed += body_consumed
 
-        case "return":
-            tmp["type"] = "return"
-            tmp["val"] = parM(line[i][2:])
-
-        case "if":
-            tmp["type"] = "if"
-            tmp["exp"] = parM(line[i][1:])
-            body, body_consumed = parse(line[i+2:])
-            tmp["body"] = body
-            consumed += 2 + body_consumed  # +2 for 'If' line and '{' line
-        
-        case "while":
-            tmp["type"]="while"
-            tmp["exp"] = parM(line[i][1:])
-            body, body_consumed = parse(line[i+2:])
-            tmp["body"] = body
-            consumed += 2 + body_consumed  # +2 for 'while' line and '{' line
-        
-        case "for":
-            tmp["type"] = "for"
-
-            tmp["init"] , xyz = parse(line[i+1])
-            tmp["exp"] = parM(line[i+2:])
-            tmp["incexp"] = parM(line[i+2])
-            
-            tmp["body"], body_consumed = parse(line[i+4:])
-
-            consume+= body_consumed + 5
-
-
-
-            
-        
-
-
-
-        case _:
-            if line[i][0].startswith("IDENTIFIER>"):
-                tmp["type"] = "asing"
-                tmp["name"] = line[i][0].split(">")[1]
+            case "return":
+                tmp["type"] = "return"
                 tmp["val"] = parM(line[i][2:])
-            elif line[i][0].startswith("FUNCT>"):
-                tmp["type"] = "fcall"
-                tmp["name"] = line[i][0].split(">")[1]
-                tmp["para"] = []
-                j = 1
-                current_param = []
-                while j < len(line[i]):
-                    if line[i][j] == ",":
+
+            case "if":
+                tmp["type"] = "if"
+                tmp["exp"] = parM(line[i][1:])
+                body, body_consumed = parse(line[i+2:])
+                tmp["body"] = body
+                consumed += 2 + body_consumed  # +2 for 'If' line and '{' line
+            
+            case "while":
+                tmp["type"]="while"
+                tmp["exp"] = parM(line[i][1:])
+                body, body_consumed = parse(line[i+2:])
+                tmp["body"] = body
+                consumed += 2 + body_consumed  # +2 for 'while' line and '{' line
+            
+            case "for":
+                
+                tmp["type"] = "for"
+
+                tmp["init"] = parse([line[i+1]])[0][0]
+                print(line[i])
+                print(line[i+1])
+                print(line[i+2])
+                print(line[i+3])
+                tmp["exp"] = parM(line[i+2])
+                tmp["incexp"] = parse([line[i+3]])[0]
+                
+                tmp["body"], body_consumed = parse(line[i+5:])
+                i += 5 
+                consumed += body_consumed + 5
+
+
+            case _:
+                if line[i][0].startswith("IDENTIFIER>"):
+                    tmp["type"] = "asing"
+                    tmp["name"] = line[i][0].split(">")[1]
+                    tmp["val"] = parM(line[i][2:])
+                elif line[i][0].startswith("FUNCT>"):
+                    tmp["type"] = "fcall"
+                    tmp["name"] = line[i][0].split(">")[1]
+                    tmp["para"] = []
+                    j = 1
+                    current_param = []
+                    while j < len(line[i]):
+                        if line[i][j] == ",":
+                            tmp["para"].append(parM(current_param))
+                            current_param = []
+                        else:
+                            current_param.append(line[i][j])
+                        j += 1
+                    if current_param:
                         tmp["para"].append(parM(current_param))
-                        current_param = []
-                    else:
-                        current_param.append(line[i][j])
-                    j += 1
-                if current_param:
-                    tmp["para"].append(parM(current_param))
 
-      out.append(tmp)
-      i += consumed
+        out.append(tmp)
+        if consumed == 0:
+            consumed+=1
+        else:
+            i += consumed
 
-  return out, i
+    return out, i
 
   
           
-lal=[['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1'],['Let', 'TYPE>n64', 'IDENTIFIER>y', '=', 'INTEGER>1']]       
-lol=[['IDENTIFIER>y', '=','IDENTIFIER>y',"+", 'INTEGER>1',"*", 'INTEGER>1']]
-lla=[['If', 'IDENTIFIER>x', '==', 'INTEGER>2'], '{', ['IDENTIFIER>x', '=', 'INTEGER>1',"+",'INTEGER>1'], '}']
-tw=[['While', 'IDENTIFIER>x', '==', 'INTEGER>1'], '{', ['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1'], '}', ['Func', 'NAME>plus', 'TYPE>n64', 'IDENTIFIER>a'], '{', ['Return', 'IDENTIFIER>a'], '}', ['IDENTIFIER>x', '=', 'IDENTIFIER>plus', 'INTEGER>1']]
 
-out,lines=parse(lla)
+fort=[['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '!=', 'INTEGER>4'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1'], '}']
+fart = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '==', 'INTEGER>1'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>e', '=', 'IDENTIFIER>e', '+', 'INTEGER>1'], '}']
+
+
+out,lines=parse(fart)
 print(out)

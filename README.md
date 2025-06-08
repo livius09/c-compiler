@@ -2,6 +2,9 @@
 a small project to understand compilers (i know its shity)
 ## Changes
 
+#### v0.4.0:
+  did a lot of stuff including fixing some naming of keys in the dict but mainly writing code gen for loops 
+
 #### v0.3.2:
   finished tokenizing and parsing while and for loops 
 
