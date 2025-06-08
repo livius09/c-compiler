@@ -1,0 +1,21 @@
+jmp .L0
+.L1
+mov rax [x]
+push rax
+mov rax 1
+pop rbx
+add rax rbx
+mov [x] , rax
+mov rax [i]
+push rax
+mov rax 1
+pop rbx
+add rax rbx
+mov [i] , rax
+.L0
+mov rax [i]
+push rax
+mov rax 1
+pop rbx
+cmp rax rbx
+je .L1

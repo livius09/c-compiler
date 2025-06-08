@@ -4,7 +4,7 @@ def formulate_math(node:dict, context="asing"): #asing, cond
     if nodetype == "Identifier":
         return [f"mov rax [{node['name']}]"]
     
-    if nodetype == "Literal":
+    if nodetype == "literal":
         return [f"mov rax {node['val']}"]
     
     if nodetype == "Fcall":
@@ -79,7 +79,7 @@ def formulate_fcals(node:dict):    #genertate code for function calls and checki
                 else:
                     raise TypeError(f"expected type {dectypes[i]} but got {vartype} on arg {i} of function call {fname}")
 
-            elif curtype == "Literal":
+            elif curtype == "literal":
                 code.append(f"mov {regs[i]} {params[i]['val']}")
 
         code.append(f"call .{fname}")
@@ -112,17 +112,26 @@ regs= ['edi","esi","edx","ecx","r8d","r9d']    #the regs for giving over functio
 data=[]         #data section of asm
 
 
-def label_gen():
+def label_generator():
     num = 0
     while True:
         yield num
         num+=1 
+
+label_gen = label_generator()
+
 
 iflockup={"==": "jne",
           "!=": "je" ,
           "<" : "jle",
           ">" : "jg" ,
           }
+
+looplockup = {"==": "je",
+              "!=": "jne",
+              "<":  "jg",
+              ">":  "jle"
+              }
 
 
 def gen(a:list[dict]):
@@ -133,7 +142,7 @@ def gen(a:list[dict]):
             
             case "letdec":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
                 identify =node['name']
-                vartype = node['vartype']
+                vartype = node['var_type']
                 if identify in vars.keys():
                     raise SyntaxError("variable has already been declared")
                 else:
@@ -141,7 +150,7 @@ def gen(a:list[dict]):
 
                 dotype = node['val']['type']
 
-                if dotype == "Literal":
+                if dotype == "literal":
                     data.append(f"{node['name']} dq {node['val']['val']}")
                 elif dotype == "identifier":
                     data.append(f"{node['name']} dq {node['val']['val']}")
@@ -154,7 +163,7 @@ def gen(a:list[dict]):
                 name = node['name']
                 curtype = node['val']['type']
                 if name in vars.keys():
-                    if curtype == "Literal":
+                    if curtype == "literal":
                         text.append(f"mov [{name}] , {node['val']['val']}")
 
                     elif curtype == "BinExp":
@@ -204,9 +213,9 @@ def gen(a:list[dict]):
 
             case "if_else":
                 text.extend(formulate_math(node["exp"],"cond"))
-                endl = label_gen()
+                endl = next(label_gen)
                 
-                elsel= label_gen()
+                elsel= next(label_gen)
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
                 text.extend(gen(node["body"]))
@@ -218,7 +227,30 @@ def gen(a:list[dict]):
                 text.append(f".L{endl}:")
 
             case "while":
-                pass
+                endla = next(label_gen)
+                startla =next(label_gen)
+                text.append(f"jmp .L{endla}")
+                text.append(f".L{startla}")
+                text.extend(gen(node["body"]))
+                text.append(f".L{endla}")
+                text.extend(formulate_math(node["exp"],"cond"))
+                text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
+
+            case "for":
+                endla = next(label_gen)
+                startla =next(label_gen)
+
+                text.extend(gen([node["init"]]))
+                text.append(f"jmp .L{endla}")
+                text.append(f".L{startla}")
+
+                text.extend(gen(node["body"]))
+
+                text.extend(gen(node["incexp"]))
+                text.append(f".L{endla}")
+                text.extend(formulate_math(node["exp"],"cond"))
+                text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
+        print(text)
 
     return text
 
@@ -228,7 +260,14 @@ def gen(a:list[dict]):
              
 init = {'type': 'asing', 'name': 'y', 'val': {'type': 'BinExp', 'op': '+', 'left': {'type': 'Identifier', 'name': 'y'}, 'right': {'type': 'Literal', 'val': 1}}}    
 nif=[{'type': 'if', 'exp': {'type': 'BinExp', 'op': '==', 'left': {'type': 'Identifier', 'name': 'x'}, 'right': {'type': 'Literal', 'val': 2}}, 'body': [{'type': 'asing', 'name': 'x', 'val': {'type': 'Literal', 'val': 2}}]}]      
-print(gen(nif))
+nfor = [{'type': 'for', 'init': {'type': 'letdec', 'name': 'i', 'var_type': 'n8', 'val': {'type': 'literal', 'val': 0}}, 'exp': {'type': 'BinExp', 'op': '==', 'left': {'type': 'Identifier', 'name': 'i'}, 'right': {'type': 'literal', 'val': 1}}, 'incexp': [{'type': 'asing', 'name': 'i', 'val': {'type': 'BinExp', 'op': '+', 'left': {'type': 'Identifier', 'name': 'i'}, 'right': {'type': 'literal', 'val': 1}}}], 'body': [{'type': 'asing', 'name': 'x', 'val': {'type': 'BinExp', 'op': '+', 'left': {'type': 'Identifier', 'name': 'x'}, 'right': {'type': 'literal', 'val': 1}}}]}]
+out = gen(nfor)
+with open("./code_gen/readout.txt","w") as file:
+    for a in out:
+        file.write(a+"\n")
+    file.close
+    
+
 
 
 
