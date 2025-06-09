@@ -1,7 +1,3 @@
-['for']
-['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0']
-['IDENTIFIER>i', '==', 'INTEGER>1']
-['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1']
-{
-['IDENTIFIER>e', '=', 'IDENTIFIER>e', '+', 'INTEGER>1']
-}
+['Let', 'TYPE>n8', 'IDENTIFIER>num', '=', 'INTEGER>2']
+['Let', 'TYPE>n8~', 'IDENTIFIER>ptr', '=', 'REFRENCE>num']
+['Let', 'IDENTIFIER>refnum', '=', 'DEREFRENCE>ptr', '+', 'INTEGER>1']

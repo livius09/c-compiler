@@ -3,7 +3,9 @@
 out=[]
 operations=["+","-","*","/","=","<",">","==","!=","!"]
 comands = ["let", "return","for","while","break","if","else","func"]
-types = ["n8","n16","n32","n64","un8","un16","un32","un64"]
+
+types = ["n8","n16","n32","n64","un8","un16","un32","un64",     
+         "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
 with open("tokenize/input.txt","r") as raw:
     read = raw.read()
@@ -132,8 +134,10 @@ def tokenize(line:str):
                         si+=line[i]
                         i+=1
                     tokenln.append(f"SIZE>{si}")
-
-                tokenln.append(f"TYPE>{s}")
+                elif line[i] =="~":
+                    tokenln.append(f"TYPE>{s}~")
+                else:
+                    tokenln.append(f"TYPE>{s}")
                 continue
 
             if line[i] == "(":
@@ -142,8 +146,12 @@ def tokenize(line:str):
                 tokenln.append("(")
                 continue
 
-                
-            tokenln.append(f"IDENTIFIER>{s}")
+            if line[i-len(s)-1] == "~":
+                tokenln.append(f"DEREFRENCE>{s}")
+            elif line[i-len(s)-1] == "&":
+                tokenln.append(f"REFRENCE>{s}")
+            else:
+                tokenln.append(f"IDENTIFIER>{s}")
 
             continue
 

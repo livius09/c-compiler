@@ -1,3 +1,4 @@
-for(let n8 i = 0;i==1;i++){
-    e++;
-}
+let n8 num = 2;
+let n8~ ptr = &num;
+
+let refnum = ~ptr + 1;
