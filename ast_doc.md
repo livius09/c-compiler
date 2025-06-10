@@ -9,8 +9,8 @@ every node regardles of what it is has this and it and as the name entails it te
     these are primary kinds these can not acour in vals or binexp
 
 ##### letdec:
-    declares a variable and moves the val into it
-    puts the name : type in the vars dict
+declares a variable and moves the val into it
+puts the name : type in the vars dict
     {"kind":"letdec", "name": "*" "var_type":"*types", "val":"*"}
 ##### asing:
     updates a variable whit val
