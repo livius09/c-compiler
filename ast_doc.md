@@ -87,9 +87,9 @@ a binary operation betwen left and right specified by the op
 
 
 
+### example:
+[{"kind": "letdec", "var_type": "n8", "name": "num", "val": {"kind": "literal", "val": 2}}, 
+{"kind": "letdec", "var_type": "n8~", "name": "ptr", "val": {"kind": "refrence", "name": "num"}}, 
+{"kind": "letdec", "var_type": "n32", "name": "refnum", "val": {"kind": "binexp", "op": "+", "left": {"kind": "derefrence", "name": "ptr"}, "right": {"kind": "literal", "val": 1}}}]
 
-
-
-nptr = [{"kind": "letdec", "var_type": "n8", "name": "num", "val": {"kind": "literal", "val": 2}}, {"kind": "letdec", "var_type": "n8~", "name": "ptr", "val": {"kind": "refrence", "name": "num"}}, {"kind": "letdec", "var_type": "n32", "name": "refnum", "val": {"kind": "binexp", "op": "+", "left": {"kind": "derefrence", "name": "ptr"}, "right": {"kind": "literal", "val": 1}}}]
-
-init = {"kind": "asing", "name": "y", "val": {"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": "y"}, "right": {"kind": "literal", "val": 1}}}    
+{"kind": "asing", "name": "y", "val": {"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": "y"}, "right": {"kind": "literal", "val": 1}}}    
