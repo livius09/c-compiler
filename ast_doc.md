@@ -2,7 +2,8 @@
 ### this is the doc on how the ast is structured and what each node has and what i means
 *= wildcard
 types = ["n8","n16","n32","n64","un8","un16","un32","un64", "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
- ops   = ["<=",">=", "!=", "==", "!", ">", "<", "+", "-", "*", "/", "%"]
+
+ops   = ["<=",">=", "!=", "==", "!", ">", "<", "+", "-", "*", "/", "%"]
 ### Kind:
 every node regardles of what it is has this and it and as the name entails it tells you what the node is:
 #### primary:
