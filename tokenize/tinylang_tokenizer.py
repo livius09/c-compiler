@@ -4,7 +4,7 @@ out=[]
 operations=["+","-","*","/","=","<",">","==","!=","!"]
 comands = ["let", "return","for","while","break","if","else","func"]
 
-types = ["n8","n16","n32","n64","un8","un16","un32","un64",     
+types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void"     
          "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
 with open("tokenize/input.txt","r") as raw:
@@ -107,16 +107,7 @@ def tokenize(line:str):
                 i+=1
                 continue
                 
-            if s == "func":
-                i+=1
-                tokenln.append("func")
-                b=""
-                while(line[i].isalnum() and i < len(line)):
-                    b+= line[i]
-                    i+=1
-
-                tokenln.append(f"NAME>{b}")
-                continue
+            
 
                 
                 

@@ -1,21 +1,14 @@
-jmp .L0
-.L1
-mov rax [x]
-push rax
-mov rax 1
-pop rbx
-add rax rbx
-mov [x] , rax
-mov rax [i]
-push rax
-mov rax 1
-pop rbx
-add rax rbx
-mov [i] , rax
-.L0
-mov rax [i]
-push rax
-mov rax 1
-pop rbx
-cmp rax rbx
-je .L1
+data:
+	num dq 2
+	ptr dq 0
+	refnum dq 0
+text:
+	lea rax, [num]
+	mov [ptr], rax
+	mov rax, [ptr]
+	mov rax, [rax]
+	push rax
+	mov rax, 1
+	pop rbx
+	add rax, rbx
+	mov [refnum], rax

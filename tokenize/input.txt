@@ -1,4 +1,25 @@
-let n8 num = 2;
-let n8~ ptr = &num;
+let n64 x = 1;
+let n64 x2 = 6 + x;
 
-let refnum = ~ptr + 1;
+if(1 == 2){
+    x = 1;
+} else{
+    x=2;
+    x=x2;
+}
+
+while (x==1){
+    x++;
+}
+
+for(let n8 i = 0; i!=4; i++;){
+    x++;
+}
+
+func n64 plus(n64 a){
+    return a;
+}
+
+x = plus(1)+4;
+
+plus(1);

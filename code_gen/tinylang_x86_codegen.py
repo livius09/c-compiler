@@ -1,16 +1,23 @@
 def formulate_math(node:dict, context="asing"): #asing, cond
-    nodetype = node['type']
-
+    nodetype = node['kind']
+    
     if nodetype == "Identifier":
-        return [f"mov rax [{node['name']}]"]
+        return [f"mov rax, [{node['name']}]"]
     
     if nodetype == "literal":
-        return [f"mov rax {node['val']}"]
+        return [f"mov rax, {node['val']}"]
+
+    if nodetype == "refrence":
+        return [f"lea rax, {node['name']}"]
+    
+    if nodetype == "derefrence":
+       return [f"mov rax, [{node['name']}]",  # rax = address of pointee
+                "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
-        return formulate_fcals(node,context)
+        return formulate_fcals(node)
 
-    if nodetype == "BinExp":
+    if nodetype == "binexp":
         code = []
         cmpops=["==","!=","<",">","<=",">="]
 
@@ -21,11 +28,11 @@ def formulate_math(node:dict, context="asing"): #asing, cond
 
         op = node['op']
         if op == "+":
-            code.append("add rax rbx")
+            code.append("add rax, rbx")
         elif op == "-":
-            code.append("sub rax rbx")
+            code.append("sub rax, rbx")
         elif op == "*":
-            code.append("imul rax rbx")
+            code.append("imul rax, rbx")
         elif op == "/":
             code.extend(["cqo",                    #sign-extend RAX into RDX:RAX
                         "idiv rbx"               # result: quotient in RAX, remainder in RDX
@@ -33,10 +40,10 @@ def formulate_math(node:dict, context="asing"): #asing, cond
         elif op == "%":
             code.extend(["cqo",                    #sign-extend RAX into RDX:RAX
                         "idiv rbx",               # result: quotient in RAX, remainder in RDX
-                        "mov rax rdx"
+                        "mov rax, rdx"
                         ])
         elif op in cmpops:
-            code.append("cmp rax rbx")
+            code.append("cmp rax, rbx")
             if context == "asing":
                 set_instr = {
                         "==": "sete al",
@@ -63,18 +70,18 @@ def formulate_fcals(node:dict):    #genertate code for function calls and checki
         
         for i in range(len(params)):
 
-            curtype = params[i]['type']
+            curtype = params[i]['kind']
 
-            if curtype == "BinExp":
+            if curtype == "binexp":
                 code.extend(formulate_math)
-                code.append(f"mov {regs[i]} , rax")
+                code.append(f"mov {regs[i]}, rax")
             elif curtype == "Identifier":
                 
                 varname = params[i]['name']
                 vartype = vars[varname]
 
                 if dectypes[i] == vartype:
-                    code.append(f"mov {regs[i]} [{varname}]")
+                    code.append(f"mov {regs[i]}, [{varname}]")
 
                 else:
                     raise TypeError(f"expected type {dectypes[i]} but got {vartype} on arg {i} of function call {fname}")
@@ -106,9 +113,9 @@ def formulate_fcals(node:dict):    #genertate code for function calls and checki
 #edx 
 #esi 
 #edi
-vars={"x" : "n8"}         #x:n8    contains the var name as key and type as value
+vars={}         #x:n8    contains the var name as key and type as value
 functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
-regs= ['edi","esi","edx","ecx","r8d","r9d']    #the regs for giving over function arguments
+regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 data=[]         #data section of asm
 
 
@@ -138,49 +145,78 @@ def gen(a:list[dict]):
     text=[]         #text section so the actual executed asm
     
     for node in a:
-        match node['type']:
+        match node['kind']:
             
             case "letdec":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
-                identify =node['name']
+                var_name =node['name']
                 vartype = node['var_type']
-                if identify in vars.keys():
-                    raise SyntaxError("variable has already been declared")
+                if var_name in vars.keys():
+                    raise SyntaxError(f"variable: {var_name} has already been declared")
                 else:
-                    vars[identify] = vartype
+                    vars[var_name] = vartype
 
-                dotype = node['val']['type']
+                dotype = node['val']['kind']
 
                 if dotype == "literal":
-                    data.append(f"{node['name']} dq {node['val']['val']}")
-                elif dotype == "identifier":
-                    data.append(f"{node['name']} dq {node['val']['val']}")
+                    data.append(f"{var_name} dq {node['val']['val']}")
 
-                    text.append(f"mov rax , [{identify}]")
-                    text.append(f"mov [{node['name']}] , rax")
+                elif dotype == "identifier":
+                    data.append(f"{var_name} dq 0")
+
+                    text.append(f"mov rax , [{var_name}]")
+                    text.append(f"mov [{var_name}] , rax")
+
+                elif dotype == "binexp":
+                    data.append(f"{var_name} dq 0")
+                    
+                    text.extend(formulate_math(node['val']))
+                    text.append(f"mov [{var_name}], rax")
+
+                elif dotype == "refrence":
+                    data.append(f"{var_name} dq 0")
+
+                    text.append(f"lea rax, [{node['val']['name']}]")
+                    text.append(f"mov [{var_name}], rax")
+
+                elif dotype == "derefrence":
+                    data.append(f"{var_name} dq 0")
+                    print("ligma sigma")
+                    text.append(f"mov rax, [{node['name']}]")  # rax = address of pointee
+                    text.append("mov rax, [rax]")              # rax = value at that address
+                    text.append(f"mov [{var_name}], rax")
 
 
             case "asing":    #genreate code for the normal "x = y+1" statements
-                name = node['name']
-                curtype = node['val']['type']
-                if name in vars.keys():
-                    if curtype == "literal":
-                        text.append(f"mov [{name}] , {node['val']['val']}")
+                var_name = node['name']
+                dotype = node['val']['kind']
+                if var_name in vars.keys():
+                    if dotype == "literal":
+                        text.append(f"mov [{var_name}], {node['val']['val']}")
 
-                    elif curtype == "BinExp":
+                    elif dotype == "binexp":
                         text.extend(formulate_math(node['val']))
-                        text.append(f"mov [{name}] , rax")
+                        text.append(f"mov [{var_name}], rax")
 
-                    elif curtype == "Identifier":
-                        text.append(f"mov rax , [{node['val']['name']}]")
-                        text.append(f"mov [{node['name']}] , rax")
+                    elif dotype == "identifier":
+                        text.append(f"mov rax, [{node['val']['name']}]")
+                        text.append(f"mov [{var_name}], rax")
 
-                    elif curtype == "Fcall":
+                    elif dotype == "Fcall":
                         text.extend(formulate_fcals(node['val']))
-                        text.append(f"mov [{name}] , rax")
+                        text.append(f"mov [{var_name}], rax")
+
+                    elif dotype == "refrence":
+                        text.append(f"lea rax {node['val']['name']}")
+                        text.append(f"mov [{var_name}], rax")
+
+                    elif dotype == "derefrence":
+                        text.append(f"mov rdx, [{node['val']['name']}]")
+                        text.append("mov rax, [rdx]")
+                        text.append(f"mov [{var_name}], rax")
 
 
                 else:
-                    raise SyntaxError(f"variable:{name} has not been declared")
+                    raise SyntaxError(f"variable:{var_name} has not been declared")
 
             case "fcall":    
                 formulate_fcals(node)
@@ -192,16 +228,18 @@ def gen(a:list[dict]):
                 fname = node['name']
 
                 if len(params) > len(regs):
-                    raise SyntaxError("to many args")
+                    raise SyntaxError("to many args in function: " + fname)
                 else:
-                    text.apend(f".{fname}:")
+                    functions[fname]= params
+
+                    text.append(f".{fname}:")
                     text.extend(gen(node["body"]))
             
             case "if":
                 
                 text.extend(formulate_math(node["exp"],"cond"))
 
-                lnum = label_gen
+                lnum = next(label_gen)
                 
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
@@ -250,7 +288,9 @@ def gen(a:list[dict]):
                 text.append(f".L{endla}")
                 text.extend(formulate_math(node["exp"],"cond"))
                 text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
-        print(text)
+            
+            case _:
+                raise SyntaxError("ligma")
 
     return text
 
@@ -258,13 +298,23 @@ def gen(a:list[dict]):
 
 
              
-init = {'type': 'asing', 'name': 'y', 'val': {'type': 'BinExp', 'op': '+', 'left': {'type': 'Identifier', 'name': 'y'}, 'right': {'type': 'Literal', 'val': 1}}}    
-nif=[{'type': 'if', 'exp': {'type': 'BinExp', 'op': '==', 'left': {'type': 'Identifier', 'name': 'x'}, 'right': {'type': 'Literal', 'val': 2}}, 'body': [{'type': 'asing', 'name': 'x', 'val': {'type': 'Literal', 'val': 2}}]}]      
-nfor = [{'type': 'for', 'init': {'type': 'letdec', 'name': 'i', 'var_type': 'n8', 'val': {'type': 'literal', 'val': 0}}, 'exp': {'type': 'BinExp', 'op': '==', 'left': {'type': 'Identifier', 'name': 'i'}, 'right': {'type': 'literal', 'val': 1}}, 'incexp': [{'type': 'asing', 'name': 'i', 'val': {'type': 'BinExp', 'op': '+', 'left': {'type': 'Identifier', 'name': 'i'}, 'right': {'type': 'literal', 'val': 1}}}], 'body': [{'type': 'asing', 'name': 'x', 'val': {'type': 'BinExp', 'op': '+', 'left': {'type': 'Identifier', 'name': 'x'}, 'right': {'type': 'literal', 'val': 1}}}]}]
-out = gen(nfor)
+init = {'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'y'}, 'right': {'kind': 'literal', 'val': 1}}}    
+nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 2}}, 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'literal', 'val': 2}}]}]      
+nfor = [{'kind': 'for', 'init': {'kind': 'letdec', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
+nptr = [{'kind': 'letdec', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letdec', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letdec', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
+
+out = gen(nptr)
+print(vars)
+print(data)
+print(out)
+
 with open("./code_gen/readout.txt","w") as file:
+    file.write("data:\n")
+    for b in data:
+        file.write("\t"+b+"\n")
+    file.write("text:\n")
     for a in out:
-        file.write(a+"\n")
+        file.write("\t"+a+"\n")
     file.close
     
 
