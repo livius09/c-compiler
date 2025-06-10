@@ -8,45 +8,45 @@ every node regardles of what it is has this and it and as the name entails it te
 #### primary:
 these are primary kinds these can not acour in vals or binexp
 
-##### letdec:
+#### letdec:
 declares a variable and moves the val into it
 puts the name : type in the vars dict
 
     {"kind":"letdec", "name": "*" "var_type":"*types", "val":"*"}
-##### asing:
+#### asing:
 updates a variable whit val
 
     {"kind":"asing", "name": "*", "val":"*"}
 
-##### fcall:
+#### fcall:
 stands to generate a stand alone function call whit the return value being discarded
 param is a list of paramethers that contains secondary nodes
 
     {"kind":"fcall", "name": "*", "param":[*node,*node,*node] }
 
-##### function_dec:
+#### function_dec:
 to declare a function 
 params contains the types of the args
 body contains nodes that execute on fcall
     
     {"kind":"function_dec", "name": "*", "param":[*type,*type,*type], "ret_type":*types body: [*node] }
 
-##### if:
+#### if:
 well a if |:
 
     {"kind":"if", "exp":binexp, "body":[*node]}
 
-##### if_else:
+#### if_else:
 well a if whit an else |:
     
     {"kind":"if_else", "exp":binexp, "body":*node, "else_body":[*node]}
 
-##### while:
+#### while:
 well a while loop |:
 
     {"kind":"while", "exp":binexp, "body":[*node]}
 
-##### for:
+#### for:
 a for loop a bit more interesting
 init is for example let n64 i = 0
 exp is the condition
@@ -54,27 +54,27 @@ incexp is e.g the i++
     
     {"kind":"for", "exp":binexp, "init":("ledec"||"asing"), "incexp":"binexp" "body":[*node]}
 
-#### Secondary:
+### Secondary:
 these are inside val or binexp
 
-##### literal:
+#### literal:
 a literal int value
 
     {"kind":"literal", "val": *int}
 
-##### identifier:
+#### identifier:
 a variable 
 in the futur ading: "type": *type
 field
     
     {"kind": "Identifier", "name": "*"}
 
-##### refrence:
+#### refrence:
 loads the memory adres of a variable
 
     {"kind": "refrence", "name": "*"}
 
-##### derefrence:
+#### derefrence:
 derefrence the value stored in a ptr
     
     {"kind": "derefrence", "name": "*"}
