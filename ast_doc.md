@@ -9,11 +9,20 @@ every node regardles of what it is has this and it and as the name entails it te
 #### primary:
 these are primary kinds these can not acour in vals or binexp
 
-#### letdec:
+#### letinit:
 declares a variable and moves the val into it
 puts the name : type in the vars dict
 
-    {"kind":"letdec", "name": "*" "var_type":"*types", "val":"*"}
+    {"kind":"letinit", "name": "*" "var_type":"*types", "val":"*"}
+    {"kind":"letinit", "name": "*" "var_type":"*types", "val":[], "size": *n}
+
+#### letdec:
+only creates space for the variable 
+puts the name : type in the vars dict
+
+    {"kind":"letdec", "name": "*" "var_type":"*types"}
+    {"kind":"letdec", "name": "*" "var_type":"*types", "size": *n}
+
 #### asing:
 updates a variable whit val
 

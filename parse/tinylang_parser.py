@@ -179,21 +179,57 @@ def parse(line: list[list[str]]):
                 break
 
             case "let":
-                tmp["kind"] = "letdec"
-
+                is_arr = False
                 var_type = line[i][1].split(">")[1]
+
 
                 if var_type in var_types:
                     tmp["var_type"] = var_type
+                elif var_type.endswith("[]") and (var_type[:-2] in var_types):
+                    tmp["var_type"] = var_type
+                    is_arr = True
                 else:
                     raise SyntaxError("type cant be: "+ var_type)
                 
-                tmp["name"] = line[i][2].split(">")[1]
-                
 
-                math_part = line[i][line[i].index('=') + 1:]
+                if line[i][2].startswith("IDENTIFIER>"):
 
-                tmp["val"] = parM(math_part)
+                    tmp["name"] = line[i][2].split(">")[1]
+
+                elif line[i][3].startswith("IDENTIFIER>"):
+
+                    tmp["name"] = line[i][3].split(">")[1]
+                else:
+                    raise SyntaxError("no given identifier for "+line[i][3]+line[i][2])
+
+
+
+                if len(line[i]) > 3 and line[i][3] == "=": 
+                    #is an initialazion
+
+                    tmp["kind"] = "letinit"
+
+                    
+
+                    if is_arr:
+                        pass
+                        
+
+                    else:
+                        var_type = line[i][1].split(">")[1]
+
+                        math_part = line[i][line[i].index('=') + 1:]
+
+                        tmp["val"] = parM(math_part)
+
+                else:
+                    #is and decl
+
+                    tmp["kind"] = "letdec"
+
+                    if is_arr:
+                        tmp["size"] = int(line[i][2].split(">")[1])
+
 
 
             case "func":
@@ -267,7 +303,8 @@ def parse(line: list[list[str]]):
                     if current_param:
                         tmp["para"].append(parM(current_param))
                 else:
-                    raise SyntaxError("ligma")
+                    #raise SyntaxError("ligma")
+                    pass
 
 
 
@@ -285,6 +322,7 @@ def parse(line: list[list[str]]):
 fort = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '!=', 'INTEGER>4'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1'], '}']
 fart = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '==', 'INTEGER>1'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>e', '=', 'IDENTIFIER>e', '+', 'INTEGER>1'], '}']
 ptrt = [['Let', 'TYPE>n8', 'IDENTIFIER>num', '=', 'INTEGER>2'], ['Let', 'TYPE>n8~', 'IDENTIFIER>ptr', '=', 'REFRENCE>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>refnum', '=', 'DEREFRENCE>ptr', '+', 'INTEGER>1']]
+arrt = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>nam', '=', 'INTEGER>15'], ['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>nbm'], ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '='], '{', ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4'], '}', ['IDENTIFIER>num', '=', 'INTEGER>10']]
 
-out,lines=parse(ptrt)
+out,lines=parse(arrt)
 print(out)

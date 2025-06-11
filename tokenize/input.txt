@@ -1,7 +1,5 @@
-
-let n8[] arr = {1,2,3};
-let n8[10] rra;
-
-let n32 stuff;
-
-let n8  var = arr[1];
+let n32 num;
+let n32 nam = 15;
+let n8[10] nbm;
+let n8[]   ncm = {1,2,3,4}; 
+num=10;

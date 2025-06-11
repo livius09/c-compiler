@@ -1,7 +1,8 @@
-['Let', 'TYPE>n8[]', 'IDENTIFIER>arr', '=']
+['Let', 'TYPE>n32', 'IDENTIFIER>num']
+['Let', 'TYPE>n32', 'IDENTIFIER>nam', '=', 'INTEGER>15']
+['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>nbm']
+['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '=']
 {
-['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3']
+['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4']
 }
-['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>rra']
-['Let', 'TYPE>n32', 'IDENTIFIER>stuff']
-['Let', 'TYPE>n8', 'IDENTIFIER>var', '=', 'IDENTIFIER>arr', 'INTEGER>1']
+['IDENTIFIER>num', '=', 'INTEGER>10']
