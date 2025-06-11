@@ -24,7 +24,8 @@ def tokenize(line:str):
             continue
 
         if line[i] == ";":
-            out.append(tokenln)
+            if tokenln != []:
+                out.append(tokenln)
             tokenln=[]
             i+=1
             continue
@@ -131,7 +132,9 @@ def tokenize(line:str):
                     while(line[i].isdigit() and i < len(line)):
                         si+=line[i]
                         i+=1
-                    tokenln.append(f"SIZE>{si}")
+                    if si != "":
+                        tokenln.append(f"SIZE>{si}")
+                    continue
 
                 tokenln.append(f"TYPE>{s}")
                 continue

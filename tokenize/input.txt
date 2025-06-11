@@ -1,3 +1,6 @@
-for(let n8 i = 0;i==1;i++){
-    e++;
-}
+let n8[] arr = {1,2,3};
+let n8[10] rra;
+
+let n32 stuff;
+
+let n8  var = arr[1];
