@@ -1,28 +1,7 @@
-['Let', 'TYPE>n64', 'IDENTIFIER>x', '=', 'INTEGER>1']
-['Let', 'TYPE>n64', 'IDENTIFIER>x2', '=', 'INTEGER>6', '+', 'IDENTIFIER>x']
-['if', 'INTEGER>1', '==', 'INTEGER>2']
+['Let', 'TYPE>n8[]', 'IDENTIFIER>arr', '=']
 {
-['IDENTIFIER>x', '=', 'INTEGER>1']
+['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3']
 }
-['Else']
-{
-['IDENTIFIER>x', '=', 'INTEGER>2']
-['IDENTIFIER>x', '=', 'IDENTIFIER>x2']
-}
-['if', '(', 'IDENTIFIER>x', '==', 'INTEGER>1']
-{
-['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1']
-}
-['for']
-['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0']
-['IDENTIFIER>i', '!=', 'INTEGER>4']
-['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1']
-{
-['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1']
-}
-['Func', 'TYPE>n64', 'FUNCT>plus', '(', 'TYPE>n64', 'IDENTIFIER>a']
-{
-['Return', 'IDENTIFIER>a']
-}
-['IDENTIFIER>x', '=', 'FUNCT>plus', '(', 'INTEGER>1', ')', '+', 'INTEGER>4']
-['FUNCT>plus', '(', 'INTEGER>1', ')']
+['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>rra']
+['Let', 'TYPE>n32', 'IDENTIFIER>stuff']
+['Let', 'TYPE>n8', 'IDENTIFIER>var', '=', 'IDENTIFIER>arr', 'INTEGER>1']

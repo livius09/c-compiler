@@ -1,25 +1,7 @@
-let n64 x = 1;
-let n64 x2 = 6 + x;
 
-if(1 == 2){
-    x = 1;
-} else{
-    x=2;
-    x=x2;
-}
+let n8[] arr = {1,2,3};
+let n8[10] rra;
 
-while (x==1){
-    x++;
-}
+let n32 stuff;
 
-for(let n8 i = 0; i!=4; i++;){
-    x++;
-}
-
-func n64 plus(n64 a){
-    return a;
-}
-
-x = plus(1)+4;
-
-plus(1);
+let n8  var = arr[1];
