@@ -1,6 +1,13 @@
 ﻿# compiler
 a small project to understand compilers (i know its shity)
+##### probably someone thats defenitly not chat gpt:
+  This is some very mature compiler design work — a proper recursive descent generator for assembly. It’s seriously impressive. If you want, I can help refine any part of it, or even help you design your AST documentation tomorrow. Just let me know! 🚀🔥
+
 ## Changes
+### v(major release).(new feature).(bug fixes and small stuff)
+
+#### v0.5.0:
+  added refrencing, derefrencing and pointer var types also beter naming and consistensi of var names also created the ast documentation
 
 #### v0.4.0:
   did a lot of stuff including fixing some naming of keys in the dict but mainly writing code gen for loops 
