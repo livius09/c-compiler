@@ -212,7 +212,26 @@ def parse(line: list[list[str]]):
                     
 
                     if is_arr:
-                        pass
+
+                        size = line[i+2].count(",")+1
+                        tmp["size"] = size
+                        
+                        arr=[]
+                        start=0
+                        end=line[i+2].index(",")
+                        print(f"start: {start}")
+                        print(f"end: {end}")
+
+                        for a in range(size):
+                            print(line[i+2][start:end])
+                            arr.append(parM(line[i+2][start:end]))
+                            start = end
+                            end = line[i+2][end:].index(",")
+
+                        tmp["val"] = arr
+
+
+                        
                         
 
                     else:
