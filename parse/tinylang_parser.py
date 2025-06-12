@@ -163,7 +163,7 @@ def parM(tokens: list):
 
 
 var_types = ["n8","n16","n32","n64","un8","un16","un32","un64",     
-         "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
+             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
 
 def parse(line: list[list[str]]):
@@ -216,23 +216,32 @@ def parse(line: list[list[str]]):
                         size = line[i+2].count(",")+1
                         tmp["size"] = size
                         
-                        arr=[]
-                        start=0
-                        end=line[i+2].index(",")
-                        print(f"start: {start}")
-                        print(f"end: {end}")
+                        arr = []
 
-                        for a in range(size):
-                            print(line[i+2][start:end])
-                            arr.append(parM(line[i+2][start:end]))
-                            start = end
-                            end = line[i+2][end:].index(",")
+
+                        chunks = []
+                        current = []
+
+                        for token in line[i+2]:
+                            if token == ",":
+                                chunks.append(current)
+                                current = []
+                            else:
+                                current.append(token)
+
+                        # Append the last chunk
+                        if current:
+                            chunks.append(current)
+
+                        # Now call parM() on each chunk
+                        for chunk in chunks:
+                            arr.append(parM(chunk))
 
                         tmp["val"] = arr
-
-
+                        i+=3
                         
-                        
+
+  
 
                     else:
                         var_type = line[i][1].split(">")[1]

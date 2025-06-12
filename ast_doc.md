@@ -13,8 +13,8 @@ these are primary kinds these can not acour in vals or binexp
 declares a variable and moves the val into it
 puts the name : type in the vars dict
 
-    {"kind":"letinit", "name": "*" "var_type":"*types", "val":"*"}
-    {"kind":"letinit", "name": "*" "var_type":"*types", "val":[], "size": *n}
+    {"kind":"letinit", "name": "*", "var_type":"*types", "val":"*"}
+    {"kind":"letinit", "name": "*", "var_type":"*types", "val":[*literal]*, "size": *n}
 
 #### letdec:
 only creates space for the variable 

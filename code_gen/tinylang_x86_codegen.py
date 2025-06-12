@@ -117,7 +117,12 @@ vars={}         #x:n8    contains the var name as key and type as value
 functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 data=[]         #data section of asm
+var_types=["n8","n16","n32","n64","un8","un16","un32","un64",     
+             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
+
+def is_arr_type(test:str):
+    return test.endswith("[]") and (test[:-2] in var_types )
 
 def label_generator():
     num = 0
@@ -147,7 +152,7 @@ def gen(a:list[dict]):
     for node in a:
         match node['kind']:
             
-            case "letdec":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
+            case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
                 var_name =node['name']
                 vartype = node['var_type']
                 if var_name in vars.keys():
@@ -155,7 +160,10 @@ def gen(a:list[dict]):
                 else:
                     vars[var_name] = vartype
 
-                dotype = node['val']['kind']
+                if  not is_arr_type(vartype):
+                    dotype = node['val']['kind']
+                else:
+                    dotype = ""
 
                 if dotype == "literal":
                     data.append(f"{var_name} dq {node['val']['val']}")
@@ -185,6 +193,29 @@ def gen(a:list[dict]):
                     text.append("mov rax, [rax]")              # rax = value at that address
                     text.append(f"mov [{var_name}], rax")
 
+                elif is_arr_type(vartype):
+                    vars[var_name] = vartype
+                    if is_arr_type(vartype):
+                        data.append(var_name+":")
+                        print(node)
+                        for nana in node['val']:
+                            if nana["kind"] == "literal":
+                                data.append(f"\t.long \t {nana['val']}")
+
+            case "letdec":
+                var_name =node['name']
+                vartype = node['var_type']
+                if (var_name in vars.keys()):
+                    raise SyntaxError(f"variable: {var_name} has already been declared")
+                else:
+                    vars[var_name] = vartype
+                    if is_arr_type(vartype):
+                        pass
+
+                    else:
+                        
+                        vars[var_name] = vartype
+                        data.append(f"{var_name} dq 0")
 
             case "asing":    #genreate code for the normal "x = y+1" statements
                 var_name = node['name']
@@ -290,7 +321,7 @@ def gen(a:list[dict]):
                 text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
             
             case _:
-                raise SyntaxError("ligma")
+                pass #raise SyntaxError("ligma")
 
     return text
 
@@ -300,10 +331,11 @@ def gen(a:list[dict]):
              
 init = {'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'y'}, 'right': {'kind': 'literal', 'val': 1}}}    
 nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 2}}, 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'literal', 'val': 2}}]}]      
-nfor = [{'kind': 'for', 'init': {'kind': 'letdec', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
-nptr = [{'kind': 'letdec', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letdec', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letdec', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
+nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
+nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
+narr = [{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'var_type': 'n32', 'name': 'nam', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 15}}, {'var_type': 'n8[]', 'name': 'nbm', 'kind': 'letdec', 'size': 10}, {'var_type': 'n8[]', 'name': 'ncm', 'kind': 'letinit', 'size': 4, 'val': [{'kind': 'literal', 'val': 1}, {'kind': 'literal', 'val': 2}, {'kind': 'literal', 'val': 3}, {'kind': 'literal', 'val': 4}]}, {'kind': 'asing', 'name': 'num', 'val': {'kind': 'literal', 'val': 10}}]
 
-out = gen(nptr)
+out = gen(narr)
 print(vars)
 print(data)
 print(out)

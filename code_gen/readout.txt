@@ -1,14 +1,10 @@
 data:
-	num dq 2
-	ptr dq 0
-	refnum dq 0
+	num dq 0
+	nam dq 15
+	ncm:
+		.long 	 1
+		.long 	 2
+		.long 	 3
+		.long 	 4
 text:
-	lea rax, [num]
-	mov [ptr], rax
-	mov rax, [ptr]
-	mov rax, [rax]
-	push rax
-	mov rax, 1
-	pop rbx
-	add rax, rbx
-	mov [refnum], rax
+	mov [num], 10
