@@ -31,6 +31,16 @@ def parM(tokens: list):
             return {"kind": "refrence", "name": token.split(">")[1]}
         elif token.startswith("DEREFRENCE>"):
             return {"kind": "derefrence", "name": token.split(">")[1]}
+        elif token.startswith("ARR>"):
+            content=token.split(">")[2]
+
+            if content.isdecimal():
+                stuff={"kind": "literal", "val":int(content)}
+            elif content.isalnum():
+                stuff={"kind": "Identifier", "name": content}
+
+            return {"kind": "arrac", "name": token.split(">")[1],"pos":stuff}
+        
         else:
             raise ValueError(f"Unexpected token: {token}")
 
@@ -351,6 +361,7 @@ fort = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIF
 fart = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '==', 'INTEGER>1'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>e', '=', 'IDENTIFIER>e', '+', 'INTEGER>1'], '}']
 ptrt = [['Let', 'TYPE>n8', 'IDENTIFIER>num', '=', 'INTEGER>2'], ['Let', 'TYPE>n8~', 'IDENTIFIER>ptr', '=', 'REFRENCE>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>refnum', '=', 'DEREFRENCE>ptr', '+', 'INTEGER>1']]
 arrt = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>nam', '=', 'INTEGER>15'], ['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>nbm'], ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '='], '{', ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4'], '}', ['IDENTIFIER>num', '=', 'INTEGER>10']]
+arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '='], '{', ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4'], '}', ['IDENTIFIER>num', '=', 'ARR>ncm>1']]
 
-out,lines=parse(arrt)
+out,lines=parse(arct)
 print(out)

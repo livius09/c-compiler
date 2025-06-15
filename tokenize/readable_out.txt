@@ -1,8 +1,6 @@
 ['Let', 'TYPE>n32', 'IDENTIFIER>num']
-['Let', 'TYPE>n32', 'IDENTIFIER>nam', '=', 'INTEGER>15']
-['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>nbm']
 ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '=']
 {
 ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4']
 }
-['IDENTIFIER>num', '=', 'INTEGER>10']
+['IDENTIFIER>num', '=', 'ARR>ncm>ligma']

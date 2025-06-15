@@ -155,3 +155,13 @@ print(is_arr_type("n8[]"))
 print(is_arr_type("n8["))
 print(is_arr_type("n8]"))
 print(is_arr_type("n[]"))
+
+#big holly bomboclat
+tokens = ['ARR>ncm', '[', 'INTEGER>1', '+', 'INTEGER>1', ']']
+start = tokens.index('[')
+end = tokens.index(']')
+content = tokens[start + 1:end]
+print(content)  # ['INTEGER>1', '+', 'INTEGER>1']
+
+"".isalnum()
+

@@ -107,11 +107,7 @@ def tokenize(line:str):
                 tokenln.append("if")
                 i+=1
                 continue
-                
-            
-
-                
-                
+                   
 
             if(s in comands):
                 tokenln.append(s.capitalize())
@@ -127,12 +123,25 @@ def tokenize(line:str):
                         i+=1
                     if si != "":
                         tokenln.append(f"SIZE>{si}")
+                    i+=1
                         
                 elif line[i] =="~":
                     tokenln.append(f"TYPE>{s}~")
                 else:
                     tokenln.append(f"TYPE>{s}")
                 continue
+            
+            if line[i] =="[":
+                i+=1
+                pos=""
+                while(line[i].isalnum() and i < len(line)):
+                    pos+=line[i]
+                    i+=1
+
+                tokenln.append(f"ARR>{s}>{pos}")
+
+                continue
+                
 
             if line[i] == "(":
                 i+=1

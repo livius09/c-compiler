@@ -88,6 +88,11 @@ loads the memory adres of a variable
 derefrence the value stored in a ptr
     
     {"kind": "derefrence", "name": "*"}
+
+#### arrac:
+array acces
+acesees an aray at a specified position
+    {'kind': 'arrac', 'name': '*', 'pos': *int}
             
 
 #### binary expresion:
