@@ -4,3 +4,4 @@
 ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4']
 }
 ['IDENTIFIER>num', '=', 'ARR>ncm>ligma']
+['ARR>ncm>2', '=', 'INTEGER>2']

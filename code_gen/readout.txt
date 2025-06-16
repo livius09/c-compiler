@@ -1,11 +1,5 @@
 data:
 	num dq 0
-	ncm:
-		.long 	 1
-		.long 	 2
-		.long 	 3
-		.long 	 4
 text:
-	mov rax, [1]
-	mov rax, ncm[0+rax*1]
-	mov [num], rax
+	mov rax, 2
+	mov ncm[rip+8], rax

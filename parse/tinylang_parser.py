@@ -340,6 +340,25 @@ def parse(line: list[list[str]]):
                         j += 1
                     if current_param:
                         tmp["para"].append(parM(current_param))
+
+                if line[i][0].startswith("ARR>"):
+                    #'ARR>ncm>2', '=', 'INTEGER>2'
+                    tmp["kind"] = "asing"
+                    tmp["name"] = line[i][0].split(">")[1]
+                    
+                    content=line[i][0].split(">")[2]
+
+                    if content.isdecimal():
+                        stuff={"kind": "literal", "val":int(content)}
+                    elif content.isalnum():
+                        stuff={"kind": "Identifier", "name": content}
+                    else:
+                        raise SyntaxError("arr aces only suports literal and identifier")
+
+                    tmp["pos"]=stuff
+
+                    tmp["val"] = parM(line[i][2:])
+
                 else:
                     #raise SyntaxError("ligma")
                     pass
@@ -361,7 +380,6 @@ fort = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIF
 fart = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '==', 'INTEGER>1'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>e', '=', 'IDENTIFIER>e', '+', 'INTEGER>1'], '}']
 ptrt = [['Let', 'TYPE>n8', 'IDENTIFIER>num', '=', 'INTEGER>2'], ['Let', 'TYPE>n8~', 'IDENTIFIER>ptr', '=', 'REFRENCE>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>refnum', '=', 'DEREFRENCE>ptr', '+', 'INTEGER>1']]
 arrt = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>nam', '=', 'INTEGER>15'], ['Let', 'TYPE>n8[]', 'SIZE>10', 'IDENTIFIER>nbm'], ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '='], '{', ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4'], '}', ['IDENTIFIER>num', '=', 'INTEGER>10']]
-arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '='], '{', ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4'], '}', ['IDENTIFIER>num', '=', 'ARR>ncm>1']]
-
+arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'],['ARR>ncm>2', '=', 'INTEGER>2']]
 out,lines=parse(arct)
 print(out)

@@ -6,6 +6,9 @@ a small project to understand compilers (i know its shity)
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v0.6.0:
+  added arrays you now can read and write from/to arrays 
+
 #### v0.5.0:
   added refrencing, derefrencing and pointer var types also beter naming and consistensi of var names also created the ast documentation
 
