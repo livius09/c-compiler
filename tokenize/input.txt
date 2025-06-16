@@ -1,3 +1,4 @@
 let n32 num;
 let n8[]   ncm = {1,2,3,4}; 
 num=ncm[ligma];
+ncm[2]=2;

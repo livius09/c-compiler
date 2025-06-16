@@ -160,6 +160,7 @@ def gen(a:list[dict],scope=True):   #true is global false is local
 
     
     for node in a:
+        print(node)
         match node['kind']:
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
@@ -209,7 +210,10 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                         data.append(var_name+":")
                         for nana in node['val']:
                             if nana["kind"] == "literal":
-                                data.append(f"\t.long \t {nana['val']}")
+                                size = size_lookup(vartype[:-2])
+                                directive = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}[size]
+                                data.append(f"\t{directive} \t{nana['val']}")
+
 
             case "letdec":
                 var_name =node['name']
@@ -231,28 +235,23 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                 dotype = node['val']['kind']
                 if write_name in vars.keys():
                     if dotype == "literal":
-                        text.append(f"mov [{write_name}], {node['val']['val']}")
+                        text.append(f"mov rax, {node['val']['val']}")
 
                     elif dotype == "binexp":
                         text.extend(formulate_math(node['val']))
-                        text.append(f"mov [{write_name}], rax")
 
                     elif dotype == "identifier":
                         text.append(f"mov rax, [{node['val']['name']}]")
-                        text.append(f"mov [{write_name}], rax")
 
                     elif dotype == "Fcall":
                         text.extend(formulate_fcals(node['val']))
-                        text.append(f"mov [{write_name}], rax")
 
                     elif dotype == "refrence":
                         text.append(f"lea rax {node['val']['name']}")
-                        text.append(f"mov [{write_name}], rax")
 
                     elif dotype == "derefrence":
                         text.append(f"mov rdx, [{node['val']['name']}]")
                         text.append("mov rax, [rdx]")
-                        text.append(f"mov [{write_name}], rax")
                     elif dotype=="arrac":
                         
                         #{'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 1}}}
@@ -263,7 +262,6 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                             pos = node["val"]["pos"]["val"]
                             pos*=size_lookup(vars[read_name])
                             text.append(f"mov rax, {read_name}[rip+{pos}]")
-                            text.append(f"mov [{write_name}], rax")
 
                         elif  node["val"]["pos"]["kind"] == "identifier":
                             #mov eax, lala[0+rax*4]
@@ -271,10 +269,28 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                             size = size_lookup(vars[node["val"]["name"]])
                             text.append(f"mov rax, [{node['val']['pos']['name']}]")
                             text.append(f"mov rax, {read_name}[0+rax*{size}]")
-                            text.append(f"mov [{write_name}], rax")
                             
                         else:
                             raise("nicht skibidy")
+                    
+                    if not is_arr_type(vars[write_name]):
+                        text.append(f"mov [{write_name}], rax")
+                    else:
+                        if node["pos"]["kind"] == "literal":
+                        
+                            
+                            pos = node["pos"]["val"]
+                            pos*=size_lookup(vars[write_name])
+                            text.append(f"mov {write_name}[rip+{pos}], rax")
+
+                        elif  node["pos"]["kind"] == "identifier":
+                            #mov eax, lala[0+rax*4]
+                            read_name = node["val"]['name']
+                            size = size_lookup(vars[node["val"]["name"]])
+                            text.append(f"mov rdx, [{node['val']['pos']['name']}]")
+                            text.append(f"mov {write_name}[0+rdx*{size}], rax")
+
+
 
 
                 else:
@@ -364,8 +380,7 @@ init = {'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left
 nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 2}}, 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'literal', 'val': 2}}]}]      
 nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
-narr = [{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'var_type': 'n8[]', 'name': 'ncm', 'kind': 'letinit', 'size': 4, 'val': [{'kind': 'literal', 'val': 1}, {'kind': 'literal', 'val': 2}, {'kind': 'literal', 'val': 3}, {'kind': 'literal', 'val': 4}]}, {'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'identifier', 'name': 1}}}]
-
+narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
 out = gen(narr)
 print(vars)
 print(data)
