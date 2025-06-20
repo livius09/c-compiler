@@ -117,11 +117,10 @@ vars={}         #x:n8    contains the var name as key and type as value
 functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 data=[]         #data section of asm
-var_types=["n8","n16","n32","n64","un8","un16","un32","un64",     
-             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
+var_types=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
 def size_lookup(lok_type:str):
-    types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,     "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
+    types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
     if (lok_type.endswith("[]")):
         return types[lok_type[:-2]]
     else:
@@ -130,6 +129,14 @@ def size_lookup(lok_type:str):
 
 def is_arr_type(test:str):
     return test.endswith("[]") and (test[:-2] in var_types )
+
+def is_ptr_type(test:str):
+    return test.endswith("~") and (test in var_types )
+
+def is_n_type(test:str):
+    return  test in var_types[:8]
+
+
 
 def label_generator():
     num = 0
@@ -273,11 +280,9 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                         else:
                             raise("nicht skibidy")
                     
-                    if not is_arr_type(vars[write_name]):
-                        text.append(f"mov [{write_name}], rax")
-                    else:
+                    
+                    if is_arr_type(vars[write_name]):
                         if node["pos"]["kind"] == "literal":
-                        
                             
                             pos = node["pos"]["val"]
                             pos*=size_lookup(vars[write_name])
@@ -289,6 +294,14 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                             size = size_lookup(vars[node["val"]["name"]])
                             text.append(f"mov rdx, [{node['val']['pos']['name']}]")
                             text.append(f"mov {write_name}[0+rdx*{size}], rax")
+                    
+                    elif is_ptr_type(vars[write_name]):
+                        text.append(f"mov rdx, [{write_name}]")
+                        text.append(f"mov [rdx], rax ")
+                        
+
+                    elif is_n_type(vars[write_name]):
+                        text.append(f"mov [{write_name}], rax")
 
 
 
@@ -394,7 +407,6 @@ with open("./code_gen/readout.txt","w") as file:
     for a in out:
         file.write("\t"+a+"\n")
     file.close
-    
 
 
 
