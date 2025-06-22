@@ -1,7 +1,4 @@
 ['Let', 'TYPE>n32', 'IDENTIFIER>num']
-['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '=']
-{
-['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4']
-}
-['IDENTIFIER>num', '=', 'ARR>ncm>ligma']
-['ARR>ncm>2', '=', 'INTEGER>2']
+['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'INTEGER>1']
+['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'INTEGER>3']
+['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'INTEGER>2']

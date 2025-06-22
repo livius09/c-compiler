@@ -47,7 +47,7 @@ def print_ofst():
             color_index += 1
 
         color = color_map[prefix]
-        print(str(index)+"\t" + color + entry + RESET)
+        print("[rbp"+str(index)+"]" + "\t" + color + entry + RESET)
 
 add_ofset_table({'var_type':"n16[]", 'var_name':"gaga", "len":3 })
 add_ofset_table({'var_type':"n8", 'var_name':"nu"})

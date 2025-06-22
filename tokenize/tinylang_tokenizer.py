@@ -1,7 +1,7 @@
 #better
 #tokenizer
 out=[]
-operations=["+","-","*","/","=","<",">","==","!=","!"]
+operations=["+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>", "&", "|", "^"]
 comands = ["let", "return","for","while","break","if","else","func"]
 
 types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void"     
@@ -167,8 +167,8 @@ def tokenize(line:str):
             continue
 
         if (line[i] in operations):
-            if line[i+1] == "=":
-                tokenln.append(line[i]+"=")
+            if  line[i+1] == line[i] and line[i+1] in operations:   #for the ==, <<, !=, <= and so on 
+                tokenln.append(str(line[i]) + str(line[i+1]))
                 i+=1
             else:    
                 tokenln.append(line[i])
