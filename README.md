@@ -6,6 +6,21 @@ a small project to understand compilers (i know its shity)
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v0.7.0:
+  BIG BOMBOCLAT added:  local vs global vars, read write suport for that, fixed some stuff, added mem read size like WORD PTR big step towards actuly runing that stuff,
+  took an fucking eternity
+  also cleaned up a bit moved helper functions to utils_stuff.py 
+  created user_utils.py for recurses for debuging and seeing what going on for now only a memory table printer (more planed or sth)
+
+  main:
+    mov computer, code
+    mov "human", food
+    mov computer, code
+    mov ""human", food
+    mov sleep, 2 am
+  jmp main
+  
+
 #### v0.6.0:
   added arrays you now can read and write from/to arrays 
 

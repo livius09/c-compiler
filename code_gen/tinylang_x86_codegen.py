@@ -1,8 +1,27 @@
-def formulate_math(node:dict, context="asing"): #asing, cond
+from colorama import *
+from utils_stuff import *
+
+
+def var_mem_asm(var_n:str,imp_locals:dict):
+        if var_n in imp_locals.keys():
+            var_type = imp_locals[var_n]
+            if is_n_type(var_type):
+                return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]" 
+            
+        elif var_n in global_vars.keys():
+            var_type = global_vars[var_n]
+            if is_n_type(var_type):
+                return f"{get_mov_size(var_type)} [{var_n}]" 
+        else:
+            raise SyntaxError(f"var {var_n} has never been declared")
+        
+
+
+def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
     nodetype = node['kind']
     
     if nodetype == "Identifier":
-        return [f"mov rax, [{node['name']}]"]
+        return [f"mov rax, {node['name']}"]
     
     if nodetype == "literal":
         return [f"mov rax, {node['val']}"]
@@ -21,9 +40,9 @@ def formulate_math(node:dict, context="asing"): #asing, cond
         code = []
         cmpops=["==","!=","<",">","<=",">="]
 
-        code += formulate_math(node['left'],context)
+        code += formulate_math(node['left'], local_var, context)
         code.append("push rax")
-        code += formulate_math(node['right'],context)
+        code += formulate_math(node['right'], local_var, context)
         code.append("pop rbx")
 
         op = node['op']
@@ -61,7 +80,7 @@ def formulate_math(node:dict, context="asing"): #asing, cond
         
         return code
 
-def formulate_fcals(node:dict):    #genertate code for function calls and checking the parameter types
+def formulate_fcals(node:dict,local_vars:dict):    #genertate code for function calls and checking the parameter types
     code=[]
     fname = node['name']
     if fname in functions.keys():
@@ -73,7 +92,7 @@ def formulate_fcals(node:dict):    #genertate code for function calls and checki
             curtype = params[i]['kind']
 
             if curtype == "binexp":
-                code.extend(formulate_math)
+                code.extend(formulate_math(params[i]["val"],local_vars))
                 code.append(f"mov {regs[i]}, rax")
             elif curtype == "Identifier":
                 
@@ -97,7 +116,6 @@ def formulate_fcals(node:dict):    #genertate code for function calls and checki
 
 
 
-
 #.text	Program code (instructions)
 #.rodata	Read-only data like string literals
 #.data	Initialized global and static variables
@@ -113,56 +131,39 @@ def formulate_fcals(node:dict):    #genertate code for function calls and checki
 #edx 
 #esi 
 #edi
-vars={}         #x:n8    contains the var name as key and type as value
+
+global_vars={}         #x:n8    contains the var name as key and type as value
 functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 data=[]         #data section of asm
-var_types=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
-
-def size_lookup(lok_type:str):
-    types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
-    if (lok_type.endswith("[]")):
-        return types[lok_type[:-2]]
-    else:
-        return types[lok_type]
-
-
-def is_arr_type(test:str):
-    return test.endswith("[]") and (test[:-2] in var_types )
-
-def is_ptr_type(test:str):
-    return test.endswith("~") and (test in var_types )
-
-def is_n_type(test:str):
-    return  test in var_types[:8]
 
 
 
-def label_generator():
-    num = 0
-    while True:
-        yield num
-        num+=1 
-
-label_gen = label_generator()
-
-
-iflockup={"==": "jne",
-          "!=": "je" ,
-          "<" : "jle",
-          ">" : "jg" ,
-          }
-
-looplockup = {"==": "je",
-              "!=": "jne",
-              "<":  "jg",
-              ">":  "jle"
-              }
-
-
-def gen(a:list[dict],scope=True):   #true is global false is local
+def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text=[]         #text section so the actual executed asm
+    ofset=0         #ofset for the local vars
+
     
+
+    
+    
+    def get_var(var_n:str):
+        if var_n in local_vars.keys():
+            return local_vars[var_n]
+        elif var_n in global_vars.keys():
+            return global_vars[var_n]
+        else:
+            raise SyntaxError(f"var {var_n} doese not exist")
+        
+    def var_decl(var_n:str):
+        if var_n in local_vars.keys():
+            return True
+        elif var_n in global_vars.keys():
+            return True
+        else:
+            raise SyntaxError(f"var {var_n} doese not exist")
+        
+
 
 
     
@@ -171,45 +172,68 @@ def gen(a:list[dict],scope=True):   #true is global false is local
         match node['kind']:
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
-                var_name =node['name']
-                vartype = node['var_type']
-                if var_name in vars.keys():
+                var_name = node['name']
+                vartype  = node['var_type']
+
+                if var_decl(var_name):
                     raise SyntaxError(f"variable: {var_name} has already been declared")
+    
+                tmp={}
+                tmp["type"]=vartype
+
+                size = None
+                
+
+                if is_arr_type(vartype):
+                    tmp["type"] = vartype
+                    arrlen = node['len']
+                    arrsize = arrlen * size_lookup(vartype)
+                    
+                    tmp['size'] = arrsize
+                    tmp['len'] = arrlen
+
+                    data.append(f"{var_name}:")
+                    data.append(f"\t.zero\t{arrsize}")
+
+
+                if scope:
+                    global_vars[var_name] = tmp
                 else:
-                    vars[var_name] = vartype
+                    ofset+=size
+                    tmp['ofs'] = ofset
+                    local_vars[var_name] = tmp
 
                 if  not is_arr_type(vartype):
-                    dotype = node['val']['kind']
+                    val_type = node['val']['kind']
                 else:
-                    dotype = ""
+                    val_type = ""
 
-                if dotype == "literal":
+                if val_type == "literal":
                     data.append(f"{var_name} dq {node['val']['val']}")
 
-                elif dotype == "identifier":
+                elif val_type == "identifier":
                     data.append(f"{var_name} dq 0")
 
-                    text.append(f"mov rax , [{var_name}]")
-                    text.append(f"mov [{var_name}] , rax")
+                    text.append(f"mov rax , {var_mem_asm(node['val']['name'])}")
+                    text.append(f"mov {var_mem_asm(var_name)} , rax")
 
-                elif dotype == "binexp":
+                elif val_type == "binexp":
                     data.append(f"{var_name} dq 0")
                     
-                    text.extend(formulate_math(node['val']))
-                    text.append(f"mov [{var_name}], rax")
+                    text.extend(formulate_math(node['val'],local_vars))
+                    text.append(f"mov {var_mem_asm(var_name)}, rax")
 
-                elif dotype == "refrence":
+                elif val_type == "refrence":
                     data.append(f"{var_name} dq 0")
 
-                    text.append(f"lea rax, [{node['val']['name']}]")
+                    text.append(f"lea rax, {var_mem_asm(node['val']['name'])}")
                     text.append(f"mov [{var_name}], rax")
 
-                elif dotype == "derefrence":
+                elif val_type == "derefrence":
                     data.append(f"{var_name} dq 0")
-                    print("ligma sigma")
-                    text.append(f"mov rax, [{node['name']}]")  # rax = address of pointee
+                    text.append(f"mov rax, {var_mem_asm(node['name'])}")  # rax = address of pointee
                     text.append("mov rax, [rax]")              # rax = value at that address
-                    text.append(f"mov [{var_name}], rax")
+                    text.append(f"mov {var_mem_asm(node['name'])}, rax")
 
                 elif is_arr_type(vartype):
                     vars[var_name] = vartype
@@ -225,41 +249,66 @@ def gen(a:list[dict],scope=True):   #true is global false is local
             case "letdec":
                 var_name =node['name']
                 vartype = node['var_type']
-                if (var_name in vars.keys()):
+
+                if (var_decl(var_name)):
                     raise SyntaxError(f"variable: {var_name} has already been declared")
                 else:
-                    vars[var_name] = vartype
+
+                    
+                    tmp={}
+                    size = None
+                    tmp['type'] = vartype
+
                     if is_arr_type(vartype):
-                        pass
+                        tmp["type"] = vartype
+                        arrlen = node['len']
+                        arrsize = arrlen * size_lookup(vartype)
+                        
+                        tmp['size'] = arrsize
+                        tmp['len'] = arrlen
+
+                        data.append(f"{var_name}:")
+                        data.append(f"\t.zero\t{arrsize}")
+
+
 
                     else:
+                        size = size_lookup(vartype)
+                
                         
-                        vars[var_name] = vartype
-                        data.append(f"{var_name} dq 0")
+
+                    if scope:
+                        global_vars[var_name] = tmp
+                    else:
+                        ofset+=size
+                        tmp['ofs'] = ofset
+                        local_vars[var_name] = tmp
 
             case "asing":    #genreate code for the normal "x = y+1" statements
                 write_name = node['name']
-                dotype = node['val']['kind']
-                if write_name in vars.keys():
-                    if dotype == "literal":
-                        text.append(f"mov rax, {node['val']['val']}")
+                val_type = node['val']['kind']
 
-                    elif dotype == "binexp":
+                if write_name in vars.keys():
+                    if val_type == "literal":
+                        text.append(f"mov rax, {var_mem_asm(node['val']['val'])}")
+
+                    elif val_type == "binexp":
                         text.extend(formulate_math(node['val']))
 
-                    elif dotype == "identifier":
-                        text.append(f"mov rax, [{node['val']['name']}]")
+                    elif val_type == "identifier":
+                        text.append(f"mov rax, {var_mem_asm(node['val']['name'])}")
 
-                    elif dotype == "Fcall":
-                        text.extend(formulate_fcals(node['val']))
+                    elif val_type == "Fcall":
+                        text.extend(formulate_fcals(node['val'], local_vars))
 
-                    elif dotype == "refrence":
-                        text.append(f"lea rax {node['val']['name']}")
+                    elif val_type == "refrence":
+                        text.append(f"lea rax, {var_mem_asm(node['val']['name'])}")
 
-                    elif dotype == "derefrence":
-                        text.append(f"mov rdx, [{node['val']['name']}]")
-                        text.append("mov rax, [rdx]")
-                    elif dotype=="arrac":
+                    elif val_type == "derefrence":
+                        text.append(f"mov rdx, {var_mem_asm(node['val']['name'])}")
+                        text.append(f"mov rax, {get_mov_size(get_var(node['val']['name'])['type'][:-2])} [rdx]")
+
+                    elif val_type=="arrac":
                         
                         #{'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 1}}}
 
@@ -274,34 +323,58 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                             #mov eax, lala[0+rax*4]
                             read_name = node["val"]['name']
                             size = size_lookup(vars[node["val"]["name"]])
-                            text.append(f"mov rax, [{node['val']['pos']['name']}]")
+                            text.append(f"mov rax, {var_mem_asm(node['val']['pos']['name'])}")
                             text.append(f"mov rax, {read_name}[0+rax*{size}]")
                             
                         else:
                             raise("nicht skibidy")
                     
                     
-                    if is_arr_type(vars[write_name]):
-                        if node["pos"]["kind"] == "literal":
-                            
-                            pos = node["pos"]["val"]
-                            pos*=size_lookup(vars[write_name])
-                            text.append(f"mov {write_name}[rip+{pos}], rax")
+                    if is_arr_type(get_var(write_name)['type']):
 
-                        elif  node["pos"]["kind"] == "identifier":
-                            #mov eax, lala[0+rax*4]
-                            read_name = node["val"]['name']
-                            size = size_lookup(vars[node["val"]["name"]])
-                            text.append(f"mov rdx, [{node['val']['pos']['name']}]")
-                            text.append(f"mov {write_name}[0+rdx*{size}], rax")
+                        if write_name in global_vars.keys():
+                            if node["pos"]["kind"] == "literal":
+                                
+                                pos = node["pos"]["val"]
+                                pos*=size_lookup(global_vars[write_name]['type'])
+                                
+                                text.append(f"mov  [rip+{pos}], rax")
+
+                            elif  node["pos"]["kind"] == "identifier":
+                                #mov eax, lala[0+rax*4]
+                                read_name = node["val"]['name']
+                                size = size_lookup(global_vars[node["val"]["name"]])
+                                text.append(f"mov rdx, {var_mem_asm(node['val']['pos']['name'])}")
+                                text.append(f"mov {write_name}[0+rdx*{size}], rax")
+
+                        elif write_name in local_vars:
+                            if node["pos"]["kind"] == "literal":
+                                #ofs - i*size
+                                
+                                pos = node["pos"]["val"]
+                                pos*=size_lookup(local_vars[write_name])
+                                pos-= (local_vars[write_name]['ofs'])
+                                text.append(f"mov {var_mem_asm()} [rbp-{pos}], rax")
+
+                            elif node["pos"]["kind"] == "identifier":
+                                #[rbp-ofs+rax*size]
+                                ofs = local_vars[write_name]['ofs']
+                                read_name = node["val"]['name']
+                                size = size_lookup(global_vars[node["val"]["name"]])
+                                text.append(f"mov rdx, {var_mem_asm(node['val']['pos']['name'])}")
+                                text.append(f"mov {var_mem_asm(write_name)} [rbp-{ofs}+rdx*{size}], rax")
+
+                        else:
+                            raise SyntaxError(f"variable {write_name} has never been declared")
+
                     
                     elif is_ptr_type(vars[write_name]):
-                        text.append(f"mov rdx, [{write_name}]")
+                        text.append(f"mov rdx, {var_mem_asm(write_name)}")
                         text.append(f"mov [rdx], rax ")
                         
 
                     elif is_n_type(vars[write_name]):
-                        text.append(f"mov [{write_name}], rax")
+                        text.append(f"mov {var_mem_asm(write_name)}, rax")
 
 
 
@@ -310,7 +383,7 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                     raise SyntaxError(f"variable:{write_name} has not been declared")
 
             case "fcall":    
-                formulate_fcals(node)
+                formulate_fcals(node,local_vars)
 
 
                 
@@ -328,7 +401,7 @@ def gen(a:list[dict],scope=True):   #true is global false is local
             
             case "if":
                 
-                text.extend(formulate_math(node["exp"],"cond"))
+                text.extend(formulate_math(node["exp"],local_vars,"cond"))
 
                 lnum = next(label_gen)
                 
@@ -341,7 +414,7 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                 
 
             case "if_else":
-                text.extend(formulate_math(node["exp"],"cond"))
+                text.extend(formulate_math(node["exp"], local_vars, "cond"))
                 endl = next(label_gen)
                 
                 elsel= next(label_gen)
@@ -362,7 +435,7 @@ def gen(a:list[dict],scope=True):   #true is global false is local
                 text.append(f".L{startla}")
                 text.extend(gen(node["body"]))
                 text.append(f".L{endla}")
-                text.extend(formulate_math(node["exp"],"cond"))
+                text.extend(formulate_math(node["exp"], local_vars, "cond"))
                 text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
 
             case "for":
@@ -377,7 +450,7 @@ def gen(a:list[dict],scope=True):   #true is global false is local
 
                 text.extend(gen(node["incexp"]))
                 text.append(f".L{endla}")
-                text.extend(formulate_math(node["exp"],"cond"))
+                text.extend(formulate_math(node["exp"],local_vars, "cond"))
                 text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
             
             case _:
@@ -394,7 +467,7 @@ nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'I
 nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
 narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
-out = gen(narr)
+out = gen(narr,{})
 print(vars)
 print(data)
 print(out)

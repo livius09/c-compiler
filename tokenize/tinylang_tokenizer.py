@@ -122,7 +122,7 @@ def tokenize(line:str):
                         si+=line[i]
                         i+=1
                     if si != "":
-                        tokenln.append(f"SIZE>{si}")
+                        tokenln.append(f"len>{si}")
                     i+=1
                         
                 elif line[i] =="~":

@@ -14,14 +14,14 @@ declares a variable and moves the val into it
 puts the name : type in the vars dict
 
     {"kind":"letinit", "name": "*", "var_type":"*types", "val":"*"}
-    {"kind":"letinit", "name": "*", "var_type":"*types", "val":[*literal]*, "size": *n}
+    {"kind":"letinit", "name": "*", "var_type":"*types", "val":[*literal], "len": *n}
 
 #### letdec:
 only creates space for the variable 
 puts the name : type in the vars dict
 
     {"kind":"letdec", "name": "*" "var_type":"*types"}
-    {"kind":"letdec", "name": "*" "var_type":"*types", "size": *n}
+    {"kind":"letdec", "name": "*" "var_type":"*types", "len": *n}
 
 #### asing:
 updates a variable whit val
@@ -100,7 +100,15 @@ a binary operation betwen left and right specified by the op
 
     {"kind": "binexp", "op": "*ops", "left": *node , "right": *node}
 
+### locals:
+for the locals of the curent scope
+pos indicates the ofset to rbp
+size in bytes of the whole thing
+    {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], ofs:10, len:4, size:8}}
 
+### globals:
+for the globals
+    {x:{type:n32, size:4}, arr:{type:n16[], len:4, size:8}}
 
 ### example:
 [{"kind": "letdec", "var_type": "n8", "name": "num", "val": {"kind": "literal", "val": 2}}, 

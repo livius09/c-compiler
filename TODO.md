@@ -8,6 +8,8 @@ things that still need to be done:
 
 
 ### Codegen:
-
+    - [x] locals
+    - [x] mov sizes
 
 ### Docs:
+    - [ ] update on locals and globals
