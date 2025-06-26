@@ -2,21 +2,6 @@ from colorama import *
 from utils_stuff import *
 
 
-def var_mem_asm(var_n:str,imp_locals:dict):
-        if var_n in imp_locals.keys():
-            var_type = imp_locals[var_n]
-            if is_n_type(var_type):
-                return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]" 
-            
-        elif var_n in global_vars.keys():
-            var_type = global_vars[var_n]
-            if is_n_type(var_type):
-                return f"{get_mov_size(var_type)} [{var_n}]" 
-        else:
-            raise SyntaxError(f"var {var_n} has never been declared")
-        
-
-
 def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
     nodetype = node['kind']
     
@@ -61,6 +46,12 @@ def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
                         "idiv rbx",               # result: quotient in RAX, remainder in RDX
                         "mov rax, rdx"
                         ])
+        elif op == "&":
+            code.append("and rax, rbx")
+        elif op == "|":
+            code.append("or rax, rbx")
+        elif op == "^":
+            code.append("xor rax, rbx")
         elif op in cmpops:
             code.append("cmp rax, rbx")
             if context == "asing":
@@ -139,9 +130,9 @@ data=[]         #data section of asm
 
 
 
-def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text=[]         #text section so the actual executed asm
-    ofset=0         #ofset for the local vars
+    ofset=ofs         #ofset for the local vars
 
     
 
@@ -387,7 +378,7 @@ def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false 
 
 
                 
-            case "function_dec":
+            case "fun_dec":
                 params = node["param"]
                 fname = node['name']
 
@@ -397,7 +388,27 @@ def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false 
                     functions[fname]= params
 
                     text.append(f".{fname}:")
-                    text.extend(gen(node["body"]))
+                    text.append("push rbp")
+                    text.append("mov rbp, rsp")
+
+                    loc_para = {}
+                    loc_ofs = 0
+                    #unpacking locals and construct the new stack frame
+                    for i in range(len(params)):  
+                        cur_type = params[i]['type']
+                        cur_name = params[i]['name']
+                        cur_size = size_lookup(cur_type)
+
+                        loc_ofs+=cur_size
+                        cur_ofs = loc_ofs
+
+
+                        loc_para[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs} 
+
+                        text.append(f"mov {params[i]['type']}, {regs[i]}")
+                    
+                    text.extend(gen(node["body"],loc_para, loc_ofs)) #gen a new funct whit its own locals
+
             
             case "if":
                 
@@ -408,7 +419,9 @@ def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false 
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
                 
-                text.extend(gen(node["body"]))
+                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
                 
                 text.append(f".L{lnum}:")
                 
@@ -420,11 +433,15 @@ def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false 
                 elsel= next(label_gen)
 
                 text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
-                text.extend(gen(node["body"]))
+                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
                 text.append(f"jmp .L{endl}")
 
                 text.append(f".L{elsel}:")
-                text.extend(gen(node["else_body"]))
+                tmp_text,tmp_ofs = gen(node["else_body"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
 
                 text.append(f".L{endl}:")
 
@@ -433,7 +450,9 @@ def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false 
                 startla =next(label_gen)
                 text.append(f"jmp .L{endla}")
                 text.append(f".L{startla}")
-                text.extend(gen(node["body"]))
+                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
                 text.append(f".L{endla}")
                 text.extend(formulate_math(node["exp"], local_vars, "cond"))
                 text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
@@ -442,21 +461,33 @@ def gen(a:list[dict],local_vars:dict[dict],scope=True):   #true is global false 
                 endla = next(label_gen)
                 startla =next(label_gen)
 
-                text.extend(gen([node["init"]]))
+                tmp_text,tmp_ofs = gen(node["init"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
+
                 text.append(f"jmp .L{endla}")
                 text.append(f".L{startla}")
 
-                text.extend(gen(node["body"]))
+                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
 
-                text.extend(gen(node["incexp"]))
+                tmp_text,tmp_ofs = gen(node["incexp"],local_vars,ofset)
+                ofset = tmp_ofs
+                text.extend(tmp_text)
+
                 text.append(f".L{endla}")
                 text.extend(formulate_math(node["exp"],local_vars, "cond"))
                 text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
+
+            case "ret":
+                text.extend(formulate_math(node['val']))
+                text.append("ret")
             
             case _:
-                pass #raise SyntaxError("ligma")
+                raise SyntaxError("AST Defective")
 
-    return text
+    return text, ofset
 
 
 
@@ -467,7 +498,7 @@ nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'I
 nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
 narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
-out = gen(narr,{})
+out,tmo = gen(narr,{},0,True)
 print(vars)
 print(data)
 print(out)

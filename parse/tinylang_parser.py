@@ -51,6 +51,11 @@ def parM(tokens: list):
             '!=' :1,
             '==' :1,
             '!'  :1,
+            '&'  :1,
+            '|'  :1,
+            '<<' :1,
+            '>>' :1,
+            '^'  :1,
             '>'  :1,
             '<'  :1,
             '+'  :2,
@@ -83,8 +88,16 @@ def parM(tokens: list):
                 result = int(a > b)
             elif op == '<=':
                 result = int(a <= b)
-            elif op == '>=':
-                result = int(a >= b)
+            elif op == '&':
+                result = int(a & b)
+            elif op == '|':
+                result = int(a | b)    
+            elif op == '^':
+                result = int(a ^ b) 
+            elif op == '>>':
+                result = int(a >> b) 
+            elif op == '<<':
+                result = int(a << b)                
 
             # Return folded literal if result was computed
             if result is not None:
@@ -109,6 +122,12 @@ def parM(tokens: list):
             return right
 
         if op == '/' and right["kind"] == "literal" and right["val"] == 1:
+            return left
+        
+        if op == '>>' and right["kind"] == "literal" and right["val"] == 0:
+            return left
+        
+        if op == '<<' and right["kind"] == "literal" and right["val"] == 0:
             return left
 
         # Not foldable
@@ -223,8 +242,8 @@ def parse(line: list[list[str]]):
 
                     if is_arr:
 
-                        len = line[i+2].count(",")+1
-                        tmp["len"] = len
+                        lene = line[i+2].count(",")+1
+                        tmp["len"] = lene
                         
                         arr = []
 
@@ -277,7 +296,7 @@ def parse(line: list[list[str]]):
                 tmp["parameter"] = []
                 for a in range(1, len(line[i]) - 2, 2):
                     tmp["parameter"].append({
-                        "kind": line[i][a].split(">")[1],
+                        "type": line[i][a].split(">")[1],
                         "name": line[i][a+1].split(">")[1]
                     })
 
@@ -286,8 +305,9 @@ def parse(line: list[list[str]]):
                 consumed += body_consumed
 
             case "return":
-                tmp["kind"] = "return"
-                tmp["val"] = parM(line[i][2:])
+                tmp["kind"] = "ret"
+                tmp["val"] = parM(line[i][1:])
+
 
             case "if":
                 tmp["kind"] = "if"
@@ -325,9 +345,28 @@ def parse(line: list[list[str]]):
                     tmp["kind"] = "asing"
                     tmp["name"] = line[i][0].split(">")[1]
                     tmp["val"] = parM(line[i][2:])
+
                 elif line[i][0].startswith("FUNCT>"):
                     tmp["kind"] = "fcall"
                     tmp["name"] = line[i][0].split(">")[1]
+                    tmp["para"] = []
+                    j = 1
+                    current_param = []
+                    while j < len(line[i]):
+                        if line[i][j] == ",":
+                            tmp["para"].append(parM(current_param))
+                            current_param = []
+                        else:
+                            current_param.append(line[i][j])
+                        j += 1
+                    if current_param:
+                        tmp["para"].append(parM(current_param))
+
+                elif line[i][0].startswith("TYPE>") and line[i][1].startswith("FUNCT>"):
+                    tmp["kind"] = "fun_dec"
+                    tmp["name"] = line[i][1].split(">")[1]
+                    tmp["ret_type"] = line[i][0].split(">")[1]
+                   
                     tmp["para"] = []
                     j = 1
                     current_param = []
@@ -381,6 +420,7 @@ fart = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIF
 ptrt = [['Let', 'TYPE>n8', 'IDENTIFIER>num', '=', 'INTEGER>2'], ['Let', 'TYPE>n8~', 'IDENTIFIER>ptr', '=', 'REFRENCE>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>refnum', '=', 'DEREFRENCE>ptr', '+', 'INTEGER>1']]
 arrt = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>nam', '=', 'INTEGER>15'], ['Let', 'TYPE>n8[]', 'len>10', 'IDENTIFIER>nbm'], ['Let', 'TYPE>n8[]', 'IDENTIFIER>ncm', '='], '{', ['INTEGER>1', ',', 'INTEGER>2', ',', 'INTEGER>3', ',', 'INTEGER>4'], '}', ['IDENTIFIER>num', '=', 'INTEGER>10']]
 arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'],['ARR>ncm>2', '=', 'INTEGER>2']]
-bint = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'INTEGER>1'], ['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'INTEGER>3'], ['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'INTEGER>2']]
-out,lines=parse(arct)
+bint = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'IDENTIFIER>num']]
+funt = [['TYPE>n32', 'FUNCT>main', '(', 'TYPE>n8', 'IDENTIFIER>na', ',', 'TYPE>n32', 'IDENTIFIER>num'], '{', ['Return', 'IDENTIFIER>na', '+', 'IDENTIFIER>num'], '}']
+out,lines=parse(funt)
 print(out)
