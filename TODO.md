@@ -10,6 +10,8 @@ things that still need to be done:
 ### Codegen:
     - [x] locals
     - [x] mov sizes
+    - [ ] context class
+    . [ ] alingment
 
 ### Docs:
     - [ ] update on locals and globals

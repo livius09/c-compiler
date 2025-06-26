@@ -1,5 +1,5 @@
 from colorama import *
-from utils_stuff import *
+import utils_stuff 
 
 
 def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
@@ -154,6 +154,16 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
         else:
             raise SyntaxError(f"var {var_n} doese not exist")
         
+    def alingment_gen(var_type:str,dlen=1)->int:
+        size = size_lookup(var_type)
+        if ofset % size != 0:
+            ofset += size - (ofset % size)
+
+        ofset += size*(dlen-1)
+
+        return ofset
+
+
 
 
 

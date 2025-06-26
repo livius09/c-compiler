@@ -1,5 +1,5 @@
-from tinylang_x86_codegen import global_vars
 
+global_vars={}
 iflockup={"==": "jne",
           "!=": "je" ,
           "<" : "jle",
@@ -77,11 +77,6 @@ class context():
         else:
             self.offset += size
             self.locals[name] = {"type": vartype, "size": size, "ofs": self.offset}
-
-
-    
-
-
 
 
 

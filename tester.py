@@ -253,3 +253,18 @@ def get_fart(nam:str):
 get_fart("x")["name"]="ligma"
 
 print(abc)
+
+ofset = 5
+
+def alingment_gen(var_type:str,dlen=1)->int:
+    global ofset
+    size = 4
+    if ofset % size != 0:
+        ofset += size - (ofset % size)  #add pading upto alingment
+
+    ofset += size*dlen  #add the actual size of the thing
+    
+
+    return ofset
+
+print(alingment_gen("n32"))
