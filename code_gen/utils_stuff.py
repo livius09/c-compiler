@@ -1,3 +1,5 @@
+from tinylang_x86_codegen import global_vars
+
 iflockup={"==": "jne",
           "!=": "je" ,
           "<" : "jle",
@@ -44,6 +46,40 @@ def label_generator():
         num+=1 
 
 label_gen = label_generator()
+
+def var_mem_asm(var_n:str,imp_locals:dict):
+    if var_n in imp_locals.keys():
+        var_type = imp_locals[var_n]
+        if is_n_type(var_type):
+            return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]" 
+        
+    elif var_n in global_vars.keys():
+        var_type = global_vars[var_n]
+        if is_n_type(var_type):
+            return f"{get_mov_size(var_type)} [{var_n}]" 
+    else:
+        raise SyntaxError(f"var {var_n} has never been declared")
+    
+
+class context():
+    def __init__(self, is_global=False, parent=None):
+        self.locals = {}
+        self.globals = global_vars if is_global else parent.globals if parent else {}
+        self.is_global = is_global
+        self.offset = 0 if is_global else (parent.offset if parent else 0)
+        self.parent = parent
+        self.ret_type=None
+        self.expoint=None
+
+    def declare_var(self, name, vartype, size):
+        if self.is_global:
+            self.globals[name] = {"type": vartype, "size": size}
+        else:
+            self.offset += size
+            self.locals[name] = {"type": vartype, "size": size, "ofs": self.offset}
+
+
+    
 
 
 

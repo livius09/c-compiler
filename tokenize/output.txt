@@ -1,1 +1,1 @@
-[['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'INTEGER>1'], ['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'INTEGER>3'], ['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'INTEGER>2']]
+[['TYPE>n32', 'FUNCT>main', '(', 'TYPE>n8', 'IDENTIFIER>na', ',', 'TYPE>n32', 'IDENTIFIER>num'], '{', ['Return', 'IDENTIFIER>na', '+', 'IDENTIFIER>num'], '}']

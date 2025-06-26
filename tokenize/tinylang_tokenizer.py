@@ -151,7 +151,7 @@ def tokenize(line:str):
 
             if line[i-len(s)-1] == "~":
                 tokenln.append(f"DEREFRENCE>{s}")
-            elif line[i-len(s)-1] == "&":
+            elif line[i-len(s)-1] == "$":
                 tokenln.append(f"REFRENCE>{s}")
             else:
                 tokenln.append(f"IDENTIFIER>{s}")
