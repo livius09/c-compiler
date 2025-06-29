@@ -1,5 +1,5 @@
+from tinylang_x86_codegen import global_vars
 
-global_vars={}
 iflockup={"==": "jne",
           "!=": "je" ,
           "<" : "jle",
@@ -61,22 +61,22 @@ def var_mem_asm(var_n:str,imp_locals:dict):
         raise SyntaxError(f"var {var_n} has never been declared")
     
 
-class context():
+class contextc():
     def __init__(self, is_global=False, parent=None):
-        self.locals = {}
-        self.globals = global_vars if is_global else parent.globals if parent else {}
+        self.locals = parent.locals if parent else None
         self.is_global = is_global
         self.offset = 0 if is_global else (parent.offset if parent else 0)
         self.parent = parent
-        self.ret_type=None
-        self.expoint=None
+        self.ret_type= parent.ret_type if parent else None
+        self.expoint = parent.ret_type if parent else None
 
     def declare_var(self, name, vartype, size):
         if self.is_global:
-            self.globals[name] = {"type": vartype, "size": size}
+            global_vars[name] = {"type": vartype, "size": size}
         else:
             self.offset += size
             self.locals[name] = {"type": vartype, "size": size, "ofs": self.offset}
+
 
 
 
