@@ -1,1 +1,1 @@
-[['TYPE>n32', 'FUNCT>main', '(', 'TYPE>n8', 'IDENTIFIER>na', ',', 'TYPE>n32', 'IDENTIFIER>num'], '{', ['Return', 'IDENTIFIER>na', '+', 'IDENTIFIER>num'], '}']
+[['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2'], ['Func', 'TYPE>void', 'FUNCT>Main', '('], '{', ['Let', 'TYPE>n64', 'IDENTIFIER>local', '=', 'INTEGER>1', '<<', 'INTEGER>1'], ['IDENTIFIER>local', '=', 'IDENTIFIER>global', '+', 'INTEGER>1'], '}']

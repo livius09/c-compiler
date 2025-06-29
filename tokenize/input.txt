@@ -1,4 +1,7 @@
+let n64 global = 1 + 2; 
 
-n32 main(n8 na, n32 num){
-    return na + num;
-}
+func void Main(){
+    let n64 local = 1 << 1; #2#
+
+    local = global + 1;
+} 

@@ -1,4 +1,4 @@
-from tinylang_x86_codegen import global_vars
+
 
 iflockup={"==": "jne",
           "!=": "je" ,
@@ -48,35 +48,69 @@ def label_generator():
 label_gen = label_generator()
 
 def var_mem_asm(var_n:str,imp_locals:dict):
+    from tinylang_x86_codegen import global_vars
     if var_n in imp_locals.keys():
         var_type = imp_locals[var_n]
         if is_n_type(var_type):
             return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]" 
-        
+    
+    
     elif var_n in global_vars.keys():
         var_type = global_vars[var_n]
         if is_n_type(var_type):
             return f"{get_mov_size(var_type)} [{var_n}]" 
     else:
         raise SyntaxError(f"var {var_n} has never been declared")
-    
+
+def alingment_gen(var_type:str, cur_conx, dlen=1)->int:
+    size = size_lookup(var_type)
+    if cur_conx.offset % size != 0:
+        cur_conx.offset += size - (cur_conx.offset % size)
+
+    cur_conx.offset += size*(dlen-1)
+
+    return cur_conx.offset  
 
 class contextc():
-    def __init__(self, is_global=False, parent=None):
-        self.locals = parent.locals if parent else None
+    def __init__(self, is_global=False):
+        self.locals = {}
         self.is_global = is_global
-        self.offset = 0 if is_global else (parent.offset if parent else 0)
-        self.parent = parent
-        self.ret_type= parent.ret_type if parent else None
-        self.expoint = parent.ret_type if parent else None
+        self.offset = 0
+        self.ret_type= "void"
+        self.expoint = None
 
-    def declare_var(self, name, vartype, size):
+    def declare_var(self, name, vartype, var_len=1):
+        from tinylang_x86_codegen import global_vars
+        size = size_lookup(vartype) * var_len
+
         if self.is_global:
             global_vars[name] = {"type": vartype, "size": size}
+            if is_arr_type(vartype):
+                global_vars[name]['len'] = var_len
         else:
-            self.offset += size
+            self.offset += alingment_gen(vartype,self,var_len)
             self.locals[name] = {"type": vartype, "size": size, "ofs": self.offset}
+            if is_arr_type(vartype):
+                self.local[name]['len'] = var_len
 
 
+def var_decl(var_n:str, loc_conx:contextc):      #checks if a var has already been declared
+    from tinylang_x86_codegen import global_vars
+    if var_n in loc_conx.locals.keys():
+        return True
+    elif var_n in global_vars.keys():
+        return True
+    else:
+        return False
 
-
+def get_var_dict(var_n:str,contex:contextc):
+    from tinylang_x86_codegen import global_vars
+    if var_n in contex.locals.keys():
+        return contex.locals[var_n]
+    elif var_n in global_vars.keys():
+        return global_vars[var_n]
+    else:
+        raise SyntaxError(f"var {var_n} doese not exist")
+    
+def get_var_type(var_n:str,contex:contextc):
+    return get_var_dict(var_n,contex)['type']

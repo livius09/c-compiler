@@ -4,7 +4,7 @@ out=[]
 operations=["+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>", "&", "|", "^"]
 comands = ["let", "return","for","while","break","if","else","func"]
 
-types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void"     
+types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void",     
          "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
 with open("tokenize/input.txt","r") as raw:
@@ -19,6 +19,13 @@ def tokenize(line:str):
         if(line[i].isspace()):
             i+=1
             continue
+        
+        if(line[i] == "#"):
+            i+=1
+            while line[i] != "#":
+                i+=1
+            i+=1
+            continue 
 
         if(line[i] == ","):
             i+=1

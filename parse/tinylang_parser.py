@@ -290,17 +290,17 @@ def parse(line: list[list[str]]):
 
 
             case "func":
-                tmp["kind"] = "function_dec"
-                tmp["name"] = line[i][3]
-                tmp["ret_type"]=line[i][2]
-                tmp["parameter"] = []
-                for a in range(1, len(line[i]) - 2, 2):
-                    tmp["parameter"].append({
+                tmp["kind"] = "func_dec"
+                tmp["name"] = line[i][2].split(">")[1]
+                tmp["ret_type"]= line[i][1].split(">")[1]
+                tmp["param"] = []
+                for a in range(1, len(line[i]) - 4, 4):
+                    tmp["param"].append({
                         "type": line[i][a].split(">")[1],
                         "name": line[i][a+1].split(">")[1]
                     })
 
-                body, body_consumed = parse(line[i+1:])
+                body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
                 consumed += body_consumed
 
@@ -380,7 +380,7 @@ def parse(line: list[list[str]]):
                     if current_param:
                         tmp["para"].append(parM(current_param))
 
-                if line[i][0].startswith("ARR>"):
+                elif line[i][0].startswith("ARR>"):
                     #'ARR>ncm>2', '=', 'INTEGER>2'
                     tmp["kind"] = "asing"
                     tmp["name"] = line[i][0].split(">")[1]
@@ -399,12 +399,13 @@ def parse(line: list[list[str]]):
                     tmp["val"] = parM(line[i][2:])
 
                 else:
-                    #raise SyntaxError("ligma")
+                    raise SyntaxError(line[i])
                     pass
 
 
+        if tmp != {}:
+            out.append(tmp)
 
-        out.append(tmp)
         if consumed == 0:
             consumed+=1
         else:
@@ -422,5 +423,7 @@ arrt = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>n
 arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'],['ARR>ncm>2', '=', 'INTEGER>2']]
 bint = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'IDENTIFIER>num']]
 funt = [['TYPE>n32', 'FUNCT>main', '(', 'TYPE>n8', 'IDENTIFIER>na', ',', 'TYPE>n32', 'IDENTIFIER>num'], '{', ['Return', 'IDENTIFIER>na', '+', 'IDENTIFIER>num'], '}']
-out,lines=parse(funt)
+
+test = [['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2'], ['Func', 'TYPE>void', 'FUNCT>Main', '('], '{', ['Let', 'TYPE>n64', 'IDENTIFIER>local', '=', 'INTEGER>1', '<<', 'INTEGER>1'], ['IDENTIFIER>local', '=', 'IDENTIFIER>global', '+', 'INTEGER>1'], '}']
+out,lines = parse(test)
 print(out)

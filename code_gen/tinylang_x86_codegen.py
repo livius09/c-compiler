@@ -1,21 +1,21 @@
 from colorama import *
 import utils_stuff as ut
+import kind_hadel as kh
 
-
-def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
+def formulate_math(node:dict, local_var:dict, mcontext="asing",): #asing, cond
     nodetype = node['kind']
     
-    if nodetype == "Identifier":
-        return [f"mov rax, {node['name']}"]
+    if nodetype == "identifier":
+        return [f"mov rax, {ut.var_mem_asm(node['name'],local_var)}"]
     
     if nodetype == "literal":
         return [f"mov rax, {node['val']}"]
 
     if nodetype == "refrence":
-        return [f"lea rax, {node['name']}"]
+        return [f"lea rax, {ut.var_mem_asm(node['name'],local_var)}"]
     
     if nodetype == "derefrence":
-       return [f"mov rax, [{node['name']}]",  # rax = address of pointee
+       return [f"mov rax, {ut.var_mem_asm(node['name'],local_var)}",  # rax = address of pointee
                 "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
@@ -25,9 +25,9 @@ def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
         code = []
         cmpops=["==","!=","<",">","<=",">="]
 
-        code += formulate_math(node['left'], local_var, context)
+        code += formulate_math(node['left'], local_var, mcontext)
         code.append("push rax")
-        code += formulate_math(node['right'], local_var, context)
+        code += formulate_math(node['right'], local_var, mcontext)
         code.append("pop rbx")
 
         op = node['op']
@@ -54,7 +54,7 @@ def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
             code.append("xor rax, rbx")
         elif op in cmpops:
             code.append("cmp rax, rbx")
-            if context == "asing":
+            if mcontext == "asing":
                 set_instr = {
                         "==": "sete al",
                         "!=": "setne al",
@@ -70,6 +70,8 @@ def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
             raise SyntaxError("uknown operation: "+op)
         
         return code
+    else:
+        raise SyntaxError("invalid math: " + str(nodetype))
 
 def formulate_fcals(node:dict,conx):    #genertate code for function calls and checking the parameter types
     code=[]
@@ -130,318 +132,72 @@ data=[]         #data section of asm
 
 
 
-def gen(a:list[dict],contex):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text=[]         #text section so the actual executed asm
-    ofset=ofs         #ofset for the local vars
 
     
-
-    
-    
-    def get_var(var_n:str):
-        if var_n in contex.local_vars.keys():
-            return contex.local_vars[var_n]
-        elif var_n in global_vars.keys():
-            return global_vars[var_n]
-        else:
-            raise SyntaxError(f"var {var_n} doese not exist")
-        
-    def var_decl(var_n:str):
-        if var_n in contex.local_vars.keys():
-            return True
-        elif var_n in global_vars.keys():
-            return True
-        else:
-            raise SyntaxError(f"var {var_n} doese not exist")
-        
-    def alingment_gen(var_type:str,dlen=1)->int:
-        size = ut.size_lookup(var_type)
-        if ofset % size != 0:
-            ofset += size - (ofset % size)
-
-        ofset += size*(dlen-1)
-
-        return ofset
-
-
-
-
-
     
     for node in a:
         print(node)
         match node['kind']:
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
-                pass
+                text.extend(kh.handle_letinit(node,contex))
 
             case "letdec":
-                var_name =node['name']
-                vartype = node['var_type']
-
-                if (var_decl(var_name)):
-                    raise SyntaxError(f"variable: {var_name} has already been declared")
-                else:
-
-                    
-                    tmp={}
-                    size = None
-                    tmp['type'] = vartype
-
-                    if ut.ut.is_arr_type(vartype):
-                        tmp["type"] = vartype
-                        arrlen = node['len']
-                        arrsize = arrlen * ut.size_lookup(vartype)
-                        
-                        tmp['size'] = arrsize
-                        tmp['len'] = arrlen
-
-                        data.append(f"{var_name}:")
-                        data.append(f"\t.zero\t{arrsize}")
-
-
-
-                    else:
-                        size = ut.size_lookup(vartype)
-                
-                        
-
-                    if contex.isglobal:
-                        global_vars[var_name] = tmp
-                    else:
-                        ofset+=size
-                        tmp['ofs'] = ofset
-                        contex.local_vars[var_name] = tmp
+                text.extend(kh.handle_let_dec(node,contex))
 
             case "asing":    #genreate code for the normal "x = y+1" statements
-                write_name = node['name']
-                val_type = node['val']['kind']
-
-                if write_name in vars.keys():
-                    if val_type == "literal":
-                        text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'])}")
-
-                    elif val_type == "binexp":
-                        text.extend(formulate_math(node['val']))
-
-                    elif val_type == "identifier":
-                        text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'])}")
-
-                    elif val_type == "Fcall":
-                        text.extend(formulate_fcals(node['val'], contex))
-
-                    elif val_type == "refrence":
-                        text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'])}")
-
-                    elif val_type == "derefrence":
-                        text.append(f"mov rdx, {ut.var_mem_asm(node['val']['name'])}")
-                        text.append(f"mov rax, {ut.get_mov_size(get_var(node['val']['name'])['type'][:-2])} [rdx]")
-
-                    elif val_type=="arrac":
-                        
-                        #{'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 1}}}
-
-                        if node["val"]["pos"]["kind"] == "literal":
-                            print(node)
-                            read_name = node["val"]['name']
-                            pos = node["val"]["pos"]["val"]
-                            pos*=ut.size_lookup(vars[read_name])
-                            text.append(f"mov rax, {read_name}[rip+{pos}]")
-
-                        elif  node["val"]["pos"]["kind"] == "identifier":
-                            #mov eax, lala[0+rax*4]
-                            read_name = node["val"]['name']
-                            size = ut.size_lookup(vars[node["val"]["name"]])
-                            text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'])}")
-                            text.append(f"mov rax, {read_name}[0+rax*{size}]")
-                            
-                        else:
-                            raise("nicht skibidy")
-                    
-                    
-                    if ut.ut.is_arr_type(get_var(write_name)['type']):
-
-                        if write_name in global_vars.keys():
-                            if node["pos"]["kind"] == "literal":
-                                
-                                pos = node["pos"]["val"]
-                                pos*=ut.size_lookup(global_vars[write_name]['type'])
-                                
-                                text.append(f"mov  [rip+{pos}], rax")
-
-                            elif  node["pos"]["kind"] == "identifier":
-                                #mov eax, lala[0+rax*4]
-                                read_name = node["val"]['name']
-                                size = ut.size_lookup(global_vars[node["val"]["name"]])
-                                text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'])}")
-                                text.append(f"mov {write_name}[0+rdx*{size}], rax")
-
-                        elif write_name in contex.local_vars:
-                            if node["pos"]["kind"] == "literal":
-                                #ofs - i*size
-                                
-                                pos = node["pos"]["val"]
-                                pos*=ut.size_lookup(contex.local_vars[write_name])
-                                pos-= (contex.local_vars[write_name]['ofs'])
-                                text.append(f"mov {ut.var_mem_asm()} [rbp-{pos}], rax")
-
-                            elif node["pos"]["kind"] == "identifier":
-                                #[rbp-ofs+rax*size]
-                                ofs = contex.local_vars[write_name]['ofs']
-                                read_name = node["val"]['name']
-                                size = ut.size_lookup(global_vars[node["val"]["name"]])
-                                text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'])}")
-                                text.append(f"mov {ut.var_mem_asm(write_name)} [rbp-{ofs}+rdx*{size}], rax")
-
-                        else:
-                            raise SyntaxError(f"variable {write_name} has never been declared")
-
-                    
-                    elif ut.is_ptr_type(vars[write_name]):
-                        text.append(f"mov rdx, {ut.var_mem_asm(write_name)}")
-                        text.append(f"mov [rdx], rax ")
-                        
-
-                    elif ut.is_n_type(vars[write_name]):
-                        text.append(f"mov {ut.var_mem_asm(write_name)}, rax")
-
-
-
-
-                else:
-                    raise SyntaxError(f"variable:{write_name} has not been declared")
+                text.extend(kh.handle_asing(node,contex))
 
             case "fcall":    
-                formulate_fcals(node, contex.local_vars)
+                text.extend(formulate_fcals(node, contex.locals))
 
-
+  
+            case "func_dec":
+                text.extend(kh.handle_func_def(node,contex))
                 
-            case "fun_dec":
-                params = node["param"]
-                fname = node['name']
-
-                if len(params) > len(regs):
-                    raise SyntaxError("to many args in function: " + fname)
-                else:
-                    functions[fname]= params
-                    return_type = node["ret_type"]
-
-
-                    text.append(f".{fname}:")
-                    text.append("push rbp")
-                    text.append("mov rbp, rsp")
-
-                    loc_para = {}
-                    loc_ofs = 0
-                    #unpacking locals and construct the new stack frame
-                    for i in range(len(params)):  
-                        cur_type = params[i]['type']
-                        cur_name = params[i]['name']
-                        cur_size = ut.size_lookup(cur_type)
-
-                        loc_ofs+=cur_size
-                        cur_ofs = loc_ofs
-
-
-                        loc_para[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs} 
-
-                        text.append(f"mov {params[i]['type']}, {regs[i]}")
-                    
-                    text.extend(gen(node["body"],loc_para, loc_ofs)) #gen a new funct whit its own locals
-
             
             case "if":
-                
-                text.extend(formulate_math(node["exp"],contex.local_vars,"cond"))
-
-                lnum = next(ut.lable_gen)
-                
-
-                text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
-                
-                tmp_text,tmp_ofs = gen(node["body"],contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-                
-                text.append(f".L{lnum}:")
+                text.extend(kh.handle_if(node,contex))
                 
 
             case "if_else":
-                text.extend(formulate_math(node["exp"], contex.local_vars, "cond"))
-                endl = next(ut.lable_gen)
-                
-                elsel= next(ut.lable_gen)
+                text.extend(kh.handle_if_else(node,contex))
 
-                text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
-                tmp_text,tmp_ofs = gen(node["body"],contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-                text.append(f"jmp .L{endl}")
-
-                text.append(f".L{elsel}:")
-                tmp_text,tmp_ofs = gen(node["else_body"], contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-
-                text.append(f".L{endl}:")
 
             case "while":
-                endla = next(ut.lable_gen)
-                startla =next(ut.lable_gen)
-                text.append(f"jmp .L{endla}")
-                text.append(f".L{startla}")
-                tmp_text,tmp_ofs = gen(node["body"], contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-                text.append(f".L{endla}")
-                text.extend(formulate_math(node["exp"], contex.local_vars, "cond"))
-                text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
+                text.extend(kh.handle_while(node,contex))
+
 
             case "for":
-                endla = next(ut.lable_gen)
-                startla =next(ut.lable_gen)
+                text.extend(kh.handle_for(node,contex))
 
-                tmp_text,tmp_ofs = gen(node["init"], contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-
-                text.append(f"jmp .L{endla}")
-                text.append(f".L{startla}")
-
-                tmp_text,tmp_ofs = gen(node["body"], contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-
-                tmp_text,tmp_ofs = gen(node["incexp"], contex.local_vars,ofset)
-                ofset = tmp_ofs
-                text.extend(tmp_text)
-
-                text.append(f".L{endla}")
-                text.extend(formulate_math(node["exp"], contex.local_vars, "cond"))
-                text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
             case "ret":
                 text.extend(formulate_math(node['val']))
-                text.append("ret")
             
-            case _:
-                raise SyntaxError("AST Defective")
 
-    return text, ofset
+            case _:
+                raise SyntaxError("AST Defective: "+str(node['kind']))
+
+    return text
 
 
 
 
              
-init = {'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'y'}, 'right': {'kind': 'literal', 'val': 1}}}    
+inir = [{'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'y'}, 'right': {'kind': 'literal', 'val': 1}}}]   
 nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 2}}, 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'literal', 'val': 2}}]}]      
 nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
 narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
 
-if __name__ == "__main__":
+test= [{'var_type': 'n64', 'name': 'global', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 3}}, {'kind': 'func_dec', 'name': 'Main', 'ret_type': 'void', 'param': [], 'body': [{'var_type': 'n64', 'name': 'local', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]
 
-    out,tmo = gen(narr,{},0,True)
+if __name__ == "__main__":
+    start_contx = ut.contextc(is_global=True)
+    out = gen(test, start_contx)
     print(vars)
     print(data)
     print(out)

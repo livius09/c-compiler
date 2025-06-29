@@ -6,6 +6,9 @@ a small project to understand compilers (i know its shity)
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v0.8.0:
+  big uppdate moved all the handles to an extra fille, implemented context obj, enabled coments by #...# some fixes to functions and returs to
+
 #### v0.7.0:
   BIG BOMBOCLAT added:  local vs global vars, read write suport for that, fixed some stuff, added mem read size like WORD PTR big step towards actuly runing that stuff,
   took an fucking eternity
