@@ -1,5 +1,5 @@
 from colorama import *
-import utils_stuff 
+import utils_stuff as ut
 
 
 def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
@@ -71,7 +71,7 @@ def formulate_math(node:dict, local_var:dict, context="asing",): #asing, cond
         
         return code
 
-def formulate_fcals(node:dict,local_vars:dict):    #genertate code for function calls and checking the parameter types
+def formulate_fcals(node:dict,conx):    #genertate code for function calls and checking the parameter types
     code=[]
     fname = node['name']
     if fname in functions.keys():
@@ -83,7 +83,7 @@ def formulate_fcals(node:dict,local_vars:dict):    #genertate code for function 
             curtype = params[i]['kind']
 
             if curtype == "binexp":
-                code.extend(formulate_math(params[i]["val"],local_vars))
+                code.extend(formulate_math(params[i]["val"], conx.local_vars))
                 code.append(f"mov {regs[i]}, rax")
             elif curtype == "Identifier":
                 
@@ -130,7 +130,7 @@ data=[]         #data section of asm
 
 
 
-def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+def gen(a:list[dict],contex):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text=[]         #text section so the actual executed asm
     ofset=ofs         #ofset for the local vars
 
@@ -139,15 +139,15 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
     
     
     def get_var(var_n:str):
-        if var_n in local_vars.keys():
-            return local_vars[var_n]
+        if var_n in contex.local_vars.keys():
+            return contex.local_vars[var_n]
         elif var_n in global_vars.keys():
             return global_vars[var_n]
         else:
             raise SyntaxError(f"var {var_n} doese not exist")
         
     def var_decl(var_n:str):
-        if var_n in local_vars.keys():
+        if var_n in contex.local_vars.keys():
             return True
         elif var_n in global_vars.keys():
             return True
@@ -155,7 +155,7 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
             raise SyntaxError(f"var {var_n} doese not exist")
         
     def alingment_gen(var_type:str,dlen=1)->int:
-        size = size_lookup(var_type)
+        size = ut.size_lookup(var_type)
         if ofset % size != 0:
             ofset += size - (ofset % size)
 
@@ -173,79 +173,7 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
         match node['kind']:
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
-                var_name = node['name']
-                vartype  = node['var_type']
-
-                if var_decl(var_name):
-                    raise SyntaxError(f"variable: {var_name} has already been declared")
-    
-                tmp={}
-                tmp["type"]=vartype
-
-                size = None
-                
-
-                if is_arr_type(vartype):
-                    tmp["type"] = vartype
-                    arrlen = node['len']
-                    arrsize = arrlen * size_lookup(vartype)
-                    
-                    tmp['size'] = arrsize
-                    tmp['len'] = arrlen
-
-                    data.append(f"{var_name}:")
-                    data.append(f"\t.zero\t{arrsize}")
-
-
-                if scope:
-                    global_vars[var_name] = tmp
-                else:
-                    ofset+=size
-                    tmp['ofs'] = ofset
-                    local_vars[var_name] = tmp
-
-                if  not is_arr_type(vartype):
-                    val_type = node['val']['kind']
-                else:
-                    val_type = ""
-
-                if val_type == "literal":
-                    data.append(f"{var_name} dq {node['val']['val']}")
-
-                elif val_type == "identifier":
-                    data.append(f"{var_name} dq 0")
-
-                    text.append(f"mov rax , {var_mem_asm(node['val']['name'])}")
-                    text.append(f"mov {var_mem_asm(var_name)} , rax")
-
-                elif val_type == "binexp":
-                    data.append(f"{var_name} dq 0")
-                    
-                    text.extend(formulate_math(node['val'],local_vars))
-                    text.append(f"mov {var_mem_asm(var_name)}, rax")
-
-                elif val_type == "refrence":
-                    data.append(f"{var_name} dq 0")
-
-                    text.append(f"lea rax, {var_mem_asm(node['val']['name'])}")
-                    text.append(f"mov [{var_name}], rax")
-
-                elif val_type == "derefrence":
-                    data.append(f"{var_name} dq 0")
-                    text.append(f"mov rax, {var_mem_asm(node['name'])}")  # rax = address of pointee
-                    text.append("mov rax, [rax]")              # rax = value at that address
-                    text.append(f"mov {var_mem_asm(node['name'])}, rax")
-
-                elif is_arr_type(vartype):
-                    vars[var_name] = vartype
-                    if is_arr_type(vartype):
-                        data.append(var_name+":")
-                        for nana in node['val']:
-                            if nana["kind"] == "literal":
-                                size = size_lookup(vartype[:-2])
-                                directive = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}[size]
-                                data.append(f"\t{directive} \t{nana['val']}")
-
+                pass
 
             case "letdec":
                 var_name =node['name']
@@ -260,10 +188,10 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
                     size = None
                     tmp['type'] = vartype
 
-                    if is_arr_type(vartype):
+                    if ut.ut.is_arr_type(vartype):
                         tmp["type"] = vartype
                         arrlen = node['len']
-                        arrsize = arrlen * size_lookup(vartype)
+                        arrsize = arrlen * ut.size_lookup(vartype)
                         
                         tmp['size'] = arrsize
                         tmp['len'] = arrlen
@@ -274,16 +202,16 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
 
 
                     else:
-                        size = size_lookup(vartype)
+                        size = ut.size_lookup(vartype)
                 
                         
 
-                    if scope:
+                    if contex.isglobal:
                         global_vars[var_name] = tmp
                     else:
                         ofset+=size
                         tmp['ofs'] = ofset
-                        local_vars[var_name] = tmp
+                        contex.local_vars[var_name] = tmp
 
             case "asing":    #genreate code for the normal "x = y+1" statements
                 write_name = node['name']
@@ -291,23 +219,23 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
 
                 if write_name in vars.keys():
                     if val_type == "literal":
-                        text.append(f"mov rax, {var_mem_asm(node['val']['val'])}")
+                        text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'])}")
 
                     elif val_type == "binexp":
                         text.extend(formulate_math(node['val']))
 
                     elif val_type == "identifier":
-                        text.append(f"mov rax, {var_mem_asm(node['val']['name'])}")
+                        text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'])}")
 
                     elif val_type == "Fcall":
-                        text.extend(formulate_fcals(node['val'], local_vars))
+                        text.extend(formulate_fcals(node['val'], contex))
 
                     elif val_type == "refrence":
-                        text.append(f"lea rax, {var_mem_asm(node['val']['name'])}")
+                        text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'])}")
 
                     elif val_type == "derefrence":
-                        text.append(f"mov rdx, {var_mem_asm(node['val']['name'])}")
-                        text.append(f"mov rax, {get_mov_size(get_var(node['val']['name'])['type'][:-2])} [rdx]")
+                        text.append(f"mov rdx, {ut.var_mem_asm(node['val']['name'])}")
+                        text.append(f"mov rax, {ut.get_mov_size(get_var(node['val']['name'])['type'][:-2])} [rdx]")
 
                     elif val_type=="arrac":
                         
@@ -317,65 +245,65 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
                             print(node)
                             read_name = node["val"]['name']
                             pos = node["val"]["pos"]["val"]
-                            pos*=size_lookup(vars[read_name])
+                            pos*=ut.size_lookup(vars[read_name])
                             text.append(f"mov rax, {read_name}[rip+{pos}]")
 
                         elif  node["val"]["pos"]["kind"] == "identifier":
                             #mov eax, lala[0+rax*4]
                             read_name = node["val"]['name']
-                            size = size_lookup(vars[node["val"]["name"]])
-                            text.append(f"mov rax, {var_mem_asm(node['val']['pos']['name'])}")
+                            size = ut.size_lookup(vars[node["val"]["name"]])
+                            text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'])}")
                             text.append(f"mov rax, {read_name}[0+rax*{size}]")
                             
                         else:
                             raise("nicht skibidy")
                     
                     
-                    if is_arr_type(get_var(write_name)['type']):
+                    if ut.ut.is_arr_type(get_var(write_name)['type']):
 
                         if write_name in global_vars.keys():
                             if node["pos"]["kind"] == "literal":
                                 
                                 pos = node["pos"]["val"]
-                                pos*=size_lookup(global_vars[write_name]['type'])
+                                pos*=ut.size_lookup(global_vars[write_name]['type'])
                                 
                                 text.append(f"mov  [rip+{pos}], rax")
 
                             elif  node["pos"]["kind"] == "identifier":
                                 #mov eax, lala[0+rax*4]
                                 read_name = node["val"]['name']
-                                size = size_lookup(global_vars[node["val"]["name"]])
-                                text.append(f"mov rdx, {var_mem_asm(node['val']['pos']['name'])}")
+                                size = ut.size_lookup(global_vars[node["val"]["name"]])
+                                text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'])}")
                                 text.append(f"mov {write_name}[0+rdx*{size}], rax")
 
-                        elif write_name in local_vars:
+                        elif write_name in contex.local_vars:
                             if node["pos"]["kind"] == "literal":
                                 #ofs - i*size
                                 
                                 pos = node["pos"]["val"]
-                                pos*=size_lookup(local_vars[write_name])
-                                pos-= (local_vars[write_name]['ofs'])
-                                text.append(f"mov {var_mem_asm()} [rbp-{pos}], rax")
+                                pos*=ut.size_lookup(contex.local_vars[write_name])
+                                pos-= (contex.local_vars[write_name]['ofs'])
+                                text.append(f"mov {ut.var_mem_asm()} [rbp-{pos}], rax")
 
                             elif node["pos"]["kind"] == "identifier":
                                 #[rbp-ofs+rax*size]
-                                ofs = local_vars[write_name]['ofs']
+                                ofs = contex.local_vars[write_name]['ofs']
                                 read_name = node["val"]['name']
-                                size = size_lookup(global_vars[node["val"]["name"]])
-                                text.append(f"mov rdx, {var_mem_asm(node['val']['pos']['name'])}")
-                                text.append(f"mov {var_mem_asm(write_name)} [rbp-{ofs}+rdx*{size}], rax")
+                                size = ut.size_lookup(global_vars[node["val"]["name"]])
+                                text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'])}")
+                                text.append(f"mov {ut.var_mem_asm(write_name)} [rbp-{ofs}+rdx*{size}], rax")
 
                         else:
                             raise SyntaxError(f"variable {write_name} has never been declared")
 
                     
-                    elif is_ptr_type(vars[write_name]):
-                        text.append(f"mov rdx, {var_mem_asm(write_name)}")
+                    elif ut.is_ptr_type(vars[write_name]):
+                        text.append(f"mov rdx, {ut.var_mem_asm(write_name)}")
                         text.append(f"mov [rdx], rax ")
                         
 
-                    elif is_n_type(vars[write_name]):
-                        text.append(f"mov {var_mem_asm(write_name)}, rax")
+                    elif ut.is_n_type(vars[write_name]):
+                        text.append(f"mov {ut.var_mem_asm(write_name)}, rax")
 
 
 
@@ -384,7 +312,7 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
                     raise SyntaxError(f"variable:{write_name} has not been declared")
 
             case "fcall":    
-                formulate_fcals(node,local_vars)
+                formulate_fcals(node, contex.local_vars)
 
 
                 
@@ -396,6 +324,8 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
                     raise SyntaxError("to many args in function: " + fname)
                 else:
                     functions[fname]= params
+                    return_type = node["ret_type"]
+
 
                     text.append(f".{fname}:")
                     text.append("push rbp")
@@ -407,7 +337,7 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
                     for i in range(len(params)):  
                         cur_type = params[i]['type']
                         cur_name = params[i]['name']
-                        cur_size = size_lookup(cur_type)
+                        cur_size = ut.size_lookup(cur_type)
 
                         loc_ofs+=cur_size
                         cur_ofs = loc_ofs
@@ -422,14 +352,14 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
             
             case "if":
                 
-                text.extend(formulate_math(node["exp"],local_vars,"cond"))
+                text.extend(formulate_math(node["exp"],contex.local_vars,"cond"))
 
-                lnum = next(label_gen)
+                lnum = next(ut.lable_gen)
                 
 
-                text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
+                text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
                 
-                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                tmp_text,tmp_ofs = gen(node["body"],contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
                 
@@ -437,58 +367,58 @@ def gen(a:list[dict],local_vars:dict[dict],ofs=0,scope=False):   #true is global
                 
 
             case "if_else":
-                text.extend(formulate_math(node["exp"], local_vars, "cond"))
-                endl = next(label_gen)
+                text.extend(formulate_math(node["exp"], contex.local_vars, "cond"))
+                endl = next(ut.lable_gen)
                 
-                elsel= next(label_gen)
+                elsel= next(ut.lable_gen)
 
-                text.append(f'{iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
-                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{lnum}')      #jne .L1
+                tmp_text,tmp_ofs = gen(node["body"],contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
                 text.append(f"jmp .L{endl}")
 
                 text.append(f".L{elsel}:")
-                tmp_text,tmp_ofs = gen(node["else_body"],local_vars,ofset)
+                tmp_text,tmp_ofs = gen(node["else_body"], contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
 
                 text.append(f".L{endl}:")
 
             case "while":
-                endla = next(label_gen)
-                startla =next(label_gen)
+                endla = next(ut.lable_gen)
+                startla =next(ut.lable_gen)
                 text.append(f"jmp .L{endla}")
                 text.append(f".L{startla}")
-                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                tmp_text,tmp_ofs = gen(node["body"], contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
                 text.append(f".L{endla}")
-                text.extend(formulate_math(node["exp"], local_vars, "cond"))
-                text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
+                text.extend(formulate_math(node["exp"], contex.local_vars, "cond"))
+                text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
             case "for":
-                endla = next(label_gen)
-                startla =next(label_gen)
+                endla = next(ut.lable_gen)
+                startla =next(ut.lable_gen)
 
-                tmp_text,tmp_ofs = gen(node["init"],local_vars,ofset)
+                tmp_text,tmp_ofs = gen(node["init"], contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
 
                 text.append(f"jmp .L{endla}")
                 text.append(f".L{startla}")
 
-                tmp_text,tmp_ofs = gen(node["body"],local_vars,ofset)
+                tmp_text,tmp_ofs = gen(node["body"], contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
 
-                tmp_text,tmp_ofs = gen(node["incexp"],local_vars,ofset)
+                tmp_text,tmp_ofs = gen(node["incexp"], contex.local_vars,ofset)
                 ofset = tmp_ofs
                 text.extend(tmp_text)
 
                 text.append(f".L{endla}")
-                text.extend(formulate_math(node["exp"],local_vars, "cond"))
-                text.append(f'{looplockup[node["exp"]["op"]]} .L{startla}')
+                text.extend(formulate_math(node["exp"], contex.local_vars, "cond"))
+                text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
             case "ret":
                 text.extend(formulate_math(node['val']))
@@ -508,19 +438,22 @@ nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'I
 nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
 narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
-out,tmo = gen(narr,{},0,True)
-print(vars)
-print(data)
-print(out)
 
-with open("./code_gen/readout.txt","w") as file:
-    file.write("data:\n")
-    for b in data:
-        file.write("\t"+b+"\n")
-    file.write("text:\n")
-    for a in out:
-        file.write("\t"+a+"\n")
-    file.close
+if __name__ == "__main__":
+
+    out,tmo = gen(narr,{},0,True)
+    print(vars)
+    print(data)
+    print(out)
+
+    with open("./code_gen/readout.txt","w") as file:
+        file.write("data:\n")
+        for b in data:
+            file.write("\t"+b+"\n")
+        file.write("text:\n")
+        for a in out:
+            file.write("\t"+a+"\n")
+        file.close
 
 
 
