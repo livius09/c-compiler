@@ -50,15 +50,19 @@ label_gen = label_generator()
 def var_mem_asm(var_n:str,imp_locals:dict):
     from tinylang_x86_codegen import global_vars
     if var_n in imp_locals.keys():
-        var_type = imp_locals[var_n]
+        var_type = imp_locals[var_n]['type']
         if is_n_type(var_type):
-            return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]" 
-    
-    
+            return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]"
+        else:
+            raise SyntaxError(str(var_type)+"not implemented")
+        
     elif var_n in global_vars.keys():
-        var_type = global_vars[var_n]
+        var_type = global_vars[var_n]['type']
         if is_n_type(var_type):
-            return f"{get_mov_size(var_type)} [{var_n}]" 
+            return f"{get_mov_size(var_type)} [{var_n}]"
+        else:
+            raise SyntaxError(str(var_type)+"not implemented")
+        
     else:
         raise SyntaxError(f"var {var_n} has never been declared")
 
@@ -67,7 +71,7 @@ def alingment_gen(var_type:str, cur_conx, dlen=1)->int:
     if cur_conx.offset % size != 0:
         cur_conx.offset += size - (cur_conx.offset % size)
 
-    cur_conx.offset += size*(dlen-1)
+    cur_conx.offset += size * dlen
 
     return cur_conx.offset  
 

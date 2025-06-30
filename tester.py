@@ -268,3 +268,19 @@ def alingment_gen(var_type:str,dlen=1)->int:
     return ofset
 
 print(alingment_gen("n32"))
+
+
+class ligma():
+    def __init__(self):
+        self.dact={}
+    
+lig_clas=ligma()
+
+def add(lam:dict):
+    lam["a"]=21
+
+print(lig_clas.dact)
+add(lig_clas.dact)
+
+print(lig_clas.dact)
+

@@ -1,4 +1,3 @@
-from colorama import *
 import utils_stuff as ut
 import kind_hadel as kh
 
@@ -73,7 +72,7 @@ def formulate_math(node:dict, local_var:dict, mcontext="asing",): #asing, cond
     else:
         raise SyntaxError("invalid math: " + str(nodetype))
 
-def formulate_fcals(node:dict,conx):    #genertate code for function calls and checking the parameter types
+def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function calls and checking the parameter types
     code=[]
     fname = node['name']
     if fname in functions.keys():
@@ -87,10 +86,10 @@ def formulate_fcals(node:dict,conx):    #genertate code for function calls and c
             if curtype == "binexp":
                 code.extend(formulate_math(params[i]["val"], conx.local_vars))
                 code.append(f"mov {regs[i]}, rax")
-            elif curtype == "Identifier":
+            elif curtype == "identifier":
                 
                 varname = params[i]['name']
-                vartype = vars[varname]
+                vartype = ut.get_var_type(varname, conx)
 
                 if dectypes[i] == vartype:
                     code.append(f"mov {regs[i]}, [{varname}]")
@@ -102,7 +101,8 @@ def formulate_fcals(node:dict,conx):    #genertate code for function calls and c
                 code.append(f"mov {regs[i]} {params[i]['val']}")
 
         code.append(f"call .{fname}")
-
+        
+        return code
 
     else:
         raise SyntaxError(f"functions {fname} has not been declared")
@@ -128,6 +128,7 @@ def formulate_fcals(node:dict,conx):    #genertate code for function calls and c
 global_vars={}         #x:n8    contains the var name as key and type as value
 functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
+global data
 data=[]         #data section of asm
 
 
@@ -138,11 +139,12 @@ def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #loc
     
     
     for node in a:
-        print(node)
+        
         match node['kind']:
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
                 text.extend(kh.handle_letinit(node,contex))
+                print("deae: "+str(data))
 
             case "letdec":
                 text.extend(kh.handle_let_dec(node,contex))
@@ -187,20 +189,21 @@ def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #loc
 
 
              
-inir = [{'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'y'}, 'right': {'kind': 'literal', 'val': 1}}}]   
-nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 2}}, 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'literal', 'val': 2}}]}]      
-nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'Identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'Identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
+inir = [{'kind': 'asing', 'name': 'y', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'y'}, 'right': {'kind': 'literal', 'val': 1}}}]   
+nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 2}}, 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'literal', 'val': 2}}]}]      
+nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
 narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
 
-test= [{'var_type': 'n64', 'name': 'global', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 3}}, {'kind': 'func_dec', 'name': 'Main', 'ret_type': 'void', 'param': [], 'body': [{'var_type': 'n64', 'name': 'local', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]
+test = [{'var_type': 'n64', 'name': 'global', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 3}}, {'kind': 'func_dec', 'name': 'Main', 'ret_type': 'void', 'param': [], 'body': [{'var_type': 'n64', 'name': 'local', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 
 if __name__ == "__main__":
     start_contx = ut.contextc(is_global=True)
     out = gen(test, start_contx)
-    print(vars)
-    print(data)
-    print(out)
+    
+    print("globals: "+str(global_vars))
+    print("Data: "+ str(data))
+    print("asm: "+str(out))
 
     with open("./code_gen/readout.txt","w") as file:
         file.write("data:\n")
@@ -210,6 +213,4 @@ if __name__ == "__main__":
         for a in out:
             file.write("\t"+a+"\n")
         file.close
-
-#test 123
 

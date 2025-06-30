@@ -201,7 +201,7 @@ def parse(line: list[list[str]]):
 
     while i < len(line):
         tmp = {}
-        consumed = 1  # by default, assume we consume this line
+        consumed = 1  # default: consume at least this line
 
         match line[i][0].lower():
             case "}":
@@ -211,7 +211,6 @@ def parse(line: list[list[str]]):
                 is_arr = False
                 var_type = line[i][1].split(">")[1]
 
-
                 if var_type in var_types:
                     tmp["var_type"] = var_type
                 elif var_type.endswith("[]") and (var_type[:-2] in var_types):
@@ -219,80 +218,47 @@ def parse(line: list[list[str]]):
                     is_arr = True
                 else:
                     raise SyntaxError("type cant be: "+ var_type)
-                
 
-                if line[i][2].startswith("IDENTIFIER>"):
-
-                    tmp["name"] = line[i][2].split(">")[1]
-
-                elif line[i][3].startswith("IDENTIFIER>"):
-
-                    tmp["name"] = line[i][3].split(">")[1]
+                # Find identifier
+                for tok in line[i]:
+                    if tok.startswith("IDENTIFIER>"):
+                        tmp["name"] = tok.split(">")[1]
+                        break
                 else:
-                    raise SyntaxError("no given identifier for "+line[i][3]+line[i][2])
+                    raise SyntaxError("no given identifier in "+str(line[i]))
 
-
-
-                if len(line[i]) > 3 and line[i][3] == "=": 
-                    #is an initialazion
-
+                if "=" in line[i]:
                     tmp["kind"] = "letinit"
-
-                    
-
                     if is_arr:
-
-                        lene = line[i+2].count(",")+1
-                        tmp["len"] = lene
-                        
-                        arr = []
-
-
+                        arr_line = line[i+2]
                         chunks = []
                         current = []
 
-                        for token in line[i+2]:
+                        for token in arr_line:
                             if token == ",":
                                 chunks.append(current)
                                 current = []
                             else:
                                 current.append(token)
 
-                        # Append the last chunk
                         if current:
                             chunks.append(current)
 
-                        # Now call parM() on each chunk
-                        for chunk in chunks:
-                            arr.append(parM(chunk))
-
-                        tmp["val"] = arr
-                        i+=3
-                        
-
-  
-
+                        tmp["len"] = len(chunks)
+                        tmp["val"] = [parM(chunk) for chunk in chunks]
+                        consumed = 3
                     else:
-                        var_type = line[i][1].split(">")[1]
-
-                        math_part = line[i][line[i].index('=') + 1:]
-
+                        math_part = line[i][line[i].index("=") + 1:]
                         tmp["val"] = parM(math_part)
-
                 else:
-                    #is and decl
-
                     tmp["kind"] = "letdec"
-
                     if is_arr:
                         tmp["len"] = int(line[i][2].split(">")[1])
-
-
 
             case "func":
                 tmp["kind"] = "func_dec"
                 tmp["name"] = line[i][2].split(">")[1]
-                tmp["ret_type"]= line[i][1].split(">")[1]
+                tmp["ret_type"] = line[i][1].split(">")[1]
                 tmp["param"] = []
                 for a in range(1, len(line[i]) - 4, 4):
                     tmp["param"].append({
@@ -302,43 +268,33 @@ def parse(line: list[list[str]]):
 
                 body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
-                consumed += body_consumed
+                consumed = 4 + body_consumed
 
             case "return":
                 tmp["kind"] = "ret"
                 tmp["val"] = parM(line[i][1:])
-
 
             case "if":
                 tmp["kind"] = "if"
                 tmp["exp"] = parM(line[i][1:])
                 body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
-                consumed += 2 + body_consumed  # +2 for 'If' line and '{' line
-            
+                consumed = 2 + body_consumed
+
             case "while":
-                tmp["kind"]="while"
+                tmp["kind"] = "while"
                 tmp["exp"] = parM(line[i][1:])
                 body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
-                consumed += 2 + body_consumed  # +2 for 'while' line and '{' line
-            
-            case "for":
-                
-                tmp["kind"] = "for"
+                consumed = 2 + body_consumed
 
+            case "for":
+                tmp["kind"] = "for"
                 tmp["init"] = parse([line[i+1]])[0][0]
-                print(line[i])
-                print(line[i+1])
-                print(line[i+2])
-                print(line[i+3])
                 tmp["exp"] = parM(line[i+2])
                 tmp["incexp"] = parse([line[i+3]])[0]
-                
                 tmp["body"], body_consumed = parse(line[i+5:])
-                i += 5 
-                consumed += body_consumed + 5
-
+                consumed = 5 + body_consumed
 
             case _:
                 if line[i][0].startswith("IDENTIFIER>"):
@@ -366,7 +322,6 @@ def parse(line: list[list[str]]):
                     tmp["kind"] = "fun_dec"
                     tmp["name"] = line[i][1].split(">")[1]
                     tmp["ret_type"] = line[i][0].split(">")[1]
-                   
                     tmp["para"] = []
                     j = 1
                     current_param = []
@@ -381,37 +336,26 @@ def parse(line: list[list[str]]):
                         tmp["para"].append(parM(current_param))
 
                 elif line[i][0].startswith("ARR>"):
-                    #'ARR>ncm>2', '=', 'INTEGER>2'
                     tmp["kind"] = "asing"
                     tmp["name"] = line[i][0].split(">")[1]
-                    
-                    content=line[i][0].split(">")[2]
-
+                    content = line[i][0].split(">")[2]
                     if content.isdecimal():
-                        stuff={"kind": "literal", "val":int(content)}
+                        tmp["pos"] = {"kind": "literal", "val": int(content)}
                     elif content.isalnum():
-                        stuff={"kind": "Identifier", "name": content}
+                        tmp["pos"] = {"kind": "Identifier", "name": content}
                     else:
                         raise SyntaxError("arr aces only suports literal and identifier")
-
-                    tmp["pos"]=stuff
-
                     tmp["val"] = parM(line[i][2:])
-
                 else:
-                    raise SyntaxError(line[i])
-                    pass
-
+                    raise SyntaxError(str(line[i]) + " at: " + str(i))
 
         if tmp != {}:
             out.append(tmp)
 
-        if consumed == 0:
-            consumed+=1
-        else:
-            i += consumed
+        i += consumed
 
     return out, i
+
 
   
           
