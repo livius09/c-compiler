@@ -44,35 +44,43 @@ def handle_letinit(node:dict,contex:ut.contextc):
         val_type = ""
 
     print("val type: "+str(val_type))
+
     if val_type == "literal":
         print("get here")
-        gc.data.append(f"{var_name} dq {node['val']['val']}")
+        if contex.is_global:
+            gc.data.append(f"{var_name} dq {node['val']['val']}")
+        else:
+            text.append(f"mov {ut.var_mem_asm(node['val']['name'],contex.locals)}, {node['val']['val']}")
+
         print(gc.data)
 
     elif val_type == "identifier":
-        gc.data.append(f"{var_name} dq 0")
-
+        if contex.is_global:
+            gc.data.append(f"{var_name} dq 0")
+            
         text.append(f"mov rax , {ut.var_mem_asm(node['val']['name'],contex.locals)}")
         text.append(f"mov {ut.var_mem_asm(var_name)} , rax")
 
     elif val_type == "binexp":
-        gc.data.append(f"{var_name} dq 0")
-        
+        if contex.is_global:
+            gc.data.append(f"{var_name} dq 0")
+
         text.extend(gc.formulate_math(node['val'],contex.locals))
         text.append(f"mov {ut.var_mem_asm(var_name, contex.locals)}, rax")
 
     elif val_type == "refrence":
-        gc.data.append(f"{var_name} dq 0")
+        if contex.is_global:
+            gc.data.append(f"{var_name} dq 0")
 
         text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex.locals)}")
         text.append(f"mov [{var_name}], rax")
 
     elif val_type == "derefrence":
-        gc.data.append(f"{var_name} dq 0")
+        if contex.is_global:
+            gc.data.append(f"{var_name} dq 0")
 
         text.append(f"mov rax, {ut.var_mem_asm(node['name'], contex.locals)}")  # rax = address of pointee
         text.append("mov rax, [rax]")              # rax = value at that address
-        text.append(f"mov {ut.var_mem_asm(node['name'], contex.locals)}, rax")
 
     elif ut.is_arr_type(vartype):
         ut.get_var_dict(var_name,contex)['type'] = vartype
