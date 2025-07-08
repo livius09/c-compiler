@@ -48,9 +48,9 @@ def handle_letinit(node:dict,contex:ut.contextc):
     if val_type == "literal":
         print("get here")
         if contex.is_global:
-            gc.data.append(f"{var_name}: \n\t {ut.init_size(val_type)} \t {node['val']['val']}")
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \t {node['val']['val']}")
         else:
-            text.append(f"mov {ut.var_mem_asm(node['val']['name'],contex)}, {node['val']['val']}")
+            text.append(f"mov {ut.var_mem_asm(var_name, contex)}, {node['val']['val']}")
 
         print(gc.data)
 
@@ -90,7 +90,7 @@ def handle_letinit(node:dict,contex:ut.contextc):
             for nana in node['val']:
                 if nana["kind"] == "literal":
                     size = ut.size_lookup(vartype)
-                    gc.data.append(f"\t{ ut.init_size[size]} \t{nana['val']}")
+                    gc.data.append(f"\t{ ut.init_sized[size]} \t{nana['val']}")
 
     return text
 
@@ -148,7 +148,7 @@ def handle_asing(node:dict,contex:ut.contextc):
             text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'], contex)}")
 
         elif val_type == "binexp":
-            text.extend(gc.formulate_math(node['val'],contex.locals))
+            text.extend(gc.formulate_math(node['val'],contex))
 
         elif val_type == "identifier":
             text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex)}")
@@ -198,7 +198,7 @@ def handle_asing(node:dict,contex:ut.contextc):
                 elif  node["pos"]["kind"] == "identifier":
                     #mov eax, lala[0+rax*4]
                     read_name = node["val"]['name']
-                    size = ut.size_lookup(gc.global_vars[node["val"]["name"]])
+                    size = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
                     text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex)}")
                     text.append(f"mov {write_name}[0+rdx*{size}], rax")
 
@@ -244,7 +244,7 @@ def handle_func_def(node:dict,contex:ut.contextc):
     if contex.is_global:
         params = node["param"]
 
-        if len(params) > len(gc.regs):
+        if len(params) > len(ut.regs):
             raise SyntaxError("to many args in function: " + fname)
         else:
             gc.functions[fname]= params
@@ -253,7 +253,6 @@ def handle_func_def(node:dict,contex:ut.contextc):
 
             text.append(f".{fname}:")
             text.append("push rbp")         #seting up new stack frame
-            text.append("mov rbp, rsp")
             text.append("mov rbp, rsp")
 
 
@@ -274,7 +273,7 @@ def handle_func_def(node:dict,contex:ut.contextc):
 
                 loc_para[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs} 
 
-                text.append(f"mov {ut.var_mem_asm(params[i]['type'],loc_para)}, {gc.regs[i]}")
+                text.append(f"mov {ut.var_mem_asm(params[i]['type'],loc_para)}, {ut.regs[i]}")
 
             
             

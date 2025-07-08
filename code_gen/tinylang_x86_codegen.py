@@ -1,20 +1,25 @@
 import utils_stuff as ut
 import kind_hadel as kh
 
-def formulate_math(node:dict, local_var:dict, mcontext="asing",): #asing, cond
+global_vars = {}         #x:{"type":"n8", "size":1, }    contains the var name as key and type as value
+functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
+
+data=[]         #data section of asm
+
+def formulate_math(node:dict, loc_conx, mcontext="asing",): #asing, cond
     nodetype = node['kind']
     
     if nodetype == "identifier":
-        return [f"mov rax, {ut.var_mem_asm(node['name'],local_var)}"]
+        return [f"mov rax, {ut.var_mem_asm(node['name'],loc_conx)}"]
     
     if nodetype == "literal":
         return [f"mov rax, {node['val']}"]
 
     if nodetype == "refrence":
-        return [f"lea rax, {ut.var_mem_asm(node['name'],local_var)}"]
+        return [f"lea rax, {ut.var_mem_asm(node['name'],loc_conx)}"]
     
     if nodetype == "derefrence":
-       return [f"mov rax, {ut.var_mem_asm(node['name'],local_var)}",  # rax = address of pointee
+       return [f"mov rax, {ut.var_mem_asm(node['name'],loc_conx)}",  # rax = address of pointee
                 "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
@@ -24,9 +29,9 @@ def formulate_math(node:dict, local_var:dict, mcontext="asing",): #asing, cond
         code = []
         cmpops=["==","!=","<",">","<=",">="]
 
-        code += formulate_math(node['left'], local_var, mcontext)
+        code += formulate_math(node['left'], loc_conx, mcontext)
         code.append("push rax")
-        code += formulate_math(node['right'], local_var, mcontext)
+        code += formulate_math(node['right'], loc_conx, mcontext)
         code.append("pop rbx")
 
         op = node['op']
@@ -85,20 +90,20 @@ def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function
 
             if curtype == "binexp":
                 code.extend(formulate_math(params[i]["val"], conx.local_vars))
-                code.append(f"mov {regs[i]}, rax")
+                code.append(f"mov {ut.regs[i]}, rax")
             elif curtype == "identifier":
                 
                 varname = params[i]['name']
                 vartype = ut.get_var_type(varname, conx)
 
                 if dectypes[i] == vartype:
-                    code.append(f"mov {regs[i]}, [{varname}]")
+                    code.append(f"mov {ut.regs[i]}, [{varname}]")
 
                 else:
                     raise TypeError(f"expected type {dectypes[i]} but got {vartype} on arg {i} of function call {fname}")
 
             elif curtype == "literal":
-                code.append(f"mov {regs[i]} {params[i]['val']}")
+                code.append(f"mov {ut.regs[i]} {params[i]['val']}")
 
         code.append(f"call .{fname}")
         
@@ -124,12 +129,6 @@ def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function
 #edx 
 #esi 
 #edi
-
-global_vars={}         #x:n8    contains the var name as key and type as value
-functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
-regs= ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
-global data
-data=[]         #data section of asm
 
 
 

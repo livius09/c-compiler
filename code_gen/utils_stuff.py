@@ -1,3 +1,4 @@
+regs = ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 
 
 iflockup={"==": "jne",
@@ -14,7 +15,7 @@ looplockup = {"==": "je",
 
 var_types=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
-init_size = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}
+init_sized = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}
 
 def size_lookup(lok_type:str):
     types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
@@ -27,7 +28,7 @@ def size_lookup(lok_type:str):
         raise SyntaxError(f"var type {lok_type} doese not exist")
     
 def  init_size(var_t:str) -> str:
-    return init_size[size_lookup(var_t)]
+    return init_sized[size_lookup(var_t)]
 
 
 def is_arr_type(test:str):
