@@ -48,39 +48,40 @@ def handle_letinit(node:dict,contex:ut.contextc):
     if val_type == "literal":
         print("get here")
         if contex.is_global:
-            gc.data.append(f"{var_name} dq {node['val']['val']}")
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(val_type)} \t {node['val']['val']}")
         else:
-            text.append(f"mov {ut.var_mem_asm(node['val']['name'],contex.locals)}, {node['val']['val']}")
+            text.append(f"mov {ut.var_mem_asm(node['val']['name'],contex)}, {node['val']['val']}")
 
         print(gc.data)
 
     elif val_type == "identifier":
         if contex.is_global:
-            gc.data.append(f"{var_name} dq 0")
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
             
-        text.append(f"mov rax , {ut.var_mem_asm(node['val']['name'],contex.locals)}")
-        text.append(f"mov {ut.var_mem_asm(var_name)} , rax")
+        text.append(f"mov rax , {ut.var_mem_asm(node['val']['name'], contex)}")
+        text.append(f"mov {ut.var_mem_asm(var_name, contex.locals)} , rax")
 
     elif val_type == "binexp":
         if contex.is_global:
-            gc.data.append(f"{var_name} dq 0")
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
-        text.extend(gc.formulate_math(node['val'],contex.locals))
-        text.append(f"mov {ut.var_mem_asm(var_name, contex.locals)}, rax")
+        text.extend(gc.formulate_math(node['val'],contex))
+        text.append(f"mov {ut.var_mem_asm(var_name, contex)}, rax")
 
     elif val_type == "refrence":
         if contex.is_global:
-            gc.data.append(f"{var_name} dq 0")
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
-        text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex.locals)}")
-        text.append(f"mov [{var_name}], rax")
+        text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex)}")
+        text.append(f"mov {ut.var_mem_asm(var_name, contex)}, rax")
 
     elif val_type == "derefrence":
         if contex.is_global:
-            gc.data.append(f"{var_name} dq 0")
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
-        text.append(f"mov rax, {ut.var_mem_asm(node['name'], contex.locals)}")  # rax = address of pointee
-        text.append("mov rax, [rax]")              # rax = value at that address
+        text.append(f"mov rax, {ut.var_mem_asm(node['name'], contex)}")  # rax = address of pointee
+        text.append("mov rax, [rax]")                                    # rax = value at that address
+        text.append(f"mov {ut.var_mem_asm(var_name,contex)}, rax")       #
 
     elif ut.is_arr_type(vartype):
         ut.get_var_dict(var_name,contex)['type'] = vartype
@@ -89,10 +90,10 @@ def handle_letinit(node:dict,contex:ut.contextc):
             for nana in node['val']:
                 if nana["kind"] == "literal":
                     size = ut.size_lookup(vartype)
-                    directive = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}[size]
-                    gc.data.append(f"\t{directive} \t{nana['val']}")
+                    gc.data.append(f"\t{ ut.init_size[size]} \t{nana['val']}")
 
     return text
+
 
 
 def handle_let_dec(node:dict,contex:ut.contextc):
@@ -144,22 +145,22 @@ def handle_asing(node:dict,contex:ut.contextc):
 
     if ut.var_decl(write_name,contex):
         if val_type == "literal":
-            text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'], contex.locals)}")
+            text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'], contex)}")
 
         elif val_type == "binexp":
             text.extend(gc.formulate_math(node['val'],contex.locals))
 
         elif val_type == "identifier":
-            text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex.locals)}")
+            text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex)}")
 
         elif val_type == "Fcall":
             text.extend(gc.formulate_fcals(node['val'], contex))
 
         elif val_type == "refrence":
-            text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex.locals)}")
+            text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex)}")
 
         elif val_type == "derefrence":
-            text.append(f"mov rdx, {ut.var_mem_asm(node['val']['name'], contex.locals)}")
+            text.append(f"mov rdx, {ut.var_mem_asm(node['val']['name'], contex)}")
             text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex)['type']} [rdx]")
 
         elif val_type=="arrac":
@@ -176,7 +177,7 @@ def handle_asing(node:dict,contex:ut.contextc):
                 #mov eax, lala[0+rax*4]
                 read_name = node["val"]['name']
                 size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
-                text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'], contex.locals)}")
+                text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
                 text.append(f"mov rax, {read_name}[0+rax*{size}]")
                 
             else:
@@ -198,7 +199,7 @@ def handle_asing(node:dict,contex:ut.contextc):
                     #mov eax, lala[0+rax*4]
                     read_name = node["val"]['name']
                     size = ut.size_lookup(gc.global_vars[node["val"]["name"]])
-                    text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex.locals)}")
+                    text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex)}")
                     text.append(f"mov {write_name}[0+rdx*{size}], rax")
 
             elif write_name in contex.locals.keys():
@@ -208,27 +209,27 @@ def handle_asing(node:dict,contex:ut.contextc):
                     pos = node["pos"]["val"]
                     pos*=ut.size_lookup(contex.locals[write_name]['type'])
                     pos-= (contex.locals[write_name]['ofs'])
-                    text.append(f"mov {ut.get_mov_size()} [rbp-{pos}], rax")
+                    text.append(f"mov {ut.get_mov_size(write_type)} [rbp-{pos}], rax")
 
                 elif node["pos"]["kind"] == "identifier":
                     #[rbp-ofs+rax*size]
                     ofs = contex.locals[write_name]['ofs']
                     read_name = node["val"]['name']
-                    size = ut.size_lookup(contex.locals[node["val"]["name"]]['type'])
-                    text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'], contex.locals)}")
-                    text.append(f"mov {ut.var_mem_asm(write_name, contex.locals)} [rbp-{ofs}+rdx*{size}], rax")
+                    size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
+                    text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
+                    text.append(f"mov {ut.var_mem_asm(write_name, contex)} [rbp-{ofs}+rdx*{size}], rax")
 
             else:
                 raise SyntaxError(f"variable {write_name} has never been declared")
 
         
         elif ut.is_ptr_type(write_type):
-            text.append(f"mov rdx, {ut.var_mem_asm(write_name, contex.locals)}")
+            text.append(f"mov rdx, {ut.var_mem_asm(write_name, contex)}")
             text.append(f"mov [rdx], rax ")
             
 
         elif ut.is_n_type(write_type):
-            text.append(f"mov {ut.var_mem_asm(write_name, contex.locals)}, rax")
+            text.append(f"mov {ut.var_mem_asm(write_name, contex)}, rax")
 
 
 

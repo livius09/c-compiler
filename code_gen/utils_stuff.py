@@ -14,6 +14,7 @@ looplockup = {"==": "je",
 
 var_types=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
+init_size = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}
 
 def size_lookup(lok_type:str):
     types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
@@ -24,6 +25,9 @@ def size_lookup(lok_type:str):
             return types[lok_type]
     else:
         raise SyntaxError(f"var type {lok_type} doese not exist")
+    
+def  init_size(var_t:str) -> str:
+    return init_size[size_lookup(var_t)]
 
 
 def is_arr_type(test:str):
@@ -47,24 +51,6 @@ def label_generator():
 
 label_gen = label_generator()
 
-def var_mem_asm(var_n:str,imp_locals:dict):
-    from tinylang_x86_codegen import global_vars
-    if var_n in imp_locals.keys():
-        var_type = imp_locals[var_n]['type']
-        if is_n_type(var_type):
-            return f"{get_mov_size(var_type)} [rbp-{imp_locals[var_n]['ofs']}]"
-        else:
-            raise SyntaxError(str(var_type)+"not implemented")
-        
-    elif var_n in global_vars.keys():
-        var_type = global_vars[var_n]['type']
-        if is_n_type(var_type):
-            return f"{get_mov_size(var_type)} [{var_n}]"
-        else:
-            raise SyntaxError(str(var_type)+"not implemented")
-        
-    else:
-        raise SyntaxError(f"var {var_n} has never been declared")
 
 def alingment_gen(var_type:str, cur_conx, dlen=1)->int:
     size = size_lookup(var_type)
@@ -118,3 +104,25 @@ def get_var_dict(var_n:str,contex:contextc):
     
 def get_var_type(var_n:str,contex:contextc):
     return get_var_dict(var_n,contex)['type']
+
+
+
+def var_mem_asm(var_n:str,imp_contx:contextc):
+    from tinylang_x86_codegen import global_vars
+    if var_n in imp_contx.locals.keys():
+        var_type = imp_contx.locals[var_n]['type']
+        if is_n_type(var_type):
+            return f"{get_mov_size(var_type)} [rbp-{imp_contx.locals[var_n]['ofs']}]"
+        else:
+            raise SyntaxError(str(var_type)+"not implemented")
+        
+    elif var_n in global_vars.keys():
+        var_type = global_vars[var_n]['type']
+        if is_n_type(var_type):
+            return f"{get_mov_size(var_type)} [{var_n}]"
+        else:
+            raise SyntaxError(str(var_type)+"not implemented")
+        
+    else:
+        raise SyntaxError(f"var {var_n} has never been declared")
+    
