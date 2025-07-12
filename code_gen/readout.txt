@@ -1,14 +1,14 @@
 data:
 text:
 	.Main:
-		push rbp
-		mov rbp, rsp
-		mov QWORD PTR [rbp-8], 2
-		mov rax, QWORD PTR [global]
-		push rax
-		mov rax, 1
-		pop rbx
-		add rax, rbx
-		mov QWORD PTR [rbp-8], rax
-		pop   rbp
-		ret
+	push rbp
+	mov rbp, rsp
+	mov QWORD PTR [rbp-8], 2
+	mov rax, QWORD PTR [global]
+	push rax
+	mov rax, 1
+	pop rbx
+	add rax, rbx
+	mov QWORD PTR [rbp-8], rax
+	pop   rbp
+	ret
