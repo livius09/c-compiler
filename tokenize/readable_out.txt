@@ -1,4 +1,4 @@
-['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2']
+['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2', '+', 'INTEGER>97']
 ['Let', 'ARR>char>', 'IDENTIFIER>aba', '=']
 {
 ['INTEGER>97', ',', 'INTEGER>98', ',', 'INTEGER>99', ',', 'INTEGER>10']

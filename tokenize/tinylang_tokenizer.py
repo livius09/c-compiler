@@ -96,6 +96,16 @@ def tokenize(line:str):
 
 
             continue
+
+        if line[i] == "'":
+            if line[i+2] == "'":
+                tokenln.append(f"INTEGER>{ord(line[i+1])}")
+            else:
+                raise SyntaxError(f"chars can only be one char long and need to be closed {line[i+1]}")
+            
+            i+=3
+            continue
+                
             
             
 
