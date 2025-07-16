@@ -1,7 +1,10 @@
 let n64 global = 1 + 2; 
 
+let char[] aba = "abc"
+
 func void Main(){
     let n64 local = 1 << 1; #2#
 
     local = global + 1;
-} 
+}
+

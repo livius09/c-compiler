@@ -67,6 +67,39 @@ def tokenize(line:str):
             tokenln=[]
             i+=1
             continue
+
+        if line[i] == '"':  #strings will just be turned into char arrs
+
+            if tokenln != []:
+                out.append(tokenln)
+            tokenln=[]
+                
+            out.append("{")
+
+            s = ""
+            i+=1
+            while(i < len(line)) and line[i] != '"':
+                s += line[i]
+                i+=1
+
+            i+=1
+
+            for ch in s:
+                tokenln.append(f"INTEGER>{ord(ch)}")
+                tokenln.append(",")
+
+            tokenln.append(f"INTEGER>10")
+
+            out.append(tokenln)
+            tokenln = []
+            out.append("}")
+
+
+            continue
+            
+            
+
+
             
             
         
