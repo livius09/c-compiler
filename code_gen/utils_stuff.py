@@ -17,6 +17,8 @@ var_types=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~"
 
 init_sized = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}
 
+mov_sizes = {1:"BYTE PTR", 2:"WORD PTR", 4:"DWORD PTR", 8:"QWORD PTR"}
+
 def size_lookup(lok_type:str):
     types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
     if lok_type in types.keys() or (lok_type.endswith("[]") and lok_type[:-2] in types):
@@ -41,8 +43,7 @@ def is_n_type(test:str):
     return  test in var_types[:8]
 
 def get_mov_size(var_type:str)->str:
-        #   0       1           2       3       4        5    6   7      8
-    return ["", "BYTE PTR", "WORD PTR", "", "DWORD PTR", "", "", "", "QWORD PTR"][size_lookup(var_type)]    
+    return mov_sizes[size_lookup(var_type)]    
 
 def label_generator():
     num = 0
@@ -53,14 +54,7 @@ def label_generator():
 label_gen = label_generator()
 
 
-def alingment_gen(var_type:str, cur_conx, dlen=1)->int:
-    size = size_lookup(var_type)
-    if cur_conx.offset % size != 0:
-        cur_conx.offset += size - (cur_conx.offset % size)
 
-    cur_conx.offset += size * dlen
-
-    return cur_conx.offset  
 
 class contextc():
     def __init__(self, is_global=False):
@@ -82,8 +76,16 @@ class contextc():
             self.offset += alingment_gen(vartype,self,var_len)
             self.locals[name] = {"type": vartype, "size": size, "ofs": self.offset}
             if is_arr_type(vartype):
-                self.local[name]['len'] = var_len
+                self.locals[name]['len'] = var_len
 
+def alingment_gen(var_type:str, cur_conx:contextc, dlen=1)->int:
+    size = size_lookup(var_type)
+    if cur_conx.offset % size != 0:
+        cur_conx.offset += size - (cur_conx.offset % size)
+
+    cur_conx.offset += size * dlen
+
+    return cur_conx.offset  
 
 def var_decl(var_n:str, loc_conx:contextc):      #checks if a var has already been declared
     from tinylang_x86_codegen import global_vars
@@ -106,6 +108,11 @@ def get_var_dict(var_n:str,contex:contextc):
 def get_var_type(var_n:str,contex:contextc):
     return get_var_dict(var_n,contex)['type']
 
+def get_pointer_mov_size(vartype:str) -> str:
+    if is_ptr_type(vartype):
+        return get_mov_size(vartype[:-1])
+    else:
+        raise SyntaxError("get pointer mov size got a non pointer vartype: "+str(vartype))
 
 
 def var_mem_asm(var_n:str,imp_contx:contextc):

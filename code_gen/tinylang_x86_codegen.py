@@ -6,7 +6,7 @@ functions={}    #print:[char[],n64]    contains the function name as key and the
 
 data=[]         #data section of asm
 
-def formulate_math(node:dict, loc_conx, mcontext="asing",): #asing, cond
+def formulate_math(node:dict, loc_conx:ut.contextc, mcontext="asing",): #asing, cond
     nodetype = node['kind']
     
     if nodetype == "identifier":
@@ -23,7 +23,7 @@ def formulate_math(node:dict, loc_conx, mcontext="asing",): #asing, cond
                 "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
-        return formulate_fcals(node)
+        return formulate_fcals(node,loc_conx)
 
     if nodetype == "binexp":
         code = []
@@ -89,7 +89,7 @@ def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function
             curtype = params[i]['kind']
 
             if curtype == "binexp":
-                code.extend(formulate_math(params[i]["val"], conx.local_vars))
+                code.extend(formulate_math(params[i]["val"], conx))
                 code.append(f"mov {ut.regs[i]}, rax")
             elif curtype == "identifier":
                 
@@ -146,13 +146,13 @@ def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #loc
                 print("deae: "+str(data))
 
             case "letdec":
-                text.extend(kh.handle_let_dec(node,contex))
+                kh.handle_let_dec(node,contex)
 
             case "asing":    #genreate code for the normal "x = y+1" statements
                 text.extend(kh.handle_asing(node,contex))
 
             case "fcall":    
-                text.extend(formulate_fcals(node, contex.locals))
+                text.extend(formulate_fcals(node, contex))
 
   
             case "func_dec":
@@ -176,7 +176,7 @@ def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #loc
 
 
             case "ret":
-                text.extend(formulate_math(node['val']))
+                text.extend(formulate_math(node,contex))
             
 
             case _:

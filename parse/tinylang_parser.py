@@ -38,6 +38,8 @@ def parM(tokens: list):
                 stuff={"kind": "literal", "val":int(content)}
             elif content.isalnum():
                 stuff={"kind": "Identifier", "name": content}
+            else:
+                raise SyntaxError("arr indicies must be ints of identifiers not: "+str(content))
 
             return {"kind": "arrac", "name": token.split(">")[1],"pos":stuff}
         

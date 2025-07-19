@@ -59,7 +59,7 @@ def handle_letinit(node:dict,contex:ut.contextc):
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
             
         text.append(f"mov rax , {ut.var_mem_asm(node['val']['name'], contex)}")
-        text.append(f"mov {ut.var_mem_asm(var_name, contex.locals)} , rax")
+        text.append(f"mov {ut.var_mem_asm(var_name, contex)} , rax")
 
     elif val_type == "binexp":
         if contex.is_global:
@@ -161,7 +161,7 @@ def handle_asing(node:dict,contex:ut.contextc):
 
         elif val_type == "derefrence":
             text.append(f"mov rdx, {ut.var_mem_asm(node['val']['name'], contex)}")
-            text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex)['type']} [rdx]")
+            text.append(f"mov rax, {ut.get_pointer_mov_size(ut.get_var_type(node['val']['name'],contex))} [rdx]") #get mov size of the actal contents of the pointer |: Damm
 
         elif val_type=="arrac":
             
@@ -181,7 +181,7 @@ def handle_asing(node:dict,contex:ut.contextc):
                 text.append(f"mov rax, {read_name}[0+rax*{size}]")
                 
             else:
-                raise("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))
+                raise SyntaxError("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))
         
         write_type = ut.get_var_dict(write_name,contex)['type']
 
@@ -268,12 +268,12 @@ def handle_func_def(node:dict,contex:ut.contextc):
                 cur_size = ut.size_lookup(cur_type)
 
                 
-                cur_ofs = ut.alingment_gen(cur_type,1,loc_cont)
+                cur_ofs = ut.alingment_gen(cur_type,loc_cont)
 
 
                 loc_para[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs} 
 
-                text.append(f"mov {ut.var_mem_asm(params[i]['type'],loc_para)}, {ut.regs[i]}")
+                text.append(f"mov {ut.var_mem_asm(params[i]['type'],contex)}, {ut.regs[i]}")
 
             
             
@@ -288,14 +288,14 @@ def handle_func_def(node:dict,contex:ut.contextc):
     
 def handle_if(node:dict,contex:ut.contextc):
     text=[]
-    text.extend(gc.formulate_math(node["exp"],contex.locals,"cond"))
+    text.extend(gc.formulate_math(node["exp"],contex,"cond"))
 
-    endl = next(ut.lable_gen)
+    endl = next(ut.label_gen)
     
 
     text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{endl}')      #jne .L1
     
-    text.extend(gc.functions(node["body"],contex))
+    text.extend(gc.gen(node["body"],contex))
     
     text.append(f".L{endl}:")
 
@@ -303,20 +303,20 @@ def handle_if(node:dict,contex:ut.contextc):
 
 def handle_if_else(node:dict,contex:ut.contextc):
     text=[]
-    text.extend(gc.formulate_math(node["exp"], contex.locals, "cond"))
-    endl = next(ut.lable_gen)
+    text.extend(gc.formulate_math(node["exp"], contex, "cond"))
+    endl = next(ut.label_gen)
     
-    elsel= next(ut.lable_gen)
+    elsel= next(ut.label_gen)
 
     text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{elsel}')      #jne .L1
 
-    text.extend(gc.functions(node["body"],contex))
+    text.extend(gc.gen(node["body"],contex))
 
     text.append(f"jmp .L{endl}")
 
     text.append(f".L{elsel}:")
     
-    text.extend(gc.functions(node["else_body"], contex))
+    text.extend(gc.gen(node["else_body"], contex))
 
     text.append(f".L{endl}:")
 
@@ -324,31 +324,31 @@ def handle_if_else(node:dict,contex:ut.contextc):
 
 def handle_while(node:dict,contex:ut.contextc):
     text=[]
-    endla = next(ut.lable_gen)
-    startla =next(ut.lable_gen)
+    endla = next(ut.label_gen)
+    startla =next(ut.label_gen)
     text.append(f"jmp .L{endla}")
     text.append(f".L{startla}")
     
-    text.extend(gc.functions(node["body"], contex))
+    text.extend(gc.gen(node["body"], contex))
     text.append(f".L{endla}")
-    text.extend(gc.formulate_math(node["exp"], contex.locals, "cond"))
+    text.extend(gc.formulate_math(node["exp"], contex, "cond"))
     text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
     return text
 
 def handle_for(node:dict,contex:ut.contextc):
     text=[]
-    endla = next(ut.lable_gen)
-    startla =next(ut.lable_gen)
+    endla = next(ut.label_gen)
+    startla = next(ut.label_gen)
 
-    text.extend(gc.functions(node["init"], contex))
+    text.extend(gc.gen(node["init"], contex))
 
     text.append(f"jmp .L{endla}")
     text.append(f".L{startla}")
 
-    text.extend(gc.functions(node["body"], contex))
+    text.extend(gc.gen(node["body"], contex))
 
-    text.extend(gc.functions(node["incexp"], contex))
+    text.extend(gc.gen(node["incexp"], contex))
 
     text.append(f".L{endla}")
     text.extend(gc.formulate_math(node["exp"], contex))
