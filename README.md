@@ -19,7 +19,7 @@ a small project to understand compilers (i know its shity)
     mov computer, code
     mov "human", food
     mov computer, code
-    mov ""human", food
+    mov "human", food
     mov sleep, 2 am
   jmp main
   

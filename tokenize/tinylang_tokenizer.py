@@ -1,8 +1,7 @@
 #better
 #tokenizer
-out=[]
 operations=["+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>", "&", "|", "^"]
-comands = ["let", "return","for","while","break","if","else","func"]
+comands = ["let","const","return","for","while","break","if","else","func"]
 
 types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void",     
          "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
@@ -11,7 +10,8 @@ with open("tokenize/input.txt","r") as raw:
     read = raw.read()
 
 
-def tokenize(line:str):
+def tokenize(line:str) -> list[list[str]]:
+    out=[]
     i=0
     tokenln=[]
     while i < len(line):

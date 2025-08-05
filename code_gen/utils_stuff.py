@@ -57,14 +57,14 @@ label_gen = label_generator()
 
 
 class contextc():
-    def __init__(self, is_global=False):
+    def __init__(self, is_global:bool=False):
         self.locals = {}
         self.is_global = is_global
         self.offset = 0
         self.ret_type= "void"
         self.expoint = None
 
-    def declare_var(self, name, vartype, var_len=1):
+    def declare_var(self, name:str, vartype:str, var_len:int=1) -> None:
         from tinylang_x86_codegen import global_vars
         size = size_lookup(vartype) * var_len
 
@@ -78,7 +78,7 @@ class contextc():
             if is_arr_type(vartype):
                 self.locals[name]['len'] = var_len
 
-def alingment_gen(var_type:str, cur_conx:contextc, dlen=1)->int:
+def alingment_gen(var_type:str, cur_conx:contextc, dlen:int=1)->int:
     size = size_lookup(var_type)
     if cur_conx.offset % size != 0:
         cur_conx.offset += size - (cur_conx.offset % size)
@@ -87,7 +87,7 @@ def alingment_gen(var_type:str, cur_conx:contextc, dlen=1)->int:
 
     return cur_conx.offset  
 
-def var_decl(var_n:str, loc_conx:contextc):      #checks if a var has already been declared
+def var_decl(var_n:str, loc_conx:contextc) -> bool:      #checks if a var has already been declared
     from tinylang_x86_codegen import global_vars
     if var_n in loc_conx.locals.keys():
         return True
@@ -96,7 +96,7 @@ def var_decl(var_n:str, loc_conx:contextc):      #checks if a var has already be
     else:
         return False
 
-def get_var_dict(var_n:str,contex:contextc):
+def get_var_dict(var_n:str,contex:contextc) -> dict:
     from tinylang_x86_codegen import global_vars
     if var_n in contex.locals.keys():
         return contex.locals[var_n]
@@ -105,7 +105,7 @@ def get_var_dict(var_n:str,contex:contextc):
     else:
         raise SyntaxError(f"var {var_n} doese not exist")
     
-def get_var_type(var_n:str,contex:contextc):
+def get_var_type(var_n:str,contex:contextc) -> str:
     return get_var_dict(var_n,contex)['type']
 
 def get_pointer_mov_size(vartype:str) -> str:
@@ -115,17 +115,17 @@ def get_pointer_mov_size(vartype:str) -> str:
         raise SyntaxError("get pointer mov size got a non pointer vartype: "+str(vartype))
 
 
-def var_mem_asm(var_n:str,imp_contx:contextc):
+def var_mem_asm(var_n:str,imp_contx:contextc) -> str:
     from tinylang_x86_codegen import global_vars
     if var_n in imp_contx.locals.keys():
-        var_type = imp_contx.locals[var_n]['type']
+        var_type = str(imp_contx.locals[var_n]['type'])
         if is_n_type(var_type):
             return f"{get_mov_size(var_type)} [rbp-{imp_contx.locals[var_n]['ofs']}]"
         else:
             raise SyntaxError(str(var_type)+"not implemented")
         
     elif var_n in global_vars.keys():
-        var_type = global_vars[var_n]['type']
+        var_type = str(global_vars[var_n]['type'])
         if is_n_type(var_type):
             return f"{get_mov_size(var_type)} [{var_n}]"
         else:

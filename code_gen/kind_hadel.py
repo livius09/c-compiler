@@ -2,10 +2,10 @@ import tinylang_x86_codegen as gc
 import utils_stuff as ut
 
 
-def handle_letinit(node:dict,contex:ut.contextc):
-    text = []
-    var_name = node['name']
-    vartype  = node['var_type']
+def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
+    text :list[str]= []
+    var_name :str= str(node['name'])
+    vartype  :str= str(node['var_type'])
 
     if ut.var_decl(var_name,contex):
         raise SyntaxError(f"variable: {var_name} has already been declared")
@@ -19,7 +19,7 @@ def handle_letinit(node:dict,contex:ut.contextc):
 
     if ut.is_arr_type(vartype):
         
-        varlen = node['len']
+        varlen :int= int(node['len'])
         arrsize = varlen * ut.size_lookup(vartype)
         
         tmp['size'] = arrsize
@@ -39,7 +39,7 @@ def handle_letinit(node:dict,contex:ut.contextc):
 
 
     if  ut.is_n_type(vartype):
-        val_type = node['val']['kind']
+        val_type :str= str(node['val']['kind'])
     else:
         val_type = ""
 
@@ -96,9 +96,9 @@ def handle_letinit(node:dict,contex:ut.contextc):
 
 
 
-def handle_let_dec(node:dict,contex:ut.contextc):
-    var_name =node['name']
-    vartype = node['var_type']
+def handle_let_dec(node:dict,contex:ut.contextc) -> None:
+    var_name :str= str(node['name'])
+    vartype :str= str(node['var_type'])
 
     if (ut.var_decl(var_name,contex)):
         raise SyntaxError(f"variable: {var_name} has already been declared")
@@ -112,7 +112,7 @@ def handle_let_dec(node:dict,contex:ut.contextc):
 
         if ut.is_arr_type(vartype):
             tmp["type"] = vartype
-            varlen = node['len']
+            varlen :int= int(node['len'])
             size = varlen * ut.size_lookup(vartype)
             
             tmp['len'] = varlen
@@ -137,10 +137,10 @@ def handle_let_dec(node:dict,contex:ut.contextc):
 
             contex.locals[var_name] = tmp
 
-def handle_asing(node:dict,contex:ut.contextc):
-    text=[]
-    write_name = node['name']
-    val_type = node['val']['kind']
+def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
+    text:list[str]=[]
+    write_name :str= str(node['name'])
+    val_type :str= str(node['val']['kind'])
 
 
     if ut.var_decl(write_name,contex):
@@ -166,16 +166,16 @@ def handle_asing(node:dict,contex:ut.contextc):
         elif val_type=="arrac":
             
             #{'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 1}}}
-            arr_ac_kind=node["val"]["pos"]["kind"]
+            arr_ac_kind = node["val"]["pos"]["kind"]
             if arr_ac_kind == "literal":
-                read_name = node["val"]['name']
-                pos = node["val"]["pos"]["val"]
+                read_name :str= str(node["val"]['name'])
+                pos :int= int(node["val"]["pos"]["val"])
                 pos*=ut.size_lookup(ut.get_var_type(read_name,contex))
                 text.append(f"mov rax, {read_name}[rip+{pos}]")
 
             elif  arr_ac_kind == "identifier":
                 #mov eax, lala[0+rax*4]
-                read_name = node["val"]['name']
+                read_name :str= str(node["val"]['name'])
                 size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
                 text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
                 text.append(f"mov rax, {read_name}[0+rax*{size}]")
@@ -183,21 +183,21 @@ def handle_asing(node:dict,contex:ut.contextc):
             else:
                 raise SyntaxError("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))
         
-        write_type = ut.get_var_dict(write_name,contex)['type']
+        write_type :str= str(ut.get_var_dict(write_name,contex)['type'])
 
         if ut.is_arr_type(write_type):
 
             if write_name in gc.global_vars.keys():
                 if node["pos"]["kind"] == "literal":
                     
-                    pos = node["pos"]["val"]
+                    pos :int= int(node["pos"]["val"])
                     pos*=ut.size_lookup(gc.global_vars[write_name]['type'])
                     
                     text.append(f"mov  [rip+{pos}], rax")
 
                 elif  node["pos"]["kind"] == "identifier":
                     #mov eax, lala[0+rax*4]
-                    read_name = node["val"]['name']
+                    read_name :str= str(node["val"]['name'])
                     size = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
                     text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex)}")
                     text.append(f"mov {write_name}[0+rdx*{size}], rax")
@@ -206,15 +206,15 @@ def handle_asing(node:dict,contex:ut.contextc):
                 if node["pos"]["kind"] == "literal":
                     #ofs - i*size
                     
-                    pos = node["pos"]["val"]
+                    pos :int= int(node["pos"]["val"])
                     pos*=ut.size_lookup(contex.locals[write_name]['type'])
                     pos-= (contex.locals[write_name]['ofs'])
                     text.append(f"mov {ut.get_mov_size(write_type)} [rbp-{pos}], rax")
 
                 elif node["pos"]["kind"] == "identifier":
                     #[rbp-ofs+rax*size]
-                    ofs = contex.locals[write_name]['ofs']
-                    read_name = node["val"]['name']
+                    ofs :int= int(contex.locals[write_name]['ofs'])
+                    read_name :str= str(node["val"]['name'])
                     size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
                     text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
                     text.append(f"mov {ut.var_mem_asm(write_name, contex)} [rbp-{ofs}+rdx*{size}], rax")
@@ -239,16 +239,16 @@ def handle_asing(node:dict,contex:ut.contextc):
     
 
 def handle_func_def(node:dict,contex:ut.contextc):
-    text=[]
-    fname = node['name']
+    text :list[str]=[]
+    fname :str= str(node['name'])
     if contex.is_global:
-        params = node["param"]
+        params :list[str]= node["param"]
 
         if len(params) > len(ut.regs):
             raise SyntaxError("to many args in function: " + fname)
         else:
             gc.functions[fname]= params
-            return_type = node["ret_type"]
+            return_type :str= str(node["ret_type"])
 
 
             text.append(f".{fname}:")
@@ -262,8 +262,8 @@ def handle_func_def(node:dict,contex:ut.contextc):
 
             #unpacking locals
             for i in range(len(params)):  
-                cur_type = params[i]['type']
-                cur_name = params[i]['name']
+                cur_type :str= str(params[i]['type'])
+                cur_name :str= str(params[i]['name'])
 
                 cur_size = ut.size_lookup(cur_type)
 
@@ -286,8 +286,8 @@ def handle_func_def(node:dict,contex:ut.contextc):
     else:
         raise SyntaxError("only global gc.functions are alowed: " + str(fname))
     
-def handle_if(node:dict,contex:ut.contextc):
-    text=[]
+def handle_if(node:dict,contex:ut.contextc) -> list[str]:
+    text :list[str]=[]
     text.extend(gc.formulate_math(node["exp"],contex,"cond"))
 
     endl = next(ut.label_gen)
@@ -301,8 +301,8 @@ def handle_if(node:dict,contex:ut.contextc):
 
     return text
 
-def handle_if_else(node:dict,contex:ut.contextc):
-    text=[]
+def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
+    text :list[str]=[]
     text.extend(gc.formulate_math(node["exp"], contex, "cond"))
     endl = next(ut.label_gen)
     
@@ -322,8 +322,8 @@ def handle_if_else(node:dict,contex:ut.contextc):
 
     return text
 
-def handle_while(node:dict,contex:ut.contextc):
-    text=[]
+def handle_while(node:dict,contex:ut.contextc) -> list[str]:
+    text :list[str]=[]
     endla = next(ut.label_gen)
     startla =next(ut.label_gen)
     text.append(f"jmp .L{endla}")
@@ -336,8 +336,8 @@ def handle_while(node:dict,contex:ut.contextc):
 
     return text
 
-def handle_for(node:dict,contex:ut.contextc):
-    text=[]
+def handle_for(node:dict,contex:ut.contextc) -> list[str]:
+    text :list[str]=[]
     endla = next(ut.label_gen)
     startla = next(ut.label_gen)
 

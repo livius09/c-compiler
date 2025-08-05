@@ -21,18 +21,28 @@
 ]
 
 #not mine
-def parM(tokens: list):
-    def parse_primary(token):
+def parM(tokens: list[str]):
+    def parse_primary(token:str)-> dict:
         if token.startswith("INTEGER>"):
             return {"kind": "literal", "val": int(token.split(">")[1])}
         elif token.startswith("IDENTIFIER>"):
-            return {"kind": "identifier", "name": token.split(">")[1]}
+
+            name :str= token.split(">")[1]
+
+            global constants
+
+            if name in constants.keys():
+                return {"kind": "literal", "val": constants[name]}
+            else:   #only symbolic here
+                print(constants)
+                return {"kind": "identifier", "name": name}
+            
         elif token.startswith("REFRENCE>"):
             return {"kind": "refrence", "name": token.split(">")[1]}
         elif token.startswith("DEREFRENCE>"):
             return {"kind": "derefrence", "name": token.split(">")[1]}
         elif token.startswith("ARR>"):
-            content=token.split(">")[2]
+            content :str =token.split(">")[2]
 
             if content.isdecimal():
                 stuff={"kind": "literal", "val":int(content)}
@@ -46,7 +56,7 @@ def parM(tokens: list):
         else:
             raise ValueError(f"Unexpected token: {token}")
 
-    def get_precedence(op):
+    def get_precedence(op:str) -> int:
         return {
             '<=' :1,
             '>=' :1,
@@ -67,11 +77,12 @@ def parM(tokens: list):
             '%'  :3,
         }.get(op, -1)  # Unknown ops = very low precedence
 
-    def fold_constants(left, op, right):
-    # If both sides are integer literals: constant fold
+    def fold_constants(left:dict, op:str, right:dict):
+        # If both sides are integer literals: constant fold
         if left["kind"] == "literal" and right["kind"] == "literal":
-            a, b = left["val"], right["val"]
-            result = None
+            a :int = int(left["val"])
+            b :int = int(right["val"])
+            result :int|None = None
             if op ==   '+':
                 result = a + b
             elif op == '-':
@@ -141,14 +152,14 @@ def parM(tokens: list):
         }
 
 
-    def parse_expression(tokens, precedence=0):
+    def parse_expression(tokens:list[str], precedence:int=0):
         if not tokens:
             return None
 
         left = parse_primary(tokens.pop(0))
 
         while tokens:
-            op = tokens[0]
+            op = str(tokens[0])
             op_prec = get_precedence(op)
             if op_prec < precedence:
                 break
@@ -193,17 +204,20 @@ def parM(tokens: list):
 
 
 
-var_types = ["n8","n16","n32","n64","un8","un16","un32","un64",     
-             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
+var_types :list[str]= ["n8","n16","n32","n64","un8","un16","un32","un64",     
+             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"] 
+
+global constants
+constants :dict[str, int]= {}  #replace table for the constants only used in Mparse
 
 
-def parse(line: list[list[str]]):
+def parse(line: list[list[str]])-> tuple[list[dict], int]:
     out = []
     i = 0
 
     while i < len(line):
         tmp = {}
-        consumed = 1  # default: consume at least this line
+        consumed :int= 1  # default: consume at least this line
 
         match line[i][0].lower():
             case "}":
@@ -233,7 +247,7 @@ def parse(line: list[list[str]]):
                     tmp["kind"] = "letinit"
                     if is_arr:
                         arr_line = line[i+2]
-                        chunks = []
+                        chunks :list[list[str]]= []
                         current = []
 
                         for token in arr_line:
@@ -256,6 +270,23 @@ def parse(line: list[list[str]]):
                     tmp["kind"] = "letdec"
                     if is_arr:
                         tmp["len"] = int(line[i][2].split(">")[1])
+
+            case "const":
+                name=line[i][1].split(">")[1]
+
+                if name  in constants.keys():
+                    raise SystemError(f"constant: {name} already exists")
+                
+                math_part = line[i][line[i].index("=") + 1:]
+
+                try:
+                    constants[name] = int(parM(math_part)["val"])   #warning cause idk and to int conversion is to fail on purpose
+                except:
+                    print(f"const can only be a number known at compile time\nName:{name}")
+
+
+
+
 
             case "func":
                 tmp["kind"] = "func_dec"
@@ -369,7 +400,8 @@ arrt = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['Let', 'TYPE>n32', 'IDENTIFIER>n
 arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'],['ARR>ncm>2', '=', 'INTEGER>2']]
 bint = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'IDENTIFIER>num']]
 funt = [['TYPE>n32', 'FUNCT>main', '(', 'TYPE>n8', 'IDENTIFIER>na', ',', 'TYPE>n32', 'IDENTIFIER>num'], '{', ['Return', 'IDENTIFIER>na', '+', 'IDENTIFIER>num'], '}']
+cost = [['const', 'IDENTIFIER>pi', '=', 'INTEGER>3'], ['Let', 'TYPE>n8', 'IDENTIFIER>thing', '=', 'IDENTIFIER>pi', '+', 'INTEGER>1']]
 
 test = [['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2'], ['Func', 'TYPE>void', 'FUNCT>Main', '('], '{', ['Let', 'TYPE>n64', 'IDENTIFIER>local', '=', 'INTEGER>1', '<<', 'INTEGER>1'], ['IDENTIFIER>local', '=', 'IDENTIFIER>global', '+', 'INTEGER>1'], '}']
-out,lines = parse(test)
+out,lines = parse(cost)
 print(out)

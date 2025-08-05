@@ -1,10 +1,2 @@
-['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2', '+', 'INTEGER>97']
-['Let', 'ARR>char>', 'IDENTIFIER>aba', '=']
-{
-['INTEGER>97', ',', 'INTEGER>98', ',', 'INTEGER>99', ',', 'INTEGER>10']
-}
-['Func', 'TYPE>void', 'FUNCT>Main', '(']
-{
-['Let', 'TYPE>n64', 'IDENTIFIER>local', '=', 'INTEGER>1', '<<', 'INTEGER>1']
-['IDENTIFIER>local', '=', 'IDENTIFIER>global', '+', 'INTEGER>1']
-}
+['Const', 'IDENTIFIER>pi', '=', 'INTEGER>3']
+['Let', 'TYPE>n8', 'IDENTIFIER>thing', '=', 'IDENTIFIER>pi', '+', 'INTEGER>1']
