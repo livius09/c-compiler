@@ -1,11 +1,13 @@
-import tinylang_x86_codegen as gc
-import utils_stuff as ut
+import code_gen.tinylang_x86_codegen as gc
+import code_gen.utils_stuff as ut
 
 
 def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]= []
     var_name :str= str(node['name'])
     vartype  :str= str(node['var_type'])
+
+    global data, global_vars
 
     if ut.var_decl(var_name,contex):
         raise SyntaxError(f"variable: {var_name} has already been declared")
@@ -25,11 +27,12 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         tmp['size'] = arrsize
         tmp['len'] = varlen
 
-        gc.data.append(f"{var_name}:")
+        gc.data.append(f"{var_name}:")  
         
         
 
     if contex.is_global:
+        
         gc.global_vars[var_name] = tmp
         
     else:
@@ -43,15 +46,16 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     else:
         val_type = ""
 
-    print("val type: "+str(val_type))
+    #print("val type: "+str(val_type))
 
     if val_type == "literal":
-        print("get here")
+        
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \t {node['val']['val']}")
         else:
             text.append(f"mov {ut.var_mem_asm(var_name, contex)}, {node['val']['val']}")
 
+        print("got there")
         print(gc.data)
 
     elif val_type == "identifier":
@@ -100,6 +104,8 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
     var_name :str= str(node['name'])
     vartype :str= str(node['var_type'])
 
+    global data, global_vars
+
     if (ut.var_decl(var_name,contex)):
         raise SyntaxError(f"variable: {var_name} has already been declared")
     else:
@@ -142,11 +148,14 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     write_name :str= str(node['name'])
     val_type :str= str(node['val']['kind'])
 
+    global data, global_vars
+
+
 
     if ut.var_decl(write_name,contex):
         if val_type == "literal":
-            text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'], contex)}")
-
+            text.append(f"mov rax, {node['val']['val']}")   #there was a ut.var_mem_asm(node['val']['val'],context) here: how what why and how did i never notice
+                                                            #i need to do a lot more testing
         elif val_type == "binexp":
             text.extend(gc.formulate_math(node['val'],contex))
 
@@ -238,9 +247,14 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
         raise SyntaxError(f"variable: {write_name} has not been declared")
     
 
-def handle_func_def(node:dict,contex:ut.contextc):
+def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]=[]
     fname :str= str(node['name'])
+
+    print("fuction dec")
+    
+    print(node)
+
     if contex.is_global:
         params :list[str]= node["param"]
 
@@ -262,8 +276,8 @@ def handle_func_def(node:dict,contex:ut.contextc):
 
             #unpacking locals
             for i in range(len(params)):  
-                cur_type :str= str(params[i]['type'])
-                cur_name :str= str(params[i]['name'])
+                cur_type :str= str(params[i]['type']) # type: ignore
+                cur_name :str= str(params[i]['name']) # type: ignore
 
                 cur_size = ut.size_lookup(cur_type)
 
@@ -271,9 +285,9 @@ def handle_func_def(node:dict,contex:ut.contextc):
                 cur_ofs = ut.alingment_gen(cur_type,loc_cont)
 
 
-                loc_para[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs} 
+                loc_cont.locals[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs}
 
-                text.append(f"mov {ut.var_mem_asm(params[i]['type'],contex)}, {ut.regs[i]}")
+                text.append(f"mov {ut.var_mem_asm(cur_name, loc_cont)}, {ut.regs[i]}")
 
             
             

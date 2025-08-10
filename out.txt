@@ -1,0 +1,24 @@
+data:
+text:
+	mov rax, 13
+	mov BYTE PTR [inam], rax
+	mov rax, BYTE PTR [inam]
+	push rax
+	mov rax, 1
+	pop rbx
+	cmp rax, rbx
+	jne .L0
+	mov rax, BYTE PTR [inam]
+	push rax
+	mov rax, 4
+	pop rbx
+	cmp rax, rbx
+	jne .L2
+	mov rax, 3
+	mov BYTE PTR [inam], rax
+	jmp .L1
+	.L2:
+	mov rax, 5
+	mov BYTE PTR [inam], rax
+	.L1:
+	.L0:

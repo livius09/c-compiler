@@ -18,10 +18,12 @@
       "name": "x"
     }
   }
-]
+] # type: ignore
 
 #not mine
 def parM(tokens: list[str]):
+    #print("math pars:")
+    #print(tokens)
     def parse_primary(token:str)-> dict:
         if token.startswith("INTEGER>"):
             return {"kind": "literal", "val": int(token.split(">")[1])}
@@ -34,7 +36,7 @@ def parM(tokens: list[str]):
             if name in constants.keys():
                 return {"kind": "literal", "val": constants[name]}
             else:   #only symbolic here
-                print(constants)
+                #print(constants)
                 return {"kind": "identifier", "name": name}
             
         elif token.startswith("REFRENCE>"):
@@ -52,6 +54,26 @@ def parM(tokens: list[str]):
                 raise SyntaxError("arr indicies must be ints of identifiers not: "+str(content))
 
             return {"kind": "arrac", "name": token.split(">")[1],"pos":stuff}
+        
+        elif token.startswith("FUNCT>"):
+            pass    #still need to implement ts for some reason
+            
+            tmp={}
+            tmp["kind"] = "fcall"
+            tmp["name"] = token.split(">")[1]
+            tmp["para"] = []
+            j = 1
+            current_param = []
+            #while j < len(line[i]):
+            #    if line[i][j] == ",":
+            #        tmp["para"].append(parM(current_param))
+            #        current_param = []
+            #    else:
+            #        current_param.append(line[i][j])
+            #    j += 1
+            if current_param:
+                tmp["para"].append(parM(current_param))
+            return tmp
         
         else:
             raise ValueError(f"Unexpected token: {token}")
@@ -166,7 +188,7 @@ def parM(tokens: list[str]):
 
             tokens.pop(0)  # consume the op
             right = parse_expression(tokens, op_prec + 1)
-            left = fold_constants(left, op, right)
+            left = fold_constants(left, op, right) # type: ignore
 
         return left
 
@@ -280,28 +302,33 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                 math_part = line[i][line[i].index("=") + 1:]
 
                 try:
-                    constants[name] = int(parM(math_part)["val"])   #warning cause idk and to int conversion is to fail on purpose
+                    constants[name] = int(parM(math_part)["val"])   # type: ignore #warning cause idk and to int conversion is to fail on purpose
                 except:
-                    print(f"const can only be a number known at compile time\nName:{name}")
+                    raise SyntaxError(f"const can only be a number known at compile time\nName:{name}")
 
 
 
 
 
-            case "func":
+            case "func":        #for functions being declared
                 tmp["kind"] = "func_dec"
                 tmp["name"] = line[i][2].split(">")[1]
                 tmp["ret_type"] = line[i][1].split(">")[1]
                 tmp["param"] = []
-                for a in range(1, len(line[i]) - 4, 4):
+
+                for a in range(4, len(line[i]), 2):
                     tmp["param"].append({
                         "type": line[i][a].split(">")[1],
                         "name": line[i][a+1].split(">")[1]
                     })
+                    print("inside of funcdec loop")
+                    print(line[i][a])
+                    print(line[i][a+1])
+
 
                 body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
-                consumed = 4 + body_consumed
+                consumed = 3 + body_consumed    #3 for func,{,}
 
             case "return":
                 tmp["kind"] = "ret"
@@ -312,6 +339,17 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                 tmp["exp"] = parM(line[i][1:])
                 body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
+
+                print(line[i+body_consumed+3][0])
+                if(line[i+body_consumed+3][0]=="else"):
+
+                    tmp["kind"] = "if_else"
+                    print("else parse part:")
+                    print(line[i+body_consumed+5:])
+                    else_body, else_body_consumed = parse(line[i+body_consumed+5:])
+                    tmp["else_body"] = else_body
+                    body_consumed+=else_body_consumed + 3
+    
                 consumed = 2 + body_consumed
 
             case "while":
@@ -330,12 +368,12 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                 consumed = 5 + body_consumed
 
             case _:
-                if line[i][0].startswith("IDENTIFIER>"):
+                if line[i][0].startswith("IDENTIFIER>"):    #for the asings like "x=1"
                     tmp["kind"] = "asing"
                     tmp["name"] = line[i][0].split(">")[1]
                     tmp["val"] = parM(line[i][2:])
 
-                elif line[i][0].startswith("FUNCT>"):
+                elif line[i][0].startswith("FUNCT>"):       #for standalone function calls
                     tmp["kind"] = "fcall"
                     tmp["name"] = line[i][0].split(">")[1]
                     tmp["para"] = []
@@ -351,7 +389,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                     if current_param:
                         tmp["para"].append(parM(current_param))
 
-                elif line[i][0].startswith("TYPE>") and line[i][1].startswith("FUNCT>"):
+                elif line[i][0].startswith("TYPE>") and line[i][1].startswith("FUNCT>"):    #wth ?
                     tmp["kind"] = "fun_dec"
                     tmp["name"] = line[i][1].split(">")[1]
                     tmp["ret_type"] = line[i][0].split(">")[1]
@@ -390,8 +428,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
     return out, i
 
 
-  
-          
+
 
 fort = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '!=', 'INTEGER>4'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>x', '=', 'IDENTIFIER>x', '+', 'INTEGER>1'], '}']
 fart = [['for'], ['Let', 'TYPE>n8', 'IDENTIFIER>i', '=', 'INTEGER>0'], ['IDENTIFIER>i', '==', 'INTEGER>1'], ['IDENTIFIER>i', '=', 'IDENTIFIER>i', '+', 'INTEGER>1'], '{', ['IDENTIFIER>e', '=', 'IDENTIFIER>e', '+', 'INTEGER>1'], '}']
@@ -401,7 +438,10 @@ arct = [['Let', 'TYPE>n32', 'IDENTIFIER>num'],['ARR>ncm>2', '=', 'INTEGER>2']]
 bint = [['Let', 'TYPE>n32', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>1', '<<', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '&', 'IDENTIFIER>num'], ['IDENTIFIER>num', '=', 'INTEGER>2', '|', 'IDENTIFIER>num']]
 funt = [['TYPE>n32', 'FUNCT>main', '(', 'TYPE>n8', 'IDENTIFIER>na', ',', 'TYPE>n32', 'IDENTIFIER>num'], '{', ['Return', 'IDENTIFIER>na', '+', 'IDENTIFIER>num'], '}']
 cost = [['const', 'IDENTIFIER>pi', '=', 'INTEGER>3'], ['Let', 'TYPE>n8', 'IDENTIFIER>thing', '=', 'IDENTIFIER>pi', '+', 'INTEGER>1']]
+ifel = [['Let', 'TYPE>n8', 'IDENTIFIER>inam', '=', 'INTEGER>10'], ['IDENTIFIER>inam', '=', 'INTEGER>13'], ['if', 'IDENTIFIER>inam', '==', 'INTEGER>1'], '{', ['IDENTIFIER>inam', '=', 'INTEGER>12'], '}', ['else'], '{', ['IDENTIFIER>inam', '=', 'INTEGER>15'], '}']
 
 test = [['Let', 'TYPE>n64', 'IDENTIFIER>global', '=', 'INTEGER>1', '+', 'INTEGER>2'], ['Func', 'TYPE>void', 'FUNCT>Main', '('], '{', ['Let', 'TYPE>n64', 'IDENTIFIER>local', '=', 'INTEGER>1', '<<', 'INTEGER>1'], ['IDENTIFIER>local', '=', 'IDENTIFIER>global', '+', 'INTEGER>1'], '}']
-out,lines = parse(cost)
-print(out)
+
+if __name__ == "__main__":
+    out,lines = parse(ifel)
+    print(out)

@@ -1,10 +1,13 @@
-import utils_stuff as ut
-import kind_hadel as kh
+import code_gen.kind_hadel as kh
+import code_gen.utils_stuff as ut
 
-global_vars = {}         #x:{"type":"n8", "size":1, }    contains the var name as key and type as value
-functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 
-data:list[str]=[]         #data section of asm
+
+global global_vars, functions, data
+global_vars = {}        #"x":{"type":"n8", "size":1, }    contains the var name as key and type as value
+functions :dict[str,list[str]]= {}          #"print":["char[]","n64"]    contains the function name as key and the value is the types of the parameter in order
+
+data:list[str] = []         #data section of asm
 
 def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asing, cond
     nodetype = str(node['kind'])
@@ -132,7 +135,7 @@ def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function
 
 
 
-def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in contex  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text:list[str]=[]         #text section so the actual executed asm
 
     
@@ -176,11 +179,15 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #true is global false is
 
 
             case "ret":
-                text.extend(formulate_math(node,contex))
+                text.extend(formulate_math(node["val"],contex))
             
 
             case _:
                 raise SyntaxError("AST Defective: "+str(node['kind']))
+            
+        #print("end of loop:")
+        #print(data)
+        #print(text)
 
     return text
 

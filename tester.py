@@ -231,11 +231,6 @@ def print_ofst():
         print(str(index)+"\t" + color + entry + RESET)
 
 # --- Mock helpers ---
-def size_lookup(var_type):
-    return {"int": 4, "char": 1, "float": 4}.get(var_type.replace("[]", ""), 1)
-
-def is_arr_type(var_type):
-    return var_type.endswith("[]")
 
 # --- Test example ---
 add_ofset_table({"var_name": "a", "var_type": "int", "size": 4})
@@ -250,7 +245,6 @@ abc={"x":{"name":2,"type":4},"e":{"name":4,"type":7}}
 def get_fart(nam:str):
     return abc[nam]
 
-get_fart("x")["name"]="ligma"
 
 print(abc)
 

@@ -1,0 +1,42 @@
+#pipeline pattern
+
+#get the input
+#call the lexer
+#call the parser
+#call codegen
+#link asm ?
+#use nasm to compile asm
+#run or/and output the elf binary
+
+import tokenize_tiny.tinylang_tokenizer as ttok
+import parse_tiny.tinylang_parser as tlpars
+import code_gen.tinylang_x86_codegen as tcod
+from code_gen.utils_stuff import contextc
+
+with open("inpats.txt","r") as rawf:
+    raw = rawf.read()
+
+tokenized :list[list[str]]= ttok.tokenize(raw)
+print("tokenized:")
+print(tokenized)
+
+parsed, tmp = tlpars.parse(tokenized)
+
+print("parsed:")
+print(parsed)
+
+start_contx = contextc(is_global=True)
+compiled = tcod.gen(parsed, start_contx)
+
+print("compiled:")
+print(compiled)
+
+with open("out.txt","w") as file:
+    file.write("data:\n")
+    for b in []:
+        file.write("\t"+b+"\n")
+    file.write("text:\n")
+    for a in compiled:
+        file.write("\t"+a+"\n")
+    file.close
+

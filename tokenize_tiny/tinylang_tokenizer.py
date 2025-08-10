@@ -6,8 +6,10 @@ comands = ["let","const","return","for","while","break","if","else","func"]
 types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void",     
          "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
-with open("tokenize/input.txt","r") as raw:
-    read = raw.read()
+if __name__ == "__main__":
+
+    with open("tokenize/input.txt","r") as raw:
+        read = raw.read()
 
 
 def tokenize(line:str) -> list[list[str]]:
@@ -160,7 +162,7 @@ def tokenize(line:str) -> list[list[str]]:
                    
 
             if(s in comands):
-                tokenln.append(s.capitalize())
+                tokenln.append(s.lower())
                 continue
 
             if (s in types):
@@ -232,11 +234,11 @@ def tokenize(line:str) -> list[list[str]]:
     
             
 
+if __name__ == "__main__":
+    lig = tokenize(read)
+    with open("tokenize/output.txt", "w") as file:
+        file.write(str(lig))
 
-lig = tokenize(read)
-with open("tokenize/output.txt", "w") as file:
-    file.write(str(lig))
-
-with open("tokenize/readable_out.txt", "w") as file:
-    for line in lig:
-        file.write(str(line)+"\n")
+    with open("tokenize/readable_out.txt", "w") as file:
+        for line in lig:
+            file.write(str(line)+"\n")

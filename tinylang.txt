@@ -42,7 +42,7 @@ let             //declare vars
 const           //let for constants any acourance of the symbol afterwards 
                 //will just be replaced by the number given    doesnt need a type
                 //all constants are global from the point they are created
-function(){}    //declare functions parameter
+func type name(){}    //declare functions parameter
 return          //retunrs from a function
 while(c){}      //while condition true
 for(declaration; c; operation;){}
@@ -73,7 +73,7 @@ exp:
 
     const ror = 3;
     const rar = 14+1;
-    const rbr = 13 + ror;     //yeah that works but only cause of parser trickery and constant folding
+    const rbr = 13 + ror;     #yeah that works but only cause of parser trickery and constant folding#
 
     let n8~ ptr = $e;
     ~ptr = 2;

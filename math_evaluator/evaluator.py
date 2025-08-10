@@ -58,6 +58,7 @@ def evaluator(a:list) -> list:
     
     print(a)
     evaluator(a)
+    return []
 
 
 u=[1,"+",2,"*",2,"+",[1,"+",1]]
