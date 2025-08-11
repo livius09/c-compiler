@@ -1,13 +1,16 @@
-import utils_stuff as ut
-import kind_hadel as kh
+import code_gen.kind_hadel as kh
+import code_gen.utils_stuff as ut
 
-global_vars = {}         #x:{"type":"n8", "size":1, }    contains the var name as key and type as value
-functions={}    #print:[char[],n64]    contains the function name as key and the value is the types of the parameter in order
 
-data=[]         #data section of asm
 
-def formulate_math(node:dict, loc_conx:ut.contextc, mcontext="asing",): #asing, cond
-    nodetype = node['kind']
+global global_vars, functions, data
+global_vars = {}        #"x":{"type":"n8", "size":1, }    contains the var name as key and type as value
+functions :dict[str,list[str]]= {}          #"print":["char[]","n64"]    contains the function name as key and the value is the types of the parameter in order
+
+data:list[str] = []         #data section of asm
+
+def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asing, cond
+    nodetype = str(node['kind'])
     
     if nodetype == "identifier":
         return [f"mov rax, {ut.var_mem_asm(node['name'],loc_conx)}"]
@@ -26,7 +29,7 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext="asing",): #asing, 
         return formulate_fcals(node,loc_conx)
 
     if nodetype == "binexp":
-        code = []
+        code :list[str]= []
         cmpops=["==","!=","<",">","<=",">="]
 
         code += formulate_math(node['left'], loc_conx, mcontext)
@@ -34,7 +37,7 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext="asing",): #asing, 
         code += formulate_math(node['right'], loc_conx, mcontext)
         code.append("pop rbx")
 
-        op = node['op']
+        op = str( node['op'])
         if op == "+":
             code.append("add rax, rbx")
         elif op == "-":
@@ -78,22 +81,22 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext="asing",): #asing, 
         raise SyntaxError("invalid math: " + str(nodetype))
 
 def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function calls and checking the parameter types
-    code=[]
-    fname = node['name']
+    code:list[str]=[]
+    fname = str(node['name'])
     if fname in functions.keys():
-        params = node['para']
+        params = list(node['para'])
         dectypes = functions[fname]
         
         for i in range(len(params)):
 
-            curtype = params[i]['kind']
+            curtype :str= str(params[i]['kind'])
 
             if curtype == "binexp":
                 code.extend(formulate_math(params[i]["val"], conx))
                 code.append(f"mov {ut.regs[i]}, rax")
             elif curtype == "identifier":
                 
-                varname = params[i]['name']
+                varname = str(params[i]['name'])
                 vartype = ut.get_var_type(varname, conx)
 
                 if dectypes[i] == vartype:
@@ -132,8 +135,8 @@ def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function
 
 
 
-def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
-    text=[]         #text section so the actual executed asm
+def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in contex  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+    text:list[str]=[]         #text section so the actual executed asm
 
     
     
@@ -176,11 +179,15 @@ def gen(a:list[dict],contex:ut.contextc):   #true is global false is local  #loc
 
 
             case "ret":
-                text.extend(formulate_math(node,contex))
+                text.extend(formulate_math(node["val"],contex))
             
 
             case _:
                 raise SyntaxError("AST Defective: "+str(node['kind']))
+            
+        #print("end of loop:")
+        #print(data)
+        #print(text)
 
     return text
 
@@ -193,12 +200,13 @@ nif  = [{'kind': 'if', 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'i
 nfor = [{'kind': 'for', 'init': {'kind': 'letinit', 'name': 'i', 'var_type': 'n8', 'val': {'kind': 'literal', 'val': 0}}, 'exp': {'kind': 'binexp', 'op': '==', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}, 'incexp': [{'kind': 'asing', 'name': 'i', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'i'}, 'right': {'kind': 'literal', 'val': 1}}}], 'body': [{'kind': 'asing', 'name': 'x', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'x'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 nptr = [{'kind': 'letinit', 'var_type': 'n8', 'name': 'num', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'letinit', 'var_type': 'n8~', 'name': 'ptr', 'val': {'kind': 'refrence', 'name': 'num'}}, {'kind': 'letinit', 'var_type': 'n32', 'name': 'refnum', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'derefrence', 'name': 'ptr'}, 'right': {'kind': 'literal', 'val': 1}}}]
 narr = [{'var_type': 'n32[]', 'name': 'ncm', 'kind': 'letdec',"size": 2},{'var_type': 'n32', 'name': 'num', 'kind': 'letdec'}, {'kind': 'asing', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 2}, 'val': {'kind': 'literal', 'val': 2}}]
+cost = [{'var_type': 'n8', 'name': 'thing', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 4}}]
 
 test = [{'var_type': 'n64', 'name': 'global', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 3}}, {'kind': 'func_dec', 'name': 'Main', 'ret_type': 'void', 'param': [], 'body': [{'var_type': 'n64', 'name': 'local', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
 
 if __name__ == "__main__":
     start_contx = ut.contextc(is_global=True)
-    out = gen(test, start_contx)
+    out = gen(cost, start_contx)
     
     print("globals: "+str(global_vars))
     print("Data: "+ str(data))

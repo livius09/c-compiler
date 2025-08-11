@@ -1,11 +1,13 @@
-import tinylang_x86_codegen as gc
-import utils_stuff as ut
+import code_gen.tinylang_x86_codegen as gc
+import code_gen.utils_stuff as ut
 
 
 def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
-    text = []
-    var_name = node['name']
-    vartype  = node['var_type']
+    text :list[str]= []
+    var_name :str= str(node['name'])
+    vartype  :str= str(node['var_type'])
+
+    global data, global_vars
 
     if ut.var_decl(var_name,contex):
         raise SyntaxError(f"variable: {var_name} has already been declared")
@@ -19,17 +21,18 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
 
     if ut.is_arr_type(vartype):
         
-        varlen = node['len']
+        varlen :int= int(node['len'])
         arrsize = varlen * ut.size_lookup(vartype)
         
         tmp['size'] = arrsize
         tmp['len'] = varlen
 
-        gc.data.append(f"{var_name}:")
+        gc.data.append(f"{var_name}:")  
         
         
 
     if contex.is_global:
+        
         gc.global_vars[var_name] = tmp
         
     else:
@@ -39,19 +42,20 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
 
 
     if  ut.is_n_type(vartype):
-        val_type = node['val']['kind']
+        val_type :str= str(node['val']['kind'])
     else:
         val_type = ""
 
-    print("val type: "+str(val_type))
+    #print("val type: "+str(val_type))
 
     if val_type == "literal":
-        print("get here")
+        
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \t {node['val']['val']}")
         else:
             text.append(f"mov {ut.var_mem_asm(var_name, contex)}, {node['val']['val']}")
 
+        print("got there")
         print(gc.data)
 
     elif val_type == "identifier":
@@ -97,8 +101,10 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
 
 
 def handle_let_dec(node:dict,contex:ut.contextc) -> None:
-    var_name =node['name']
-    vartype = node['var_type']
+    var_name :str= str(node['name'])
+    vartype :str= str(node['var_type'])
+
+    global data, global_vars
 
     if (ut.var_decl(var_name,contex)):
         raise SyntaxError(f"variable: {var_name} has already been declared")
@@ -112,7 +118,7 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
 
         if ut.is_arr_type(vartype):
             tmp["type"] = vartype
-            varlen = node['len']
+            varlen :int= int(node['len'])
             size = varlen * ut.size_lookup(vartype)
             
             tmp['len'] = varlen
@@ -138,15 +144,18 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
             contex.locals[var_name] = tmp
 
 def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
-    text=[]
-    write_name = node['name']
-    val_type = node['val']['kind']
+    text:list[str]=[]
+    write_name :str= str(node['name'])
+    val_type :str= str(node['val']['kind'])
+
+    global data, global_vars
+
 
 
     if ut.var_decl(write_name,contex):
         if val_type == "literal":
-            text.append(f"mov rax, {ut.var_mem_asm(node['val']['val'], contex)}")
-
+            text.append(f"mov rax, {node['val']['val']}")   #there was a ut.var_mem_asm(node['val']['val'],context) here: how what why and how did i never notice
+                                                            #i need to do a lot more testing
         elif val_type == "binexp":
             text.extend(gc.formulate_math(node['val'],contex))
 
@@ -166,16 +175,16 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
         elif val_type=="arrac":
             
             #{'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 1}}}
-            arr_ac_kind=node["val"]["pos"]["kind"]
+            arr_ac_kind = node["val"]["pos"]["kind"]
             if arr_ac_kind == "literal":
-                read_name = node["val"]['name']
-                pos = node["val"]["pos"]["val"]
+                read_name :str= str(node["val"]['name'])
+                pos :int= int(node["val"]["pos"]["val"])
                 pos*=ut.size_lookup(ut.get_var_type(read_name,contex))
                 text.append(f"mov rax, {read_name}[rip+{pos}]")
 
             elif  arr_ac_kind == "identifier":
                 #mov eax, lala[0+rax*4]
-                read_name = node["val"]['name']
+                read_name :str= str(node["val"]['name'])
                 size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
                 text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
                 text.append(f"mov rax, {read_name}[0+rax*{size}]")
@@ -183,21 +192,21 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
             else:
                 raise SyntaxError("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))
         
-        write_type = ut.get_var_dict(write_name,contex)['type']
+        write_type :str= str(ut.get_var_dict(write_name,contex)['type'])
 
         if ut.is_arr_type(write_type):
 
             if write_name in gc.global_vars.keys():
                 if node["pos"]["kind"] == "literal":
                     
-                    pos = node["pos"]["val"]
+                    pos :int= int(node["pos"]["val"])
                     pos*=ut.size_lookup(gc.global_vars[write_name]['type'])
                     
                     text.append(f"mov  [rip+{pos}], rax")
 
                 elif  node["pos"]["kind"] == "identifier":
                     #mov eax, lala[0+rax*4]
-                    read_name = node["val"]['name']
+                    read_name :str= str(node["val"]['name'])
                     size = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
                     text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex)}")
                     text.append(f"mov {write_name}[0+rdx*{size}], rax")
@@ -206,15 +215,15 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                 if node["pos"]["kind"] == "literal":
                     #ofs - i*size
                     
-                    pos = node["pos"]["val"]
+                    pos :int= int(node["pos"]["val"])
                     pos*=ut.size_lookup(contex.locals[write_name]['type'])
                     pos-= (contex.locals[write_name]['ofs'])
                     text.append(f"mov {ut.get_mov_size(write_type)} [rbp-{pos}], rax")
 
                 elif node["pos"]["kind"] == "identifier":
                     #[rbp-ofs+rax*size]
-                    ofs = contex.locals[write_name]['ofs']
-                    read_name = node["val"]['name']
+                    ofs :int= int(contex.locals[write_name]['ofs'])
+                    read_name :str= str(node["val"]['name'])
                     size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
                     text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
                     text.append(f"mov {ut.var_mem_asm(write_name, contex)} [rbp-{ofs}+rdx*{size}], rax")
@@ -239,16 +248,21 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     
 
 def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
-    text=[]
-    fname = node['name']
+    text :list[str]=[]
+    fname :str= str(node['name'])
+
+    print("fuction dec")
+    
+    print(node)
+
     if contex.is_global:
-        params = node["param"]
+        params :list[str]= node["param"]
 
         if len(params) > len(ut.regs):
             raise SyntaxError("to many args in function: " + fname)
         else:
             gc.functions[fname]= params
-            return_type = node["ret_type"]
+            return_type :str= str(node["ret_type"])
 
 
             text.append(f".{fname}:")
@@ -262,8 +276,8 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
 
             #unpacking locals
             for i in range(len(params)):  
-                cur_type = params[i]['type']
-                cur_name = params[i]['name']
+                cur_type :str= str(params[i]['type']) # type: ignore
+                cur_name :str= str(params[i]['name']) # type: ignore
 
                 cur_size = ut.size_lookup(cur_type)
 
@@ -271,9 +285,9 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
                 cur_ofs = ut.alingment_gen(cur_type,loc_cont)
 
 
-                loc_para[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs} 
+                loc_cont.locals[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs}
 
-                text.append(f"mov {ut.var_mem_asm(params[i]['type'],contex)}, {ut.regs[i]}")
+                text.append(f"mov {ut.var_mem_asm(cur_name, loc_cont)}, {ut.regs[i]}")
 
             
             
@@ -287,7 +301,7 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
         raise SyntaxError("only global gc.functions are alowed: " + str(fname))
     
 def handle_if(node:dict,contex:ut.contextc) -> list[str]:
-    text=[]
+    text :list[str]=[]
     text.extend(gc.formulate_math(node["exp"],contex,"cond"))
 
     endl = next(ut.label_gen)
@@ -302,7 +316,7 @@ def handle_if(node:dict,contex:ut.contextc) -> list[str]:
     return text
 
 def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
-    text=[]
+    text :list[str]=[]
     text.extend(gc.formulate_math(node["exp"], contex, "cond"))
     endl = next(ut.label_gen)
     
@@ -323,7 +337,7 @@ def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
     return text
 
 def handle_while(node:dict,contex:ut.contextc) -> list[str]:
-    text=[]
+    text :list[str]=[]
     endla = next(ut.label_gen)
     startla =next(ut.label_gen)
     text.append(f"jmp .L{endla}")
@@ -337,7 +351,7 @@ def handle_while(node:dict,contex:ut.contextc) -> list[str]:
     return text
 
 def handle_for(node:dict,contex:ut.contextc) -> list[str]:
-    text=[]
+    text :list[str]=[]
     endla = next(ut.label_gen)
     startla = next(ut.label_gen)
 

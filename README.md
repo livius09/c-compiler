@@ -6,6 +6,16 @@ a small project to understand compilers (i know its shity)
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.0.0:
+  wow we made it.
+  who is we idk but yeah.
+  well i did.
+  made a unified interface in main.py just write you code in input.txt press run in main.py and the asm should apear in out.txt
+  also made a lot of fixes to fuction_dec and how parameter are given over to functions
+
+#### v0.9.0:
+  added suport for constanst in form of constexpr they dont need types but they suport math if it can be simplyfied at compile time
+
 #### v0.8.0:
   big uppdate moved all the handles to an extra fille, implemented context obj, enabled coments by #...# some fixes to functions and returs to
 
@@ -19,7 +29,7 @@ a small project to understand compilers (i know its shity)
     mov computer, code
     mov "human", food
     mov computer, code
-    mov ""human", food
+    mov "human", food
     mov sleep, 2 am
   jmp main
   

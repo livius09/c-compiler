@@ -1,0 +1,3 @@
+const pi = 3;
+
+let n8 thing = pi + 1;

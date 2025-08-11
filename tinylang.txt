@@ -1,7 +1,6 @@
 typed compiled
 
 data tipes:
-    const
 
     n8  //number and amout of bits
     n16
@@ -40,7 +39,10 @@ data tipes:
 
 
 let             //declare vars
-function(){}    //declare functions parameter
+const           //let for constants any acourance of the symbol afterwards 
+                //will just be replaced by the number given    doesnt need a type
+                //all constants are global from the point they are created
+func type name(){}    //declare functions parameter
 return          //retunrs from a function
 while(c){}      //while condition true
 for(declaration; c; operation;){}
@@ -65,12 +67,24 @@ operations:
 
 
 exp:
-
+    let n8 i = 0;
     let n8 e = 1+4;
     let n8 num = e+1;
 
+    const ror = 3;
+    const rar = 14+1;
+    const rbr = 13 + ror;     #yeah that works but only cause of parser trickery and constant folding#
+
     let n8~ ptr = $e;
     ~ptr = 2;
+
+    let n16 arra[10];
+    let n16 arrab = {1, 2+2, 3+num, 4, 5, 6, 7};
+
+    arra[0] = 10;
+    arra[1] = 10+1;
+
+    num =
 
 
     func n64 plus(n64 a,n64 b){

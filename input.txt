@@ -1,0 +1,13 @@
+const pi = 3;
+
+func n8 reteigh(n8 innum){
+    return innum+8;
+}
+
+func void main(){
+    let n8 vara = 3;
+    let n64 vroo = 129;
+    vroo = vroo + vara;
+
+    vara = reteigh(pi);
+}

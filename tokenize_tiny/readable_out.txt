@@ -1,0 +1,2 @@
+['Const', 'IDENTIFIER>pi', '=', 'INTEGER>3']
+['Let', 'TYPE>n8', 'IDENTIFIER>thing', '=', 'IDENTIFIER>pi', '+', 'INTEGER>1']
