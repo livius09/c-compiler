@@ -2,7 +2,7 @@ import tinylang_x86_codegen as gc
 import utils_stuff as ut
 
 
-def handle_letinit(node:dict,contex:ut.contextc):
+def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     text = []
     var_name = node['name']
     vartype  = node['var_type']
@@ -96,7 +96,7 @@ def handle_letinit(node:dict,contex:ut.contextc):
 
 
 
-def handle_let_dec(node:dict,contex:ut.contextc):
+def handle_let_dec(node:dict,contex:ut.contextc) -> None:
     var_name =node['name']
     vartype = node['var_type']
 
@@ -137,7 +137,7 @@ def handle_let_dec(node:dict,contex:ut.contextc):
 
             contex.locals[var_name] = tmp
 
-def handle_asing(node:dict,contex:ut.contextc):
+def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     text=[]
     write_name = node['name']
     val_type = node['val']['kind']
@@ -238,7 +238,7 @@ def handle_asing(node:dict,contex:ut.contextc):
         raise SyntaxError(f"variable: {write_name} has not been declared")
     
 
-def handle_func_def(node:dict,contex:ut.contextc):
+def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
     text=[]
     fname = node['name']
     if contex.is_global:
@@ -286,7 +286,7 @@ def handle_func_def(node:dict,contex:ut.contextc):
     else:
         raise SyntaxError("only global gc.functions are alowed: " + str(fname))
     
-def handle_if(node:dict,contex:ut.contextc):
+def handle_if(node:dict,contex:ut.contextc) -> list[str]:
     text=[]
     text.extend(gc.formulate_math(node["exp"],contex,"cond"))
 
@@ -301,7 +301,7 @@ def handle_if(node:dict,contex:ut.contextc):
 
     return text
 
-def handle_if_else(node:dict,contex:ut.contextc):
+def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
     text=[]
     text.extend(gc.formulate_math(node["exp"], contex, "cond"))
     endl = next(ut.label_gen)
@@ -322,7 +322,7 @@ def handle_if_else(node:dict,contex:ut.contextc):
 
     return text
 
-def handle_while(node:dict,contex:ut.contextc):
+def handle_while(node:dict,contex:ut.contextc) -> list[str]:
     text=[]
     endla = next(ut.label_gen)
     startla =next(ut.label_gen)
@@ -336,7 +336,7 @@ def handle_while(node:dict,contex:ut.contextc):
 
     return text
 
-def handle_for(node:dict,contex:ut.contextc):
+def handle_for(node:dict,contex:ut.contextc) -> list[str]:
     text=[]
     endla = next(ut.label_gen)
     startla = next(ut.label_gen)
