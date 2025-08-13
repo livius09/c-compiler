@@ -164,11 +164,7 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
             
             case "if":
                 text.extend(kh.handle_if(node,contex))
-                
-
-            case "if_else":
-                text.extend(kh.handle_if_else(node,contex))
-
+        
 
             case "while":
                 text.extend(kh.handle_while(node,contex))

@@ -14,9 +14,9 @@ things that still need to be done:
     - [x] context class
     . [x] alingment
     - [ ] casts
-    - [ ] nested ifs (curently kinda works but falls apart whit else ig)
-    - [ ] parse if_else
-    - [ ] handle if(1){}
+    - [x] nested ifs (curently kinda works but falls apart whit else ig)
+    - [x] parse if_else
+    - [x] handle if(1){}
     - [ ] loc arr init
     - [ ] fix global data init
     - [ ] find out what the fuck is hapening whit data and globals

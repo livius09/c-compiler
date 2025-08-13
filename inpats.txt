@@ -1,12 +1,5 @@
 let n8 inam = 10;
-inam = 13;
 
-if(inam==1){
-    if(inam==4){
-        inam=3;
-    }else{
-        inam=5;y
-    }
-}else{
-    inam=15;
+if(1==1){
+    inam=13;
 }

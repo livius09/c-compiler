@@ -300,7 +300,7 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
     else:
         raise SyntaxError("only global gc.functions are alowed: " + str(fname))
     
-def handle_if(node:dict,contex:ut.contextc) -> list[str]:
+def old_handle_if(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]=[]
     text.extend(gc.formulate_math(node["exp"],contex,"cond"))
 
@@ -320,7 +320,7 @@ def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
     text.extend(gc.formulate_math(node["exp"], contex, "cond"))
     endl = next(ut.label_gen)
     
-    elsel= next(ut.label_gen)
+    elsel = next(ut.label_gen)
 
     text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{elsel}')      #jne .L1
 
@@ -335,6 +335,65 @@ def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
     text.append(f".L{endl}:")
 
     return text
+
+def handle_if(node: dict, contex: ut.contextc) -> list[str]:
+    has_else: bool = ("else_body" in node)  # Does this if have an else branch?
+    text: list[str] = []
+    higest_if: bool = (contex.expoint is None)  # Are we the outermost if?
+
+    exitl = next(ut.label_gen) if higest_if else contex.expoint #determine the exit poing for the whole ifs
+
+    # If outermost if, exit label in context so nested ifs use it
+    if higest_if:
+        contex.expoint = exitl # type: ignore
+    
+
+
+    if node["exp"]["kind"] == "literal":
+        print("const exp")
+
+        if node["exp"]["val"]:
+            text.extend(gc.gen(node["body"], contex))
+        elif has_else:
+            text.extend(gc.gen(node["else_body"], contex))
+        else:
+            raise SyntaxError("if shorting go kaboom")
+
+
+        # If this was the outermost if, close the chain and reset context
+        if higest_if:
+            contex.expoint = None
+            text.append(f".L{exitl}:")
+
+        return text
+    
+    falsel = next(ut.label_gen) if has_else else exitl
+
+    # Generate condition check
+    text.extend(gc.formulate_math(node["exp"], contex, "cond"))
+
+    
+    
+
+    text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{falsel}')
+    text.extend(gc.gen(node["body"], contex))
+
+    if has_else:
+        # If we have an else branch, jump over it after the true branch finishes
+        text.append(f"jmp .L{exitl}")
+        text.append(f".L{falsel}:")
+        text.extend(gc.gen(node["else_body"], contex))
+
+    # If this was the outermost if, close the chain and reset context
+    if higest_if:
+        contex.expoint = None
+        text.append(f".L{exitl}:")
+
+    return text
+
+
+
+
 
 def handle_while(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]=[]

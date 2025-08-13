@@ -6,6 +6,13 @@ a small project to understand compilers (i know its shity)
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.0.1:
+  yeah fine and nice litle commit.
+  fixe if up a bit
+  unified if and if_else into one handeler and one ast kind
+  made if(1){} posible
+
+
 #### v01.0.0:
   wow we made it.
   who is we idk but yeah.

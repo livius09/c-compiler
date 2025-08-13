@@ -243,7 +243,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
 
         match line[i][0].lower():
             case "}":
-                break
+                return out, i+1
 
             case "let":
                 is_arr = False
@@ -337,20 +337,27 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
             case "if":
                 tmp["kind"] = "if"
                 tmp["exp"] = parM(line[i][1:])
-                body, body_consumed = parse(line[i+2:])
+
+                # Parse the "if" body (skip the '{' at i+1)
+                body, body_consumed = parse(line[i + 2:])
                 tmp["body"] = body
 
-                print(line[i+body_consumed+3][0])
-                if(line[i+body_consumed+3][0]=="else"):
+                # Where the "else" would be if present
+                after_if_index = i + 2 + body_consumed
 
-                    tmp["kind"] = "if_else"
-                    print("else parse part:")
-                    print(line[i+body_consumed+5:])
-                    else_body, else_body_consumed = parse(line[i+body_consumed+5:])
+                # Check for "else" directly after the closing "}"
+                if after_if_index < len(line) and line[after_if_index][0] == "else":
+                    
+                    # Parse else body (skip the '{' at after_if_index+1)
+                    else_body, else_body_consumed = parse(line[after_if_index + 2:])
                     tmp["else_body"] = else_body
-                    body_consumed+=else_body_consumed + 3
-    
-                consumed = 2 + body_consumed
+
+                    # Total consumed: if start to end of else body
+                    consumed = (after_if_index + 2 + else_body_consumed) - i
+                else:
+                    # No else found
+                    consumed = 2 + body_consumed
+
 
             case "while":
                 tmp["kind"] = "while"
