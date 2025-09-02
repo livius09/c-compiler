@@ -248,6 +248,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
             case "let":
                 is_arr = False
                 var_type = line[i][1].split(">")[1]
+                tmp["kind"] = ""
 
                 if var_type in var_types:
                     tmp["var_type"] = var_type
@@ -368,7 +369,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
 
             case "for":
                 tmp["kind"] = "for"
-                tmp["init"] = parse([line[i+1]])[0][0]
+                tmp["init"] = parse([line[i+1]])[0]
                 tmp["exp"] = parM(line[i+2])
                 tmp["incexp"] = parse([line[i+3]])[0]
                 tmp["body"], body_consumed = parse(line[i+5:])

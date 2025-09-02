@@ -1,5 +1,6 @@
 import code_gen.kind_hadel as kh
 import code_gen.utils_stuff as ut
+import json
 
 
 
@@ -141,7 +142,14 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
     
     
     for node in a:
-        
+        print("cur node:")
+        print(node)
+
+    
+        if not isinstance(node, dict):
+            raise TypeError(f"gc.gen() got unexpected type: {type(node)} {node!r}")
+    
+
         match node['kind']:
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in

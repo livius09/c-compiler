@@ -1,5 +1,5 @@
 let n8 inam = 10;
 
-while(true){
-    inam++;
+for(let n8 i = 10; true; i++;){
+    inam=10;
 }

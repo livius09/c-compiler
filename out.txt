@@ -1,12 +1,14 @@
 data:
 text:
 	jmp .L0
-	.L1:
-	mov rax, BYTE PTR [inam]
+	.L1
+	mov rax, 10
+	mov BYTE PTR [inam], rax
+	mov rax, BYTE PTR [i]
 	push rax
 	mov rax, 1
 	pop rbx
 	add rax, rbx
-	mov BYTE PTR [inam], rax
+	mov BYTE PTR [i], rax
 	.L0
-	jmp 1
+	jmp .L1

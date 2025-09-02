@@ -1,6 +1,6 @@
 #better
 #tokenizer
-operations=["+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>", "&", "|", "^"]
+operations=["+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>",">=","<=", "&", "|", "^"]
 comands = ["let","const","return","for","while","break","if","else","func"]
 
 types = ["n8","n16","n32","n64","un8","un16","un32","un64", "void",     
@@ -214,9 +214,11 @@ def tokenize(line:str) -> list[list[str]]:
             continue
 
         if (line[i] in operations):
-            if  line[i+1] == line[i] and line[i+1] in operations:   #for the ==, <<, !=, <= and so on 
+            
+            if  line[i+1] in operations and str(line[i] + line[i+1]) in operations:   #for the ==, !=, << and so on 
                 tokenln.append(str(line[i]) + str(line[i+1]))
                 i+=1
+
             else:    
                 tokenln.append(line[i])
         

@@ -1,6 +1,6 @@
 import code_gen.tinylang_x86_codegen as gc
 import code_gen.utils_stuff as ut
-
+import json
 
 def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]= []
@@ -365,10 +365,12 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
 
 
 def handle_while(node:dict,contex:ut.contextc) -> list[str]:
-    text :list[str]=[]
-    if (node["exp"]["kind"]=="literal"): #if tehre is nothing return nothing
-        if node["exp"]["val"]==0:
-            return ["nop"]
+
+    if (node["exp"]["kind"]=="literal") and node["exp"]["val"]==0: #if tehre is nothing return nothing
+        return ["nop"]
+    
+    text :list[str] = []
+
         
     endla = next(ut.label_gen)
     startla =next(ut.label_gen)
@@ -379,13 +381,13 @@ def handle_while(node:dict,contex:ut.contextc) -> list[str]:
 
     text.append(f".L{endla}")
     if (node["exp"]["kind"]=="literal"): #if its a literal it must now be non zero
-        text.append(f"jmp {startla}")
+        text.append(f"jmp .L{startla}")
 
     elif node["exp"]["kind"] == "identifier":
         #print("identy exp")
 
         text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
-        text.append(f"jne {startla}")
+        text.append(f"jne .L{startla}")
 
     else:
 
@@ -395,9 +397,16 @@ def handle_while(node:dict,contex:ut.contextc) -> list[str]:
     return text
 
 def handle_for(node:dict,contex:ut.contextc) -> list[str]:
-    text :list[str]=[]
+
+    if (node["exp"]["kind"]=="literal") and node["exp"]["val"] == 0: #if tehre is nothing return nothing
+        return ["nop"]
+    
+    text :list[str] = []
     endla = next(ut.label_gen)
     startla = next(ut.label_gen)
+
+    print("init:")
+    print(json.dumps(node["init"],indent=4))
 
     text.extend(gc.gen(node["init"], contex))
 
@@ -406,10 +415,25 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
 
     text.extend(gc.gen(node["body"], contex))
 
+    print("incexp:")
+    print(json.dumps(node["incexp"],indent=4))
+
     text.extend(gc.gen(node["incexp"], contex))
 
     text.append(f".L{endla}")
-    text.extend(gc.formulate_math(node["exp"], contex))
-    text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
+
+    if (node["exp"]["kind"]=="literal"): #if its a literal it must now be non zero
+        text.append(f"jmp .L{startla}")
+
+    elif node["exp"]["kind"] == "identifier":
+        #print("identy exp")
+
+        text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
+        text.append(f"jne .L{startla}")
+
+    else:
+
+        text.extend(gc.formulate_math(node["exp"], contex, "cond"))
+        text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
     return text
