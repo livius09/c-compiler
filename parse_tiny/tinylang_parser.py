@@ -230,7 +230,7 @@ var_types :list[str]= ["n8","n16","n32","n64","un8","un16","un32","un64",
              "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"] 
 
 global constants
-constants :dict[str, int]= {}  #replace table for the constants only used in Mparse
+constants :dict[str, int]= {"false":0,"true":1}  #replace table for the constants only used in Mparse
 
 
 def parse(line: list[list[str]])-> tuple[list[dict], int]:
@@ -361,7 +361,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
 
             case "while":
                 tmp["kind"] = "while"
-                tmp["exp"] = parM(line[i][1:])
+                tmp["exp"] = parM(line[i][2:])
                 body, body_consumed = parse(line[i+2:])
                 tmp["body"] = body
                 consumed = 2 + body_consumed

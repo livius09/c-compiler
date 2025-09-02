@@ -154,11 +154,6 @@ def tokenize(line:str) -> list[list[str]]:
                 tokenln.append("if")
                 i+=1
                 continue
-
-            if s == "while":
-                tokenln.append("if")
-                i+=1
-                continue
                    
 
             if(s in comands):

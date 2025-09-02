@@ -6,6 +6,9 @@ a small project to understand compilers (i know its shity)
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.0.2:
+  implemented the ability to use variables and literals like true in the if/for/while expresions
+
 #### v01.0.1:
   yeah fine and nice litle commit.
   fixe if up a bit

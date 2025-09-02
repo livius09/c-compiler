@@ -300,41 +300,6 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
     else:
         raise SyntaxError("only global gc.functions are alowed: " + str(fname))
     
-def old_handle_if(node:dict,contex:ut.contextc) -> list[str]:
-    text :list[str]=[]
-    text.extend(gc.formulate_math(node["exp"],contex,"cond"))
-
-    endl = next(ut.label_gen)
-    
-
-    text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{endl}')      #jne .L1
-    
-    text.extend(gc.gen(node["body"],contex))
-    
-    text.append(f".L{endl}:")
-
-    return text
-
-def handle_if_else(node:dict,contex:ut.contextc) -> list[str]:
-    text :list[str]=[]
-    text.extend(gc.formulate_math(node["exp"], contex, "cond"))
-    endl = next(ut.label_gen)
-    
-    elsel = next(ut.label_gen)
-
-    text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{elsel}')      #jne .L1
-
-    text.extend(gc.gen(node["body"],contex))
-
-    text.append(f"jmp .L{endl}")
-
-    text.append(f".L{elsel}:")
-    
-    text.extend(gc.gen(node["else_body"], contex))
-
-    text.append(f".L{endl}:")
-
-    return text
 
 def handle_if(node: dict, contex: ut.contextc) -> list[str]:
     has_else: bool = ("else_body" in node)  # Does this if have an else branch?
@@ -350,7 +315,7 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
 
 
     if node["exp"]["kind"] == "literal":
-        print("const exp")
+        #print("const exp")
 
         if node["exp"]["val"]:
             text.extend(gc.gen(node["body"], contex))
@@ -369,13 +334,17 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
     
     falsel = next(ut.label_gen) if has_else else exitl
 
-    # Generate condition check
-    text.extend(gc.formulate_math(node["exp"], contex, "cond"))
+    if node["exp"]["kind"] == "identifier":
+        #print("identy exp")
 
-    
-    
+        text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
+        text.append(f"je {falsel}")
 
-    text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{falsel}')
+    else:
+        # Generate condition check
+        text.extend(gc.formulate_math(node["exp"], contex, "cond"))
+        text.append(f'{ut.iflockup[node["exp"]["op"]]} .L{falsel}')
+
     text.extend(gc.gen(node["body"], contex))
 
     if has_else:
@@ -397,15 +366,31 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
 
 def handle_while(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]=[]
+    if (node["exp"]["kind"]=="literal"): #if tehre is nothing return nothing
+        if node["exp"]["val"]==0:
+            return ["nop"]
+        
     endla = next(ut.label_gen)
     startla =next(ut.label_gen)
     text.append(f"jmp .L{endla}")
-    text.append(f".L{startla}")
+    text.append(f".L{startla}:")
     
     text.extend(gc.gen(node["body"], contex))
+
     text.append(f".L{endla}")
-    text.extend(gc.formulate_math(node["exp"], contex, "cond"))
-    text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
+    if (node["exp"]["kind"]=="literal"): #if its a literal it must now be non zero
+        text.append(f"jmp {startla}")
+
+    elif node["exp"]["kind"] == "identifier":
+        #print("identy exp")
+
+        text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
+        text.append(f"jne {startla}")
+
+    else:
+
+        text.extend(gc.formulate_math(node["exp"], contex, "cond"))
+        text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
     return text
 
