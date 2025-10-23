@@ -1,4 +1,4 @@
-from code_gen.utils_stuff import *
+import code_gen.utils_stuff as gc
 
 ofset_table = []
 
@@ -19,8 +19,8 @@ RESET = '\033[0m'
 def add_ofset_table(var_type, var_name, var_len=1):
     if var_type != "pading":
 
-        type_size = size_lookup(var_type)
-        if is_arr_type(var_type):
+        type_size = gc.size_lookup(var_type)
+        if gc.is_arr_type(var_type):
             for i in range(var_len-1,-1,-1):
                 for k in range(type_size):
                     ofset_table.append(f"{var_name}[{i}] byte:{k}")

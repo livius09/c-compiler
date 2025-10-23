@@ -31,7 +31,7 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asi
 
     if nodetype == "binexp":
         code :list[str]= []
-        cmpops=["==","!=","<",">","<=",">="]
+        cmpops: list[str]=["==","!=","<",">","<=",">="]
 
         code += formulate_math(node['left'], loc_conx, mcontext)
         code.append("push rax")
@@ -81,12 +81,12 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asi
     else:
         raise SyntaxError("invalid math: " + str(nodetype))
 
-def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function calls and checking the parameter types
+def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code for function calls and checking the parameter types
     code:list[str]=[]
     fname = str(node['name'])
     if fname in functions.keys():
         params = list(node['para'])
-        dectypes = functions[fname]
+        dectypes: list[str] = functions[fname]
         
         for i in range(len(params)):
 
@@ -98,7 +98,7 @@ def formulate_fcals(node:dict,conx:ut.contextc):    #genertate code for function
             elif curtype == "identifier":
                 
                 varname = str(params[i]['name'])
-                vartype = ut.get_var_type(varname, conx)
+                vartype: str = ut.get_var_type(varname, conx)
 
                 if dectypes[i] == vartype:
                     code.append(f"mov {ut.regs[i]}, [{varname}]")
@@ -210,7 +210,7 @@ test = [{'var_type': 'n64', 'name': 'global', 'kind': 'letinit', 'val': {'kind':
 
 if __name__ == "__main__":
     start_contx = ut.contextc(is_global=True)
-    out = gen(cost, start_contx)
+    out: list[str] = gen(cost, start_contx)
     
     print("globals: "+str(global_vars))
     print("Data: "+ str(data))

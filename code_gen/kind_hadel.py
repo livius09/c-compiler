@@ -22,7 +22,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     if ut.is_arr_type(vartype):
         
         varlen :int= int(node['len'])
-        arrsize = varlen * ut.size_lookup(vartype)
+        arrsize: int = varlen * ut.size_lookup(vartype)
         
         tmp['size'] = arrsize
         tmp['len'] = varlen
@@ -207,7 +207,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                 elif  node["pos"]["kind"] == "identifier":
                     #mov eax, lala[0+rax*4]
                     read_name :str= str(node["val"]['name'])
-                    size = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
+                    size: int = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
                     text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex)}")
                     text.append(f"mov {write_name}[0+rdx*{size}], rax")
 
@@ -279,17 +279,16 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
                 cur_type :str= str(params[i]['type']) # type: ignore
                 cur_name :str= str(params[i]['name']) # type: ignore
 
-                cur_size = ut.size_lookup(cur_type)
+                cur_size: int = ut.size_lookup(cur_type)
 
                 
-                cur_ofs = ut.alingment_gen(cur_type,loc_cont)
+                cur_ofs: int = ut.alingment_gen(cur_type,loc_cont)
 
 
                 loc_cont.locals[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs}
 
                 text.append(f"mov {ut.var_mem_asm(cur_name, loc_cont)}, {ut.regs[i]}")
 
-            
             
             
             text.extend(gc.gen(node["body"],loc_cont)) #gen a new funct whit its own locals
@@ -372,8 +371,8 @@ def handle_while(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str] = []
 
         
-    endla = next(ut.label_gen)
-    startla =next(ut.label_gen)
+    endla: int = next(ut.label_gen)
+    startla: int =next(ut.label_gen)
     text.append(f"jmp .L{endla}")
     text.append(f".L{startla}:")
     
@@ -402,11 +401,11 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
         return ["nop"]
     
     text :list[str] = []
-    endla = next(ut.label_gen)
-    startla = next(ut.label_gen)
+    endla: int = next(ut.label_gen)
+    startla: int = next(ut.label_gen)
 
-    print("init:")
-    print(json.dumps(node["init"],indent=4))
+    #print("init:")
+    #print(json.dumps(node["init"],indent=4))
 
     text.extend(gc.gen(node["init"], contex))
 
@@ -415,8 +414,8 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
 
     text.extend(gc.gen(node["body"], contex))
 
-    print("incexp:")
-    print(json.dumps(node["incexp"],indent=4))
+    #print("incexp:")
+    #print(json.dumps(node["incexp"],indent=4))
 
     text.extend(gc.gen(node["incexp"], contex))
 

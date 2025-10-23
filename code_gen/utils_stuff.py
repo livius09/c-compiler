@@ -1,30 +1,31 @@
-from typing import Generator
 import code_gen.tinylang_x86_codegen as cg
 
 
-regs = ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
+regs: list[str] = ["edi","esi","edx","ecx","r8d","r9d"]    #the regs for giving over function arguments
 
 
-iflockup={"==": "jne",
-          "!=": "je" ,
-          "<" : "jle",
-          ">" : "jg" ,
-          }
+iflockup: dict[str, str]={
+        "==": "jne",
+        "!=": "je" ,
+        "<" : "jle",
+        ">" : "jg" ,
+        }
 
-looplockup = {"==": "je",
-              "!=": "jne",
-              "<":  "jg",
-              ">":  "jle"
-              }
+looplockup: dict[str, str] = {
+            "==": "je",
+            "!=": "jne",
+            "<":  "jg",
+            ">":  "jle"
+            }
 
-var_types=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
+var_types: list[str]=["n8","n16","n32","n64","un8","un16","un32","un64","n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
-init_sized = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}
+init_sized: dict[int, str] = {1: '.byte', 2: '.word', 4: '.long', 8: '.quad'}
 
-mov_sizes = {1:"BYTE PTR", 2:"WORD PTR", 4:"DWORD PTR", 8:"QWORD PTR"}
+mov_sizes: dict[int, str] = {1:"BYTE PTR", 2:"WORD PTR", 4:"DWORD PTR", 8:"QWORD PTR"}
 
 def size_lookup(lok_type:str) -> int:
-    types={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
+    types: dict[str, int]={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
     if lok_type in types.keys() or (lok_type.endswith("[]") and lok_type[:-2] in types):
         if (lok_type.endswith("[]")):
             return types[lok_type[:-2]]
@@ -64,13 +65,13 @@ label_gen = label_generator()
 class contextc():
     def __init__(self, is_global:bool=False):
         self.locals = {}
-        self.is_global = is_global
+        self.is_global: bool = is_global
         self.offset = 0
         self.ret_type= "void"
         self.expoint = None
 
     def declare_var(self, name:str, vartype:str, var_len:int=1) -> None:
-        size = size_lookup(vartype) * var_len
+        size: int = size_lookup(vartype) * var_len
 
         if self.is_global:
             cg.global_vars[name] = {"type": vartype, "size": size}
@@ -83,7 +84,7 @@ class contextc():
                 self.locals[name]['len'] = var_len
 
 def alingment_gen(var_type:str, cur_conx:contextc, dlen:int=1)->int:
-    size = size_lookup(var_type)
+    size: int = size_lookup(var_type)
     if cur_conx.offset % size != 0:
         cur_conx.offset += size - (cur_conx.offset % size)
 

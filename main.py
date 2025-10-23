@@ -8,7 +8,7 @@
 #use nasm to compile asm
 #run or/and output the elf binary
 
-import tokenize_tiny.tinylang_tokenizer as ttok
+import tokenize_tiny.old_tinylang_tokenizer as ttok
 import parse_tiny.tinylang_parser as tlpars
 import code_gen.tinylang_x86_codegen as tcod
 from code_gen.utils_stuff import contextc

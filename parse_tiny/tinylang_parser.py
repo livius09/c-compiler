@@ -182,7 +182,7 @@ def parM(tokens: list[str]):
 
         while tokens:
             op = str(tokens[0])
-            op_prec = get_precedence(op)
+            op_prec: int = get_precedence(op)
             if op_prec < precedence:
                 break
 
@@ -247,7 +247,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
 
             case "let":
                 is_arr = False
-                var_type = line[i][1].split(">")[1]
+                var_type: str = line[i][1].split(">")[1]
                 tmp["kind"] = ""
 
                 if var_type in var_types:
@@ -287,7 +287,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                         tmp["val"] = [parM(chunk) for chunk in chunks]
                         consumed = 3
                     else:
-                        math_part = line[i][line[i].index("=") + 1:]
+                        math_part: list[str] = line[i][line[i].index("=") + 1:]
                         tmp["val"] = parM(math_part)
                 else:
                     tmp["kind"] = "letdec"
@@ -295,7 +295,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                         tmp["len"] = int(line[i][2].split(">")[1])
 
             case "const":
-                name=line[i][1].split(">")[1]
+                name: str=line[i][1].split(">")[1]
 
                 if name  in constants.keys():
                     raise SystemError(f"constant: {name} already exists")
@@ -344,7 +344,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
                 tmp["body"] = body
 
                 # Where the "else" would be if present
-                after_if_index = i + 2 + body_consumed
+                after_if_index: int = i + 2 + body_consumed
 
                 # Check for "else" directly after the closing "}"
                 if after_if_index < len(line) and line[after_if_index][0] == "else":
