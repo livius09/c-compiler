@@ -9,7 +9,7 @@
 #run or/and output the elf binary
 
 import tokenize_tiny.old_tinylang_tokenizer as ttok
-import parse_tiny.tinylang_parser as tlpars
+import parse_tiny.old_tinylang_parser as tlpars
 import code_gen.tinylang_x86_codegen as tcod
 from code_gen.utils_stuff import contextc
 import json

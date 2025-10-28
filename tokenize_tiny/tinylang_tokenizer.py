@@ -26,7 +26,7 @@ class Tokenizerc:
         
 
     def _eof(self) -> bool:
-        return self.pos == len(self.source)
+        return self.pos == self.size
     
     def _peek(self, n:int=1) -> str:
         if self.pos+n <= self.size:
@@ -36,15 +36,19 @@ class Tokenizerc:
     
     
     def _advance(self, n:int=1)-> str:
-        val = self.source[self.pos:self.pos + n]
-        for ch in val:
-            if ch == "\n":
-                self.line += 1
-                self.col = 0
-            else:
-                self.col += 1
-        self.pos += n
-        return val
+        if self.pos+n <= self.size:
+            val = self.source[self.pos:self.pos + n]
+            for ch in val:
+                if ch == "\n":
+                    self.line += 1
+                    self.col = 0
+                else:
+                    self.col += 1
+            self.pos += n
+            return val
+        else:
+            raise IndexError("tried to advance into nothingness")
+       
 
 
     def _consume_space(self) -> None:
@@ -66,7 +70,7 @@ class Tokenizerc:
 
     def _consume_keyw_type_id(self) -> None:
         tmp: str = ""
-        while(not self._eof() and self._peek().isalnum()):
+        while(not self._eof() and self._peek().isidentifier()):
             tmp += self._advance()
 
         if tmp in keywords:
