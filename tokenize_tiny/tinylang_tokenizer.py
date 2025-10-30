@@ -21,7 +21,7 @@ class Tokenizerc:
         self.line=0
         self.col=0
         
-        self.tokens:list[Token] = []
+        self.tokens :list[Token] = []
         self.current_line = []
         
 
