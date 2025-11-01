@@ -225,7 +225,7 @@ def parM(tokens: list[str]):
 
 
 var_types :list[str]= ["n8","n16","n32","n64","un8","un16","un32","un64",     
-             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"] 
+             "n8~","n16~","n32~","n64~","un8~","un16~","un32~","un64~"]
 
 global constants
 constants :dict[str, int]= {"false":0,"true":1}  #replace table for the constants only used in Mparse
