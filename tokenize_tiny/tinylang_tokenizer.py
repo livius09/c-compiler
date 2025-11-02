@@ -3,12 +3,12 @@ from dataclasses import dataclass
 @dataclass
 class Token:
     type: str
-    value: str | int
+    value: str
     line: int
     column: int
     
     def __repr__(self) -> str:
-        return f" ({self.type}, Val: {self.value}, {self.line}:{self.column}) "
+        return f' Token("{self.type}", "{self.value}", {self.line},{self.column}) '
 
 
         
@@ -70,7 +70,7 @@ class Tokenizerc:
 
     def _consume_keyw_type_id(self) -> None:
         tmp: str = ""
-        while(not self._eof() and self._peek().isidentifier()):
+        while(not self._eof() and (self._peek().isalnum() or self._peek() == "_") ):
             tmp += self._advance()
 
         if tmp in keywords:
@@ -90,10 +90,10 @@ class Tokenizerc:
             tmp += self._advance()
         
         try:
-            tmp = int(tmp)
+            tmp = int(tmp) #cast to int as a test cast back to str to fit in token
         except:
             raise SyntaxError("failed to parse number")
-        self.tokens.append(Token("INT",tmp, self.line, self.col))
+        self.tokens.append(Token("INT",str(tmp), self.line, self.col))
 
     def _consume_symbol(self) -> None:
 
@@ -157,7 +157,7 @@ class Tokenizerc:
 
 
 
-TOKEN_TYPES = {
+TOKEN_TYPES: set[str] = {
     "KEYWORD",
     "IDENTIFIER",
     "TYPE",
