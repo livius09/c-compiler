@@ -175,7 +175,7 @@ operators: set[str]={"+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">
 keywords: set[str] = {"let", "const", "return", "for", "while", "break", "if", "else", "func"}
 
 types: set[str] = {"n8","n16","n32","n64","un8","un16","un32","un64", "void",     
-         "n8~", "n16~", "n32~", "n64~", "un8~", "un16~", "un32~", "un64~"}
+                   "n8~", "n16~", "n32~", "n64~", "un8~", "un16~", "un32~", "un64~"}
 
 if __name__ == "__main__":
 

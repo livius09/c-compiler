@@ -26,7 +26,7 @@ class parserc:
     def parM(self, tokens: list[Token]) -> dict[str,int|str|dict]:
         #print("math pars:")
         #print(tokens)
-        def parse_primary(token:Token)-> dict:
+        def parse_primary(token:Token)-> dict[str,int|str]:
             if token.type == "INT":
                 return {"kind": "literal", "val": int(token.val)}
             elif token.type=="IDENTIFIER":
@@ -41,8 +41,10 @@ class parserc:
                 
             elif token.type=="REF":
                 return {"kind": "refrence", "name": token.val}
+            
             elif token.type=="DEREF":
                 return {"kind": "derefrence", "name": token.val}
+            
             elif token.type == "ARR":                               #very importantitny 
                 content :str =token.val
 
@@ -51,9 +53,9 @@ class parserc:
                 elif content.isalnum():
                     stuff={"kind": "Identifier", "name": content}
                 else:
-                    raise SyntaxError("arr indicies must be ints of identifiers not: "+str(content))
+                    raise SyntaxError(f"arr indicies must be ints of identifiers not: {str(content)} on {token.line}:{token.column}")
 
-                return {"kind": "arrac", "name": token,"pos":stuff}
+                return {"kind": "arrac", "name": token.val,"pos":1}
             
             elif token.val == "FUNCT":
                 pass    #still need to implement ts for some reason
@@ -248,8 +250,14 @@ class parserc:
                         if ttype.type == "TYPE":
                             tname: Token= self.advance()
                             if tname.type == "IDENTIFIER":
-                                if self.advance().val == "=":
+                                
+                                if self.peek().val == "=":
                                     pass
+                                elif self.peek().val == ";":
+                                    self.astlist.append({"kind":"letdec", "name": tname, "var_type":ttype})
+                                    
+
+                                self.advance()
 
 
                     case "const":
@@ -257,7 +265,7 @@ class parserc:
                         name = tmp.val
 
                         if name  in self.constants.keys():
-                            raise SystemError(f"constant: {name} already exists")
+                            raise SystemError(f"constant: {name} already exists {tmp.line}:{tmp.column}")
                         
                         self.advance()
                         math_part = []
@@ -267,10 +275,13 @@ class parserc:
                         except:
                             raise SyntaxError(f"const can only be a number known at compile time\nName:{name}, on {tmp.line}:{tmp.column}")
 
+                    case "return":
+                        self.advance()
+                        self.astlist.append()
 
 testlist: list[Token] = [ Token("KEYWORD", "const", 0,5) ,  Token("IDENTIFIER", "pi_round3", 0,14) ,  Token("OP", "=", 0,15) ,  Token("INT", "3", 0,16) ,  Token("SYMBOL", ";", 0,17) ,  Token("KEYWORD", "let", 0,20) ,  Token("TYPE", "n8~", 0,22) ,  Token("IDENTIFIER", "thing", 0,27) ,  Token("OP", "=", 0,28) ,  Token("IDENTIFIER", "pi", 0,30) ,  Token("OP", "+", 0,31) ,  Token("INT", "1", 0,32) ,  Token("SYMBOL", ";", 0,33) ]
 
-mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30) ,  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33) ,  Token("INT", "1", 0,34) ,  Token("SYMBOL", ";", 0,35)]
+mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30),  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33),  Token("INT", "1", 0,34),  Token("SYMBOL", ";", 0,35), Token("OP", "+", 0,30), Token("INT", "15", 0,30), Token("OP", "*", 0,30), Token("INT", "2", 0,30),]
 
 parser = parserc([])
 
