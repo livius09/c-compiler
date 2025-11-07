@@ -84,11 +84,27 @@ exp:
     arra[0] = 10;
     arra[1] = 10+1;
 
-    num =
+    num = arrb[1];
+
+    if(arra[0]<20){
+        num+=2;
+    }else{
+        num-=2;
+    }
 
 
     func n64 plus(n64 a,n64 b){
         return a+b;
+    }
+
+    while(num<100){
+        mum++;
+    }
+
+    let un32 sum = 0;
+
+    for(let n8 k = 0; k<5; k++; ){
+        sum+=arrab[k];
     }
 
     let n64 erg = plus(e,u);

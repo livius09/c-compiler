@@ -23,62 +23,29 @@ class parserc:
 
         self.constants :dict[str, int]= {"false":0,"true":1}  #replace table for the constants only used in Mparse
 
-    def parM(self, tokens: list[Token]) -> dict[str,int|str|dict]:
-        #print("math pars:")
-        #print(tokens)
-        def parse_primary(token:Token)-> dict[str,int|str]:
+    def parM(self) -> dict[str,int|str|dict]:
+
+        def parse_primary()-> dict[str,int|str]:
+            if self._eof():
+                raise SyntaxError("Unexpected end of input")
+
+            token = self.advance()
+
+            # Stop parsing if we hit a semicolon or closing bracket
+            if token.type == "SYMBOL" and token.val in [";", ")", ","]:
+                # Step back one so the parent parser can handle it
+                self.pos -= 1
+                raise StopIteration("End of expression")
+
             if token.type == "INT":
                 return {"kind": "literal", "val": int(token.val)}
-            elif token.type=="IDENTIFIER":
-
-                name :str= token.val
-
-                if name in self.constants.keys():
+            elif token.type == "IDENTIFIER":
+                name: str = token.val
+                if name in self.constants:
                     return {"kind": "literal", "val": self.constants[name]}
-                else:   #only symbolic here
-                    #print(constants)
-                    return {"kind": "identifier", "name": name}
-                
-            elif token.type=="REF":
-                return {"kind": "refrence", "name": token.val}
-            
-            elif token.type=="DEREF":
-                return {"kind": "derefrence", "name": token.val}
-            
-            elif token.type == "ARR":                               #very importantitny 
-                content :str =token.val
-
-                if content.isdecimal():
-                    stuff={"kind": "literal", "val":int(content)}
-                elif content.isalnum():
-                    stuff={"kind": "Identifier", "name": content}
-                else:
-                    raise SyntaxError(f"arr indicies must be ints of identifiers not: {str(content)} on {token.line}:{token.column}")
-
-                return {"kind": "arrac", "name": token.val,"pos":1}
-            
-            elif token.val == "FUNCT":
-                pass    #still need to implement ts for some reason
-                
-                tmp={}
-                tmp["kind"] = "fcall"
-                tmp["name"] = token.val
-                tmp["para"] = []
-                j = 1
-                current_param = []
-                #while j < len(line[i]):
-                #    if line[i][j] == ",":
-                #        tmp["para"].append(parM(current_param))
-                #        current_param = []
-                #    else:
-                #        current_param.append(line[i][j])
-                #    j += 1
-                if current_param:
-                    tmp["para"].append(self.parM(current_param))
-                return tmp
-            
+                return {"kind": "identifier", "name": name}
             else:
-                raise ValueError(f"Unexpected token: {token}")
+                raise ValueError(f"Unexpected token in expression: {token}")
 
         def get_precedence(op:str) -> int:
             return {
@@ -176,25 +143,37 @@ class parserc:
             }
 
 
-        def parse_expression(tokens:list[Token], precedence:int=0):
-            if not tokens:
-                return None
+        def parse_expression(precedence:int=0) -> dict[str,int|dict|str]:
 
-            left = parse_primary(tokens.pop(0))
+            try:
+                left = parse_primary()
+            except StopIteration:
+                # End of expression, return empty literal or None
+                return {"kind": "literal", "val": 0}
 
-            while tokens:
-                op: str = str(tokens[0].val)
-                op_prec: int = get_precedence(op)
+            while not self._eof():
+                next_token = self.peek()
+
+                # Stop at semicolon or other terminators
+                if next_token.type == "SYMBOL" and next_token.val in [";", ")", ","]:
+                    break
+
+                if next_token.type != "OP":
+                    break
+
+                op = next_token.val
+                op_prec = get_precedence(op)
                 if op_prec < precedence:
                     break
 
-                tokens.pop(0)  # consume the op
-                right = parse_expression(tokens, op_prec + 1)
-                left = fold_constants(left, op, right) # type: ignore
+                self.advance()  # consume operator
+                right = parse_expression(op_prec + 1)
+                left = fold_constants(left, op, right)
 
-            return left
+            return left # type: ignore
 
-        return parse_expression(tokens[:])  # type: ignore # Copy list to avoid modifying input
+
+        return parse_expression()
         
 
     def _eof(self):
@@ -223,42 +202,72 @@ class parserc:
         
     def advance(self)-> Token:
         if self.pos <= self.size:
-            return self.source[self.pos]
+            tmp=self.source[self.pos]
+            self.pos+=1
+            return tmp
         else:
             raise IndexError("tried to advance into nothingness")
+        
+    def let_parse(self):
+        ttype:Token = self.advance()
+        if ttype.type == "TYPE":
+            tname: Token= self.advance()
+            if tname.type == "IDENTIFIER":
+
+                folowing = self.peek()
+                
+                if folowing.val == "=":
+                    self.advance()
+                    return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val": self.parM()}
+                    
+                elif folowing.val == ";":
+                    return {"kind":"letdec", "name": tname, "var_type":ttype}
+                
+                else:
+                    raise SyntaxError(f"this is not something valid folowing a let identifier: {folowing.val} at {folowing.line}:{folowing.column}")
+    
+    def ident_parse(self,first:Token):
+        tdict = {"kind":"asing", "name":first.val,"val":{}}
+        ttmp = self.advance().val
+        if ttmp == "=":
+            tdict["val"] = self.parM()
+            
+        elif ttmp == "+" and self.peek().val == "+":
+            tdict["val"] = {"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
+        elif ttmp == "-" and self.peek().val == "-":
+           tdict["val"]= {"kind": "binexp", "op": "-", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
+        elif ttmp in basicop and self.peek().val == "=":
+            tdict["val"]={"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": self.parM()}
+
+
         
     def parse(self):
         first:Token = self.advance()
         
         match first.type:
             case "IDENTIFIER":
-                ttmp = self.advance().val
-                if ttmp == "=":
-                    pass
-                elif ttmp == "+" and self.peek().val == "+":
-                    self.astlist.append({"kind":"asing", "name": first.val, "val":{"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}})
-                elif ttmp == "-" and self.peek().val == "-":
-                    self.astlist.append({"kind":"asing", "name": first.val, "val":{"kind": "binexp", "op": "-", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}})
-                elif ttmp in basicop and self.peek().val == "=":
-                    self.astlist.append({"kind":"asing", "name": first.val, "val":{"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": 1}}) #fix
-
+                self.ident_parse(first)
 
             case "KEYWORD":
                 match first.val:
                     case "let":
-                        ttype: Token = self.advance()
-                        if ttype.type == "TYPE":
-                            tname: Token= self.advance()
-                            if tname.type == "IDENTIFIER":
-                                
-                                if self.peek().val == "=":
-                                    pass
-                                elif self.peek().val == ";":
-                                    self.astlist.append({"kind":"letdec", "name": tname, "var_type":ttype})
-                                    
+                        self.let_parse()
+                        
 
-                                self.advance()
+                    case "if":
+                        self.advance()
+                        self.astlist.append({})
 
+                    case "while":
+                        self.advance()
+                        self.astlist.append({"kind":"while", "exp":self.parM(), "body":self.parse()})
+
+                    case "for":
+                        pass
+
+                    case "func":
+                        pass
+                    
 
                     case "const":
                         tmp: Token= self.advance()
@@ -277,12 +286,13 @@ class parserc:
 
                     case "return":
                         self.advance()
-                        self.astlist.append()
+                        self.astlist.append(   {"kind":"ret", "val": self.parM()})
 
 testlist: list[Token] = [ Token("KEYWORD", "const", 0,5) ,  Token("IDENTIFIER", "pi_round3", 0,14) ,  Token("OP", "=", 0,15) ,  Token("INT", "3", 0,16) ,  Token("SYMBOL", ";", 0,17) ,  Token("KEYWORD", "let", 0,20) ,  Token("TYPE", "n8~", 0,22) ,  Token("IDENTIFIER", "thing", 0,27) ,  Token("OP", "=", 0,28) ,  Token("IDENTIFIER", "pi", 0,30) ,  Token("OP", "+", 0,31) ,  Token("INT", "1", 0,32) ,  Token("SYMBOL", ";", 0,33) ]
 
-mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30),  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33),  Token("INT", "1", 0,34),  Token("SYMBOL", ";", 0,35), Token("OP", "+", 0,30), Token("INT", "15", 0,30), Token("OP", "*", 0,30), Token("INT", "2", 0,30),]
+mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30),  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33),  Token("INT", "1", 0,34),  Token("SYMBOL", ";", 0,35), Token("OP", "+", 0,30), Token("INT", "15", 0,30), Token("OP", "*", 0,30), Token("INT", "2", 0,30), Token("SYMBOL", ";", 0,35)]
 
-parser = parserc([])
+parser = parserc(mtestlist)
 
-print(parser.parM(mtestlist))
+print(parser.parM())
+print(parser.parM())

@@ -43,13 +43,10 @@ body contains nodes that execute on fcall
 
 #### if:
 well a if |:
+the else body is optional but this makes it one ast variante now two
 
-    {"kind":"if", "exp":binexp, "body":[*node]}
+    {"kind":"if", "exp":binexp, "body":[*node] "else_body":[*node]}
 
-#### if_else:
-well a if whit an else |:
-    
-    {"kind":"if_else", "exp":binexp, "body":*node, "else_body":[*node]}
 
 #### while:
 well a while loop |:
@@ -62,7 +59,12 @@ init is for example let n64 i = 0
 exp is the condition
 incexp is e.g the i++
     
-    {"kind":"for", "exp":binexp, "init":("ledec"||"asing"), "incexp":"binexp" "body":[*node]}
+    {"kind":"for", "exp":binexp, "init":("ledec"||"asing"), "incexp":binexp , "body":[*node]}
+
+#### return:
+well just the return expresion
+
+    {"kind":"ret", "val": (binexp || int)}
 
 ### Secondary:
 these are inside val or binexp
