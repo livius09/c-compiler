@@ -239,9 +239,64 @@ class parserc:
         elif ttmp in basicop and self.peek().val == "=":
             tdict["val"]={"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": self.parM()}
 
+    def while_parse(self):
 
         
-    def parse(self):
+        self.expecter(self.advance(), ["("])
+
+        cond = self.parM()
+
+
+        body = self.parse_block()
+
+        return {"kind":"while", "exp" : cond, "body" : body}
+    
+    def if_parse(self):
+        
+        self.expecter(self.advance(), ["("])
+
+
+        cond = self.parM()
+
+
+        body = self.parse_block()
+
+        return {"kind":"if", "exp" : cond, "body" : body}
+    
+    def const_parse(self):
+        tmp: Token= self.advance()
+        name = tmp.val
+
+        if name  in self.constants.keys():
+            raise SystemError(f"constant: {name} already exists {tmp.line}:{tmp.column}")
+        
+        
+        self.expecter(self.advance(),["="])
+
+        try:
+            self.constants[name] = int(self.parM(math_part)["val"])   # type: ignore # cause idk and to int conversion is to fail on purpose
+        except:
+            raise SyntaxError(f"const can only be a number known at compile time\nName:{name}, on {tmp.line}:{tmp.column}")
+
+    def for_parse(self):
+        self.expecter(self.advance(),["("])
+
+        initexp = self.parse_statement()
+        
+
+        
+        return {"kind":"for",  "init":,"exp":binexp, "incexp":binexp , "body":[*node]}
+
+    def expecter(self,val:Token,expected:list[str]):
+        if Token.val not in expected:
+            raise SyntaxError(f"Expected {' or '.join(expected)} but got {val.val} on {self.liner(val)}")
+        
+    def liner(self, pos:Token)->str:
+        return f"{pos.line}:{pos.column}"
+
+
+        
+    def parse_statement(self):
         first:Token = self.advance()
         
         match first.type:
@@ -251,17 +306,15 @@ class parserc:
             case "KEYWORD":
                 match first.val:
                     case "let":
-                        self.let_parse()
+                        return self.let_parse()
                         
 
                     case "if":
-                        self.advance()
-                        self.astlist.append({})
+                        return self.if_parse()
 
                     case "while":
-                        self.advance()
-                        self.astlist.append({"kind":"while", "exp":self.parM(), "body":self.parse()})
-
+                        return self.while_parse()
+                    
                     case "for":
                         pass
 
@@ -270,23 +323,36 @@ class parserc:
                     
 
                     case "const":
-                        tmp: Token= self.advance()
-                        name = tmp.val
-
-                        if name  in self.constants.keys():
-                            raise SystemError(f"constant: {name} already exists {tmp.line}:{tmp.column}")
+                        self.const_parse()
                         
-                        self.advance()
-                        math_part = []
-
-                        try:
-                            self.constants[name] = int(self.parM(math_part)["val"])   # type: ignore # cause idk and to int conversion is to fail on purpose
-                        except:
-                            raise SyntaxError(f"const can only be a number known at compile time\nName:{name}, on {tmp.line}:{tmp.column}")
 
                     case "return":
                         self.advance()
-                        self.astlist.append(   {"kind":"ret", "val": self.parM()})
+                        return   {"kind":"ret", "val": self.parM()}
+
+    def parse_block(self):
+        """Parse a { ... } block, return list of statements."""
+        stmts = []
+
+        if self.peek().val != "{":
+            raise SyntaxError("Expected '{' to start block")
+        self.advance()  # consume '{'
+
+        while not self._eof() and self.peek().val != "}":
+            stmts.append(self.parse_statement())
+
+        if self._eof():
+            raise SyntaxError("Unterminated block (missing '}')")
+        self.advance()  # consume '}'
+
+        return stmts
+
+    def parse(self):
+        while not self._eof():
+            stmt = self.parse_statement()
+            self.astlist.append(stmt)
+        return self.astlist
+
 
 testlist: list[Token] = [ Token("KEYWORD", "const", 0,5) ,  Token("IDENTIFIER", "pi_round3", 0,14) ,  Token("OP", "=", 0,15) ,  Token("INT", "3", 0,16) ,  Token("SYMBOL", ";", 0,17) ,  Token("KEYWORD", "let", 0,20) ,  Token("TYPE", "n8~", 0,22) ,  Token("IDENTIFIER", "thing", 0,27) ,  Token("OP", "=", 0,28) ,  Token("IDENTIFIER", "pi", 0,30) ,  Token("OP", "+", 0,31) ,  Token("INT", "1", 0,32) ,  Token("SYMBOL", ";", 0,33) ]
 
