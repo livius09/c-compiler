@@ -8,6 +8,9 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.0.4:
+  rewrote the parser whit a class but still being recursive and producing the same AST
+
 #### v01.0.3:
   rewrote the tokenizer made it shorter and well better
 

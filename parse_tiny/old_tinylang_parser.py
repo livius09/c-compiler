@@ -326,6 +326,7 @@ def parse(line: list[list[str]])-> tuple[list[dict], int]:
 
 
                 body, body_consumed = parse(line[i+2:])
+                
                 tmp["body"] = body
                 consumed = 3 + body_consumed    #3 for func,{,}
 

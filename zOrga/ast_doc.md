@@ -36,10 +36,10 @@ param is a list of paramethers that contains secondary nodes
 
 #### function_dec:
 to declare a function 
-params contains the types of the args
+params contains the types of the args and theyr name
 body contains nodes that execute on fcall
     
-    {"kind":"function_dec", "name": "*", "param":[*type,*type,*type], "ret_type":*types body: [*node] }
+    {"kind":"function_dec", "name": "*", "param":[*type,*type,*type], "ret_type":*types "body": [*node] }
 
 #### if:
 well a if |:

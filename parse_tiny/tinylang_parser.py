@@ -15,7 +15,7 @@ class Token:
         return f" ({self.type}, Val: {self.val}, {self.line}:{self.column}) "
 
 class parserc:
-    def __init__(self, tlist) -> None:
+    def __init__(self, tlist:list[Token]) -> None:
         self.source :list[Token] =  tlist #the input of raw tokens
         self.size= len(self.source)
         self.pos = 0
@@ -218,26 +218,59 @@ class parserc:
                 
                 if folowing.val == "=":
                     self.advance()
-                    return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val": self.parM()}
+                    val = self.parM()
+                    self.advance()
+                    return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val":val }
                     
                 elif folowing.val == ";":
                     return {"kind":"letdec", "name": tname, "var_type":ttype}
                 
                 else:
-                    raise SyntaxError(f"this is not something valid folowing a let identifier: {folowing.val} at {folowing.line}:{folowing.column}")
-    
+                    self.expecter(folowing, ["=",";"])
+
     def ident_parse(self,first:Token):
         tdict = {"kind":"asing", "name":first.val,"val":{}}
         ttmp = self.advance().val
         if ttmp == "=":
             tdict["val"] = self.parM()
-            
+            self.advance()
+
         elif ttmp == "+" and self.peek().val == "+":
             tdict["val"] = {"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
+
         elif ttmp == "-" and self.peek().val == "-":
            tdict["val"]= {"kind": "binexp", "op": "-", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
+
         elif ttmp in basicop and self.peek().val == "=":
-            tdict["val"]={"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": self.parM()}
+            rightval=self.parM()
+            self.advance()
+            tdict["val"]={"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": rightval }
+
+        elif ttmp == "(":
+
+            fparams = []
+            while True:
+                fparams.append(self.parM())
+
+                seper = self.advance()
+
+                if seper.val == ",":
+                    pass
+                elif seper.val == ")":
+                    break
+                else:
+                    self.expecter(seper, [",",","])
+                
+
+                print("inside of funcdec loop")
+
+
+            tdict = {"kind":"fcall", "name": first.val, "param": fparams}
+
+            
+
+        return tdict
+
 
     def while_parse(self):
 
@@ -246,6 +279,7 @@ class parserc:
 
         cond = self.parM()
 
+        self.expecter(self.advance(), [")"])
 
         body = self.parse_block()
 
@@ -258,12 +292,13 @@ class parserc:
 
         cond = self.parM()
 
+        self.expecter(self.advance(), [")"])
 
         body = self.parse_block()
 
         return {"kind":"if", "exp" : cond, "body" : body}
     
-    def const_parse(self):
+    def const_parse(self) -> None:
         tmp: Token= self.advance()
         name = tmp.val
 
@@ -274,21 +309,74 @@ class parserc:
         self.expecter(self.advance(),["="])
 
         try:
-            self.constants[name] = int(self.parM(math_part)["val"])   # type: ignore # cause idk and to int conversion is to fail on purpose
+            self.constants[name] = int(self.parM()["val"])   # type: ignore # cause idk and to int conversion is to fail on purpose
         except:
             raise SyntaxError(f"const can only be a number known at compile time\nName:{name}, on {tmp.line}:{tmp.column}")
+        
+        self.advance() #consume ; 
+
+        return None
 
     def for_parse(self):
         self.expecter(self.advance(),["("])
 
         initexp = self.parse_statement()
+
+        self.expecter(self.advance(),[";"])
+
+        testexp = self.parse_statement()
+
+        self.expecter(self.advance(),[";"])
+
+        incexp = self.parse_statement()
+
+        self.expecter(self.advance(),[";"])
+
+        self.expecter(self.advance(),[")"])
+
+        body = self.parse_block()
         
 
         
-        return {"kind":"for",  "init":,"exp":binexp, "incexp":binexp , "body":[*node]}
+        return {"kind":"for",  "init":initexp,"exp":testexp, "incexp":incexp , "body": body}
+    
+    def func_parse(self):
+        ftype = self.advance()
+
+        fname = self.advance()
+
+        self.expecter(self.advance(),["("])
+
+
+        fparams = []
+        while True:
+            fparams.append({
+                "type": self.advance().val,
+                "name": self.advance().val
+            })
+
+            seper = self.advance()
+
+            if seper.val == ",":
+                pass
+            elif seper.val == ")":
+                break
+            else:
+                self.expecter(seper, [",",","])
+            
+
+            print("inside of funcdec loop")
+
+
+        body = self.parse_block()
+
+
+        
+
+        return {"kind":"function_dec", "name": fname , "param": fparams, "ret_type": ftype, "body": body}
 
     def expecter(self,val:Token,expected:list[str]):
-        if Token.val not in expected:
+        if val.val not in expected:
             raise SyntaxError(f"Expected {' or '.join(expected)} but got {val.val} on {self.liner(val)}")
         
     def liner(self, pos:Token)->str:
@@ -316,49 +404,73 @@ class parserc:
                         return self.while_parse()
                     
                     case "for":
-                        pass
+                        return self.for_parse()
 
                     case "func":
-                        pass
+                        return self.func_parse()
                     
 
                     case "const":
-                        self.const_parse()
+                        return self.const_parse()
                         
 
                     case "return":
                         self.advance()
-                        return   {"kind":"ret", "val": self.parM()}
+                        retval=self.parM()
+                        self.advance()
+                        return   {"kind":"ret", "val": retval }
+                    
+                    case _:
+                        print("Astlist:")
+                        print(self.astlist)
+
+                        print("Folowing Tokens:")
+                        print(self.source[self.pos:])
+                        raise SyntaxError(f"Unexpected keyword {first.val} on {self.liner(first)}")
+                    
+            case _:
+                print("Astlist:")
+                print(self.astlist)
+
+                print("Folowing Tokens:")
+                print(self.source[self.pos:])
+                raise SyntaxError(f"Unexpected Token type {first.type}:{first.val} on {self.liner(first)}")
+
+                
 
     def parse_block(self):
         """Parse a { ... } block, return list of statements."""
         stmts = []
 
-        if self.peek().val != "{":
-            raise SyntaxError("Expected '{' to start block")
-        self.advance()  # consume '{'
+        self.expecter(self.advance(),["{"])
 
         while not self._eof() and self.peek().val != "}":
-            stmts.append(self.parse_statement())
+            val = self.parse_statement()
+            if val != None:
+                stmts.append(val)
 
-        if self._eof():
-            raise SyntaxError("Unterminated block (missing '}')")
-        self.advance()  # consume '}'
+        self.expecter(self.advance(),["}"])
 
         return stmts
 
     def parse(self):
         while not self._eof():
             stmt = self.parse_statement()
-            self.astlist.append(stmt)
+            self.astlist.append(stmt) # type: ignore
         return self.astlist
 
 
 testlist: list[Token] = [ Token("KEYWORD", "const", 0,5) ,  Token("IDENTIFIER", "pi_round3", 0,14) ,  Token("OP", "=", 0,15) ,  Token("INT", "3", 0,16) ,  Token("SYMBOL", ";", 0,17) ,  Token("KEYWORD", "let", 0,20) ,  Token("TYPE", "n8~", 0,22) ,  Token("IDENTIFIER", "thing", 0,27) ,  Token("OP", "=", 0,28) ,  Token("IDENTIFIER", "pi", 0,30) ,  Token("OP", "+", 0,31) ,  Token("INT", "1", 0,32) ,  Token("SYMBOL", ";", 0,33) ]
 
-mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30),  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33),  Token("INT", "1", 0,34),  Token("SYMBOL", ";", 0,35), Token("OP", "+", 0,30), Token("INT", "15", 0,30), Token("OP", "*", 0,30), Token("INT", "2", 0,30), Token("SYMBOL", ";", 0,35)]
+mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30),  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33),  Token("INT", "1", 0,34),  Token("SYMBOL", ";", 0,35), Token("INT", "15", 0,30), Token("OP", "+", 0,30), Token("INT", "15", 0,30), Token("OP", "*", 0,30), Token("INT", "2", 0,30), Token("SYMBOL", ";", 0,35)]
 
-parser = parserc(mtestlist)
+Mparser = parserc(mtestlist)
 
-print(parser.parM())
-print(parser.parM())
+print(Mparser.parM())
+Mparser.advance()
+print(Mparser.parM())
+Mparser.advance()
+
+Pparser = parserc(testlist)
+
+print(Pparser.parse())
