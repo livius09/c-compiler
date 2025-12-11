@@ -2,7 +2,7 @@ typed compiled
 
 data tipes:
 
-    n8  //number and amout of bits
+    n8  //signed number and amout of bits
     n16
     n32
     n64
@@ -79,7 +79,7 @@ exp:
     ~ptr = 2;
 
     let n16 arra[10];
-    let n16 arrab = {1, 2+2, 3+num, 4, 5, 6, 7};
+    let n16 arrab = [1, 2+2, 3+num, 4, 5, 6, 7];
 
     arra[0] = 10;
     arra[1] = 10+1;

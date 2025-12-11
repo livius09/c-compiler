@@ -188,6 +188,9 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                 size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
                 text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
                 text.append(f"mov rax, {read_name}[0+rax*{size}]")
+
+
+            #add binexp 
                 
             else:
                 raise SyntaxError("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))

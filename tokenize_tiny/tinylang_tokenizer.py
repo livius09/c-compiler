@@ -11,7 +11,18 @@ class Token:
         return f' Token("{self.type}", "{self.value}", {self.line},{self.column}) '
 
 
-        
+TOKEN_TYPES: set[str] = {
+    "KEYWORD",
+    "IDENTIFIER",
+    "TYPE",
+    "INT",
+    "STR",
+    "CHAR",
+    "OP",
+    "SYMBOL",
+    "REF",
+    "DEREF"
+}       
 
 class Tokenizerc:
     def __init__(self, source: str) -> None:
@@ -150,7 +161,7 @@ class Tokenizerc:
             elif ch in ["~","$"]:
                 self._consume_ref_deref()
             else:
-                raise SyntaxError("unknown syntax")
+                raise SyntaxError(f"unknown syntax: {ch}" )
         
         #print(self.source)
         print(self.tokens)
@@ -170,7 +181,7 @@ TOKEN_TYPES: set[str] = {
     "DEREF"
 }
 
-symbols:set[str] = {",","(",")","{","}",";",}
+symbols:set[str] = {",","(",")","{","}",";","[","]"}
 operators: set[str]={"+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>",">=","<=", "&", "|", "^"}
 keywords: set[str] = {"let", "const", "return", "for", "while", "break", "if", "else", "func"}
 

@@ -32,7 +32,7 @@ class parserc:
             token = self.advance()
 
             # Stop parsing if we hit a semicolon or closing bracket
-            if token.type == "SYMBOL" and token.val in [";", ")", ","]:
+            if token.type == "SYMBOL" and token.val in [";", ")", ",","]"]:
                 # Step back one so the parent parser can handle it
                 self.pos -= 1
                 raise StopIteration("End of expression")
@@ -44,6 +44,39 @@ class parserc:
                 if name in self.constants:
                     return {"kind": "literal", "val": self.constants[name]}
                 return {"kind": "identifier", "name": name}
+            
+            elif token.type == "REF":
+                name: str = token.val
+                return {"kind": "refrence", "name": name}
+            
+            elif token.type == "DEREF":
+                name: str = token.val
+                return {"kind": "derefrence", "name": name}
+            
+            elif token.type == "char":
+                return {"kind": "literal", "val": ord(token.val)} 
+            
+            elif token.val == "(":
+
+                fparams = []
+                while True:
+                    fparams.append(self.parM())
+
+                    seper = self.advance()
+
+                    if seper.val == ",":
+                        pass
+                    elif seper.val == ")":
+                        break
+                    else:
+                        self.expecter(seper, [",",","])
+
+                    print("inside of funcdec loop")
+
+
+                return {"kind":"fcall", "name": token.val, "param": fparams}  # type: ignore
+            
+            
             else:
                 raise ValueError(f"Unexpected token in expression: {token}")
 
@@ -211,6 +244,14 @@ class parserc:
     def let_parse(self):
         ttype:Token = self.advance()
         if ttype.type == "TYPE":
+            if self.peek()=="[":
+                self.advance()
+                if self.peek() == "]":  #means that its just an arr type
+                    pass
+                else:                   #means we have an arr size declaration
+                    aarlen= self.parM()["val"]
+                    
+                    
             tname: Token= self.advance()
             if tname.type == "IDENTIFIER":
 
@@ -218,6 +259,22 @@ class parserc:
                 
                 if folowing.val == "=":
                     self.advance()
+                    if self.peek().val == "{":
+                        #array init
+                        self.advance() #consume [
+                        arrvals = []
+                        while True:
+                            arrvals.append( self.parM() )
+                            sep = self.advance()
+                            if sep.val == ",":
+                                continue
+                            elif sep.val == "}":
+                                break
+                            else:
+                                self.expecter(sep, [",","}"])
+
+                        return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val":arrvals,  "len":len(arrvals) }
+
                     val = self.parM()
                     self.advance()
                     return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val":val }
@@ -266,6 +323,14 @@ class parserc:
 
 
             tdict = {"kind":"fcall", "name": first.val, "param": fparams}
+
+        elif ttmp == "[":
+            index = self.parM()
+            self.expecter(self.advance(), ["]"])
+            tdict=    {'kind': 'arrac', 'name': first.val, 'pos': index}
+
+
+
 
             
 
@@ -362,7 +427,7 @@ class parserc:
             elif seper.val == ")":
                 break
             else:
-                self.expecter(seper, [",",","])
+                self.expecter(seper, [",",")"])
             
 
             print("inside of funcdec loop")
@@ -417,7 +482,7 @@ class parserc:
                     case "return":
                         self.advance()
                         retval=self.parM()
-                        self.advance()
+                        self.expecter(self.advance(),[";"])
                         return   {"kind":"ret", "val": retval }
                     
                     case _:
