@@ -1,11 +1,19 @@
 ## To Do
 things that still need to be done:
 
+### All
+- [ ] struct
+- [ ] casts
+- [ ] imports
+
 ### Tokenize:
-- [ ] exp in arr acess
+- [x] exp in arr acess
 - [x] strings
+- [ ] make types unasumemive
+
 
 ### Parse:
+- [ ] make types unasumemive
 
 
 ### Codegen:
@@ -13,13 +21,14 @@ things that still need to be done:
     - [x] mov sizes
     - [x] context class
     . [x] alingment
-    - [ ] casts
     - [x] nested ifs (curently kinda works but falls apart whit else ig)
     - [x] parse if_else
     - [x] handle if(1){}
     - [ ] loc arr init
     - [ ] fix global data init
     - [ ] find out what the fuck is hapening whit data and globals
+    - [ ] rework type system for own types like struct
+    - [ ] make types unasumemive
 
 ### Docs:
     - [ ] update on locals and globals

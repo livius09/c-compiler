@@ -39,6 +39,7 @@ data tipes:
 
 
 let             //declare vars
+struct          //defines a struct type
 const           //let for constants any acourance of the symbol afterwards 
                 //will just be replaced by the number given    doesnt need a type
                 //all constants are global from the point they are created
@@ -108,4 +109,35 @@ exp:
     }
 
     let n64 erg = plus(e,u);
+
+    struct human {
+        let un8 age;
+        let char[10] first_name;
+        let char[10] last_name;
+        let char~ city;
+
+    }
+
+    let human mike;
+
+    mike.age = 40;
+
+    let tmp = mike.age;
+
+    mike.first_name[0] = 'm';
+    mike.first_name[1] = 'i';
+    mike.first_name[2] = 'k';
+    mike.first_name[3] = 'e';
+
+    let char[] linz = "linz";
+    let char[] wels = "wels";
+
+    mike.city = $linz;
+    print(mike.city)    //linz
+    mike.city = $wels
+    print(mike.city)    //wels
+
+
+
+
     
