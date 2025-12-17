@@ -5,11 +5,12 @@ things that still need to be done:
 - [ ] struct
 - [ ] casts
 - [ ] imports
+- [ ] ARRAYS ! (clear definition, for both ways)
 
 ### Tokenize:
 - [x] exp in arr acess
 - [x] strings
-- [ ] make types unasumemive
+- [x] make types unasumemive
 
 
 ### Parse:
@@ -24,6 +25,7 @@ things that still need to be done:
     - [x] nested ifs (curently kinda works but falls apart whit else ig)
     - [x] parse if_else
     - [x] handle if(1){}
+
     - [ ] loc arr init
     - [ ] fix global data init
     - [ ] find out what the fuck is hapening whit data and globals

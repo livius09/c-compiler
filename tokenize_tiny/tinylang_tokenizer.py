@@ -16,12 +16,9 @@ TOKEN_TYPES: set[str] = {
     "IDENTIFIER",
     "TYPE",
     "INT",
-    "STR",
-    "CHAR",
+    "STR", "CHAR",
     "OP",
-    "SYMBOL",
-    "REF",
-    "DEREF"
+    "SYMBOL"
 }       
 
 class Tokenizerc:
@@ -63,7 +60,7 @@ class Tokenizerc:
 
 
     def _consume_space(self) -> None:
-        self.pos+=1
+        self._advance()
 
     def _consume_coment(self)-> None:
         self.pos+=1
@@ -90,7 +87,8 @@ class Tokenizerc:
 
             if self._peek() == "~":
                 tmp+="~"
-                self.pos+=1
+                self._advance()
+
             self.tokens.append(Token("TYPE",tmp, self.line, self.col))
         else:
             self.tokens.append(Token("IDENTIFIER",tmp, self.line, self.col))
@@ -123,21 +121,7 @@ class Tokenizerc:
             self.tokens.append(Token("OP", self._advance(2), self.line, self.col))
         else:
             self.tokens.append(Token("OP",self._advance(), self.line, self.col))
-
-    def _consume_ref_deref(self):
-        pre = self._advance()
-        tmp: str = ""
-        while(not self._eof() and self._peek().isalnum()):
-            tmp += self._advance()
-
-        if pre == "~":
-            self.tokens.append(Token("DEREF",tmp, self.line, self.col))
-
-        else:
-            self.tokens.append(Token("REF",tmp, self.line, self.col))
-
             
-
 
     def Tokenize(self):
         while not self._eof():
@@ -158,35 +142,20 @@ class Tokenizerc:
                 self._consume_symbol()
             elif ch in operators:
                 self._consume_op()
-            elif ch in ["~","$"]:
-                self._consume_ref_deref()
             else:
-                raise SyntaxError(f"unknown syntax: {ch}" )
+                raise SyntaxError(f"unknown syntax: {ch}")
         
         #print(self.source)
         print(self.tokens)
 
 
 
-TOKEN_TYPES: set[str] = {
-    "KEYWORD",
-    "IDENTIFIER",
-    "TYPE",
-    "INT",
-    "STR",
-    "CHAR",
-    "OP",
-    "SYMBOL",
-    "REF",
-    "DEREF"
-}
-
-symbols:set[str] = {",","(",")","{","}",";","[","]"}
-operators: set[str]={"+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>",">=","<=", "&", "|", "^"}
-keywords: set[str] = {"let", "const", "return", "for", "while", "break", "if", "else", "func"}
+symbols:set[str] = {",","(",")","{","}",";","[","]","."}
+operators: set[str]={"+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>",">=","<=", "&", "|", "^", "~", "$"}
+keywords: set[str] = {"let", "const", "return", "for", "while", "break", "if", "else", "func", "struct"}
 
 types: set[str] = {"n8","n16","n32","n64","un8","un16","un32","un64", "void",     
-                   "n8~", "n16~", "n32~", "n64~", "un8~", "un16~", "un32~", "un64~"}
+                   "n8~", "n16~", "n32~", "n64~", "un8~", "un16~", "un32~", "un64~"} 
 
 if __name__ == "__main__":
 

@@ -110,34 +110,38 @@ exp:
 
     let n64 erg = plus(e,u);
 
+    struct phone_t {
+        let un8 age;
+    }
+
+    struct wallet_t {
+        let un16 money;
+
+    }
+    
     struct human {
         let un8 age;
         let char[10] first_name;
         let char[10] last_name;
-        let char~ city;
-
+        let phone_t phone;
+        let wallet_t wallet;
     }
 
     let human mike;
 
+    let wallet leather_wallet;
+    leather_wallet.money = 1000;
+
+    mike.wallet = leather_wallet;       //copies over whole leather wallet
+
     mike.age = 40;
 
-    let tmp = mike.age;
+    let un8 tmp = mike.age;
 
     mike.first_name[0] = 'm';
     mike.first_name[1] = 'i';
     mike.first_name[2] = 'k';
     mike.first_name[3] = 'e';
 
-    let char[] linz = "linz";
-    let char[] wels = "wels";
-
-    mike.city = $linz;
-    print(mike.city)    //linz
-    mike.city = $wels
-    print(mike.city)    //wels
-
-
-
-
+    mike.phone.age = 10;
     

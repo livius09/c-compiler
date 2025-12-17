@@ -8,6 +8,11 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.0.5:
+  uppdated the parser to handle struct related things also removed REF DEREF as they are now operations.
+  uppdated the doc to include a AST-Node for structs
+  also solved a bug in the tokenizer telling wrong lines (allways sayign zero)
+
 #### v01.0.4:
   rewrote the parser whit a class but still being recursive and producing the same AST
 

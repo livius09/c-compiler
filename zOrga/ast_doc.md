@@ -41,6 +41,17 @@ body contains nodes that execute on fcall
     
     {"kind":"function_dec", "name": "*", "param":[*type,*type,*type], "ret_type":*types "body": [*node] }
 
+#### struct_def:
+to declare a structure
+in the may contain funtion_dec
+
+    {"kind":"struct_dec", "name": "*", members:[
+        {"kind":"letinit", "name": "*", "var_type":"*types", "val":"*"}
+        OR
+        {"kind":"letdec", "name": "*" "var_type":"*types"}
+        ] 
+    }
+
 #### if:
 well a if |:
 the else body is optional but this makes it one ast variante now two
@@ -81,20 +92,20 @@ field
     
     {"kind": "Identifier", "name": "*"}
 
-#### refrence:
-loads the memory adres of a variable
+#### acces:
+array, pointer or struct acces
+{'kind': 'acces', "base": {"kind": "", "name": ""},
+  "access": [
+    {"kind": ""}
+  ]
+}
+    ##### Access = {
+        "field":  {"name": str, "offset": int | None},
+        "index":  {"expr": node, "stride": int | None},
+        "deref":  {}
+        "ref"  :  {}
+    }
 
-    {"kind": "refrence", "name": "*"}
-
-#### derefrence:
-derefrence the value stored in a ptr
-    
-    {"kind": "derefrence", "name": "*"}
-
-#### arrac:
-array acces
-acesees an aray at a specified position
-    {'kind': 'arrac', 'name': '*', 'pos': *int}
             
 
 #### binary expresion:

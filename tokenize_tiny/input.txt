@@ -1,5 +1,15 @@
+struct wonam_t{
+    let un8 age;
+}
 
-let n8[] arr = {1,2,3,4};
-let n8[10] arre;
+struct man_t {
+    let un8 age;
+    let un8 kids;
+    let wonam_t partner;
+}
 
-let n8 num = 1;
+let man_t mike;
+
+mike.age = 40;
+
+mike.partner.age = 10;
