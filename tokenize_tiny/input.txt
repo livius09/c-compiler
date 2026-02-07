@@ -1,15 +1,7 @@
-struct wonam_t{
+struct wonam {
     let un8 age;
 }
 
-struct man_t {
-    let un8 age;
-    let un8 kids;
-    let wonam_t partner;
-}
+let wonam maria;    
 
-let man_t mike;
-
-mike.age = 40;
-
-mike.partner.age = 10;
+maria.age = 20;

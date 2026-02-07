@@ -26,7 +26,7 @@ puts the name : type in the vars dict
 #### asing:
 updates a variable whit val
 
-    {"kind":"asing", "name": "*", "val":"*"}
+    {"kind":"asing", "acces": *, "val":"*"}
 
 #### fcall:
 stands to generate a stand alone function call whit the return value being discarded
@@ -45,11 +45,12 @@ body contains nodes that execute on fcall
 to declare a structure
 in the may contain funtion_dec
 
-    {"kind":"struct_dec", "name": "*", members:[
+    {"kind":"struct_dec", "name": "*", "members":[
         {"kind":"letinit", "name": "*", "var_type":"*types", "val":"*"}
         OR
         {"kind":"letdec", "name": "*" "var_type":"*types"}
-        ] 
+
+        ]
     }
 
 #### if:
@@ -90,7 +91,7 @@ a variable
 in the futur ading: "type": *type
 field
     
-    {"kind": "Identifier", "name": "*"}
+    {"kind": "Identifier", "acces": "*"}
 
 #### acces:
 array, pointer or struct acces
@@ -100,10 +101,9 @@ array, pointer or struct acces
   ]
 }
     ##### Access = {
-        "field":  {"name": str, "offset": int | None},
-        "index":  {"expr": node, "stride": int | None},
-        "deref":  {}
-        "ref"  :  {}
+        {"kind":"field"  "name": str},
+        {"kind" : "index":  "expr": node},
+        {"kind":"fcall", "fname": str , "params" }
     }
 
             
@@ -112,6 +112,13 @@ array, pointer or struct acces
 a binary operation betwen left and right specified by the op
 
     {"kind": "binexp", "op": "*ops", "left": *node , "right": *node}
+
+#### unary expresion:
+a unary opperation like !, ~ or &
+
+    {"kind": "uniexp", "op": "*ops", "exp": *node }
+
+
 
 ### locals:
 for the locals of the curent scope

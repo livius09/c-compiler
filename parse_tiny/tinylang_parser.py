@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-#from multipledispatch import dispatch
 
 basicop = ["+", "-", "*", "/", "<",">", "&", "|", "^"]
 
@@ -44,14 +43,6 @@ class parserc:
                 if name in self.constants:
                     return {"kind": "literal", "val": self.constants[name]}
                 return {"kind": "identifier", "name": name}
-            
-            elif token.type == "REF":
-                name: str = token.val
-                return {"kind": "refrence", "name": name}
-            
-            elif token.type == "DEREF":
-                name: str = token.val
-                return {"kind": "derefrence", "name": name}
             
             elif token.type == "char":
                 return {"kind": "literal", "val": ord(token.val)} 
@@ -243,7 +234,7 @@ class parserc:
         
     def let_parse(self):
         ttype:Token = self.advance()
-        if ttype.type == "TYPE":
+        if ttype.type == "TYPE" or ttype.type == "IDENTIFIER":
             if self.peek()=="[":
                 self.advance()
                 if self.peek() == "]":  #means that its just an arr type
@@ -280,14 +271,17 @@ class parserc:
                     return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val":val }
                     
                 elif folowing.val == ";":
-                    return {"kind":"letdec", "name": tname, "var_type":ttype}
+                    self.expecter(self.advance(), ["=",";"])
+                    return {"kind":"letdec", "name": tname.val, "var_type" : ttype.val}
                 
                 else:
                     self.expecter(folowing, ["=",";"])
 
-    def ident_parse(self,first:Token):
-        tdict = {"kind":"asing", "name":first.val,"val":{}}
-        ttmp = self.advance().val
+    def   ident_parse(self,first:Token):
+        ttmp: Token= self.advance()
+        tdict = {"kind":"asing", "acces": self.acces_parse(first,ttmp), "val":{} }
+        ttmp = str(self.advance().val) # type: ignore levi is sexy
+        
         if ttmp == "=":
             tdict["val"] = self.parM()
             self.advance()
@@ -302,37 +296,8 @@ class parserc:
             rightval=self.parM()
             self.advance()
             tdict["val"]={"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": rightval }
-
-        elif ttmp == "(":
-
-            fparams = []
-            while True:
-                fparams.append(self.parM())
-
-                seper = self.advance()
-
-                if seper.val == ",":
-                    pass
-                elif seper.val == ")":
-                    break
-                else:
-                    self.expecter(seper, [",",","])
-                
-
-                print("inside of funcdec loop")
-
-
-            tdict = {"kind":"fcall", "name": first.val, "param": fparams}
-
-        elif ttmp == "[":
-            index = self.parM()
-            self.expecter(self.advance(), ["]"])
-            tdict=    {'kind': 'arrac', 'name': first.val, 'pos': index}
-
-
-
-
-            
+        else:
+            print(f"badiadadan: {ttmp}")
 
         return tdict
 
@@ -381,6 +346,22 @@ class parserc:
         self.advance() #consume ; 
 
         return None
+    
+    def struct_parse(self):
+        tocheck: Token  = self.advance()
+
+        if tocheck.type == "TYPE":
+            raise SyntaxError(f"you cant redefine {tocheck.val} as a struct {self.liner(tocheck)}")
+
+        name: str = tocheck.val
+
+        fields:list = self.parse_block()
+
+
+        return {"kind":"struct_dec", "name": name , "members": fields}
+
+        
+
 
     def for_parse(self):
         self.expecter(self.advance(),["("])
@@ -402,7 +383,6 @@ class parserc:
         body = self.parse_block()
         
 
-        
         return {"kind":"for",  "init":initexp,"exp":testexp, "incexp":incexp , "body": body}
     
     def func_parse(self):
@@ -439,6 +419,77 @@ class parserc:
         
 
         return {"kind":"function_dec", "name": fname , "param": fparams, "ret_type": ftype, "body": body}
+    
+    def acces_parse(self, token:Token, nexttoken:Token):
+
+        acces = {}
+
+        base: str= token.val
+
+        acclist = []
+
+
+        while True:
+
+            if nexttoken.val == ".":
+                name: str = self.advance().val
+
+                modifier: str = self.peek().val
+
+                if modifier == "[":
+                    self.advance()
+                    index = self.parM()
+                    self.expecter(self.advance(), ["]"])
+                    acclist.append({'kind': 'arrac', 'name': name, 'pos': index})
+
+                elif modifier == "(":
+                    self.advance()
+
+                    fparams = []
+                    while True:
+                        fparams.append(self.parM())
+
+                        seper: Token = self.advance()
+
+                        if seper.val == ",":
+                            pass
+                        elif seper.val == ")":
+                            fparams = []
+                            while True:
+                                fparams.append(self.parM())
+
+                                seper = self.advance()
+
+                                if seper.val == ",":
+                                    pass
+                                elif seper.val == ")":
+                                    break
+                                else:
+                                    self.expecter(seper, [",",","])
+                                
+
+                                print("inside of funcdec loop")
+
+                            acclist.append({"kind":"fcall", "name": name, "param": fparams})
+                        else:
+                            self.expecter(seper, [",",","])
+                        
+
+                        print("end of funcdec loop")
+
+
+                else:
+                    acclist.append({"kind":"field",  "name": name})
+
+            else:
+                break
+
+
+            nexttoken = self.peek()
+
+        acces={'kind': 'acces', "base": base, "access":acclist}   
+
+        return acces
 
     def expecter(self,val:Token,expected:list[str]):
         if val.val not in expected:
@@ -454,14 +505,13 @@ class parserc:
         
         match first.type:
             case "IDENTIFIER":
-                self.ident_parse(first)
+                return self.ident_parse(first)
 
             case "KEYWORD":
                 match first.val:
                     case "let":
                         return self.let_parse()
                         
-
                     case "if":
                         return self.if_parse()
 
@@ -474,16 +524,18 @@ class parserc:
                     case "func":
                         return self.func_parse()
                     
-
                     case "const":
                         return self.const_parse()
                         
-
                     case "return":
                         self.advance()
                         retval=self.parM()
                         self.expecter(self.advance(),[";"])
                         return   {"kind":"ret", "val": retval }
+                    
+                    case "struct":
+                        return self.struct_parse()
+
                     
                     case _:
                         print("Astlist:")
@@ -521,21 +573,16 @@ class parserc:
     def parse(self):
         while not self._eof():
             stmt = self.parse_statement()
+            print(stmt)
             self.astlist.append(stmt) # type: ignore
         return self.astlist
 
+testlist = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam_t", 0,14) ,  Token("SYMBOL", "{", 0,15) ,  Token("KEYWORD", "let", 1,7) ,  Token("TYPE", "un8", 1,11) ,  Token("IDENTIFIER", "age", 1,15) ,  Token("SYMBOL", ";", 1,16) ,  Token("KEYWORD", "let", 2,7) ,  Token("TYPE", "un16", 2,12) ,  Token("IDENTIFIER", "num", 2,16) , Token("SYMBOL", ";", 2,22) ,  Token("SYMBOL", "}", 3,1) ]
 
-testlist: list[Token] = [ Token("KEYWORD", "const", 0,5) ,  Token("IDENTIFIER", "pi_round3", 0,14) ,  Token("OP", "=", 0,15) ,  Token("INT", "3", 0,16) ,  Token("SYMBOL", ";", 0,17) ,  Token("KEYWORD", "let", 0,20) ,  Token("TYPE", "n8~", 0,22) ,  Token("IDENTIFIER", "thing", 0,27) ,  Token("OP", "=", 0,28) ,  Token("IDENTIFIER", "pi", 0,30) ,  Token("OP", "+", 0,31) ,  Token("INT", "1", 0,32) ,  Token("SYMBOL", ";", 0,33) ]
+tester = [ Token("KEYWORD", "let", 0,3) ,  Token("TYPE", "un16", 0,8) ,  Token("IDENTIFIER", "num", 0,12) ,  Token("SYMBOL", ";", 0,13) ]
 
-mtestlist: list[Token] = [Token("INT", "2", 0,29) ,  Token("OP", "*", 0,30),  Token("IDENTIFIER", "true", 0,32) ,  Token("OP", "+", 0,33),  Token("INT", "1", 0,34),  Token("SYMBOL", ";", 0,35), Token("INT", "15", 0,30), Token("OP", "+", 0,30), Token("INT", "15", 0,30), Token("OP", "*", 0,30), Token("INT", "2", 0,30), Token("SYMBOL", ";", 0,35)]
+moretest = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam", 0,12) ,  Token("SYMBOL", "{", 0,14) ,  Token("KEYWORD", "let", 1,7) ,  Token("TYPE", "un8", 1,11) ,  Token("IDENTIFIER", "age", 1,15) ,  Token("SYMBOL", ";", 1,16) ,  Token("SYMBOL", "}", 2,1) ,  Token("KEYWORD", "let", 4,3) ,  Token("IDENTIFIER", "wonam", 4,9) ,  Token("IDENTIFIER", "maria", 4,15) ,  Token("SYMBOL", ";", 4,16) ,  Token("IDENTIFIER", "maria", 6,5) ,  Token("SYMBOL", ".", 6,6) ,  Token("IDENTIFIER", "age", 6,9) ,  Token("OP", "=", 6,11) ,  Token("INT", "20", 6,14) ,  Token("SYMBOL", ";", 6,15) ]
 
-Mparser = parserc(mtestlist)
-
-print(Mparser.parM())
-Mparser.advance()
-print(Mparser.parM())
-Mparser.advance()
-
-Pparser = parserc(testlist)
+Pparser = parserc(moretest)
 
 print(Pparser.parse())

@@ -1,0 +1,2 @@
+#### Compiler
+also computer können nur null und eins also maschienensprache aber für einen menchen ist das fast unmöglich zu schreiben darum schreiben menchen in hochsprachen wie C, Python oder java aber dass versteht der computer wieder nicht also braucht es eine übersetzungschicht und das ist eine compiler als ein ganzes
