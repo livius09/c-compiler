@@ -1,0 +1,49 @@
+let un8 myvar;
+let un8 myvar2 = 10;
+
+-----------------------
+
+let u8 myvar = 10;
+let u8 myvar2 = 5;
+let u8 tmp;
+
+tmp = myvar + myvar2;
+tmp = myvar - myvar2;
+tmp = myvar * myvar2;
+tmp = myvar / myvar2;
+tmp = myvar << myvar2;
+tmp = myvar >> myvar2;
+tmp = myvar & myvar2;
+tmp = myvar | myvar2;
+tmp = myvar ^ myvar2;
+tmp = 2*3+5;
+
+-----------------------
+
+let un8 myvar = 0;
+
+func un8 add(un8 a, un8 b){
+    return a+b;
+}
+
+myvar = add(1,4);
+
+
+-----------------------
+let un8[] myarr = {1,2,3,4,5};
+let un8[5] myarr2;
+let un8[10] myarr3 = {12,13,14};
+
+myarr2[2] = myarr[3];
+myarr2[3] = 12;
+
+
+
+
+
+
+
+
+
+
+
