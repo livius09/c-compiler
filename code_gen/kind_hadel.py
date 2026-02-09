@@ -2,6 +2,8 @@ import code_gen.tinylang_x86_codegen as gc
 import code_gen.utils_stuff as ut
 import json
 
+debug = False
+
 def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]= []
     var_name :str= str(node['name'])
@@ -46,7 +48,8 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     else:
         val_type = ""
 
-    #print("val type: "+str(val_type))
+    if(debug):
+        print("val type: "+str(val_type))
 
     if val_type == "literal":
         
@@ -55,8 +58,9 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         else:
             text.append(f"mov {ut.var_mem_asm(var_name, contex)}, {node['val']['val']}")
 
-        print("got there")
-        print(gc.data)
+        if(debug):
+            print("got there")
+            print(gc.data)
 
     elif val_type == "identifier":
         if contex.is_global:
@@ -254,9 +258,10 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]=[]
     fname :str= str(node['name'])
 
-    print("fuction dec")
-    
-    print(node)
+    if (debug):
+        print("fuction dec")
+        
+        print(node)
 
     if contex.is_global:
         params :list[str]= node["param"]
@@ -317,7 +322,8 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
 
 
     if node["exp"]["kind"] == "literal":
-        #print("const exp")
+        if(debug):
+            print("const exp")
 
         if node["exp"]["val"]:
             text.extend(gc.gen(node["body"], contex))
@@ -337,9 +343,10 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
     falsel = next(ut.label_gen) if has_else else exitl
 
     if node["exp"]["kind"] == "identifier":
-        #print("identy exp")
+        if(debug):
+            print("identy exp")
 
-        text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
+        text.append(f"cmp {ut.var_mem_asm(node['exp']['name'],contex)},0")
         text.append(f"je {falsel}")
 
     else:
@@ -386,9 +393,10 @@ def handle_while(node:dict,contex:ut.contextc) -> list[str]:
         text.append(f"jmp .L{startla}")
 
     elif node["exp"]["kind"] == "identifier":
-        #print("identy exp")
+        if(debug):
+            print("identy exp")
 
-        text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
+        text.append(f"cmp {ut.var_mem_asm(node['exp']['name'],contex)},0")
         text.append(f"jne .L{startla}")
 
     else:
@@ -407,8 +415,9 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
     endla: int = next(ut.label_gen)
     startla: int = next(ut.label_gen)
 
-    #print("init:")
-    #print(json.dumps(node["init"],indent=4))
+    if(debug):
+        print("init:")
+        print(json.dumps(node["init"],indent=4))
 
     text.extend(gc.gen(node["init"], contex))
 
@@ -417,8 +426,9 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
 
     text.extend(gc.gen(node["body"], contex))
 
-    #print("incexp:")
-    #print(json.dumps(node["incexp"],indent=4))
+    if(debug):
+        print("incexp:")
+        print(json.dumps(node["incexp"],indent=4))
 
     text.extend(gc.gen(node["incexp"], contex))
 
@@ -428,9 +438,10 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
         text.append(f"jmp .L{startla}")
 
     elif node["exp"]["kind"] == "identifier":
-        #print("identy exp")
+        if(debug):
+            print("identy exp")
 
-        text.append(f"cmp {ut.var_mem_asm(node["exp"]["name"],contex)},0")
+        text.append(f"cmp {ut.var_mem_asm(node['exp']['name'],contex)},0")
         text.append(f"jne .L{startla}")
 
     else:

@@ -277,7 +277,7 @@ class parserc:
                 else:
                     self.expecter(folowing, ["=",";"])
 
-    def   ident_parse(self,first:Token):
+    def     ident_parse(self,first:Token):
         ttmp: Token= self.advance()
         tdict = {"kind":"asing", "acces": self.acces_parse(first,ttmp), "val":{} }
         ttmp = str(self.advance().val) # type: ignore levi is sexy

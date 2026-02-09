@@ -144,6 +144,3 @@ exp:
     mike.first_name[3] = 'e';
 
     mike.phone.age = 10;
-
-
-        

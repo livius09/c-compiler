@@ -18,7 +18,7 @@ with open("inpats.txt","r") as rawf:
     raw = rawf.read()
 
 tokenized :list[list[str]]= ttok.tokenize(raw)
-print("tokenized:")
+print("tokenized:") 
 print(tokenized)
 
 parsed, tmp = tlpars.parse(tokenized)
