@@ -11,7 +11,7 @@ class Token:
     column: int
     
     def __repr__(self) -> str:
-        return f" ({self.type}, Val: {self.val}, {self.line}:{self.column}) "
+        return f' Token("{self.type}", "{self.val}", {self.line},{self.column}) '
 
 class parserc:
     def __init__(self, tlist:list[Token]) -> None:
@@ -582,6 +582,8 @@ testlist = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam_t", 0
 tester = [ Token("KEYWORD", "let", 0,3) ,  Token("TYPE", "un16", 0,8) ,  Token("IDENTIFIER", "num", 0,12) ,  Token("SYMBOL", ";", 0,13) ]
 
 moretest = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam", 0,12) ,  Token("SYMBOL", "{", 0,14) ,  Token("KEYWORD", "let", 1,7) ,  Token("TYPE", "un8", 1,11) ,  Token("IDENTIFIER", "age", 1,15) ,  Token("SYMBOL", ";", 1,16) ,  Token("SYMBOL", "}", 2,1) ,  Token("KEYWORD", "let", 4,3) ,  Token("IDENTIFIER", "wonam", 4,9) ,  Token("IDENTIFIER", "maria", 4,15) ,  Token("SYMBOL", ";", 4,16) ,  Token("IDENTIFIER", "maria", 6,5) ,  Token("SYMBOL", ".", 6,6) ,  Token("IDENTIFIER", "age", 6,9) ,  Token("OP", "=", 6,11) ,  Token("INT", "20", 6,14) ,  Token("SYMBOL", ";", 6,15) ]
-Pparser = parserc(moretest)
 
-print(Pparser.parse())
+if __name__ == "main":
+    Pparser = parserc(moretest)
+
+    print(Pparser.parse())

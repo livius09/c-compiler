@@ -8,8 +8,8 @@
 #use nasm to compile asm
 #run or/and output the elf binary
 
-import tokenize_tiny.old_tinylang_tokenizer as ttok
-import parse_tiny.old_tinylang_parser as tlpars
+import tokenize_tiny.tinylang_tokenizer as ttok
+import parse_tiny.tinylang_parser as tlpars
 import code_gen.tinylang_x86_codegen as tcod
 from code_gen.utils_stuff import contextc
 import json
@@ -17,11 +17,18 @@ import json
 with open("inpats.txt","r") as rawf:
     raw = rawf.read()
 
-tokenized :list[list[str]]= ttok.tokenize(raw)
-print("tokenized:") 
-print(tokenized)
+Tokenize = ttok.Tokenizerc(raw)
+Tokenize.Tokenize()
 
-parsed, tmp = tlpars.parse(tokenized)
+tokens = Tokenize.tokens
+
+print("tokenized:") 
+print(tokens)
+
+
+Pparser = tlpars.parserc(tokens)
+
+parsed = Pparser.parse()
 
 print("parsed:")
 print(json.dumps(parsed,indent=4))

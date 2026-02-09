@@ -3,12 +3,12 @@ from dataclasses import dataclass
 @dataclass
 class Token:
     type: str
-    value: str
+    val: str
     line: int
     column: int
     
     def __repr__(self) -> str:
-        return f' Token("{self.type}", "{self.value}", {self.line},{self.column}) '
+        return f' Token("{self.type}", "{self.val}", {self.line},{self.column}) '
 
 
 TOKEN_TYPES: set[str] = {
@@ -146,7 +146,9 @@ class Tokenizerc:
                 raise SyntaxError(f"unknown syntax: {ch}")
         
         #print(self.source)
-        print(self.tokens)
+        #print(self.tokens)
+
+        return self.tokens
 
 
 
@@ -163,5 +165,5 @@ if __name__ == "__main__":
         read: str = raw.read()
 
     Tokenize = Tokenizerc(read)
-    Tokenize.Tokenize()
+    print(Tokenize.Tokenize())
 
