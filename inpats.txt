@@ -1,1 +1,2 @@
 let n8 inam = 10;
+inam = 2+3;

@@ -10,6 +10,10 @@ functions :dict[str,list[str]]= {}          #"print":["char[]","n64"]    contain
 
 data:list[str] = []         #data section of asm
 
+#test 
+def get_data():
+    return data
+
 def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asing, cond
     nodetype = str(node['kind'])
     
@@ -154,7 +158,7 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
                 text.extend(kh.handle_letinit(node,contex))
-                print("deae: "+str(data))
+                print("data: " + str(data))
 
             case "letdec":
                 kh.handle_let_dec(node,contex)
@@ -190,7 +194,8 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
                 raise SyntaxError("AST Defective: "+str(node['kind']))
             
         #print("end of loop:")
-        #print(data)
+
+        print("data: "+str(data))
         #print(text)
 
     return text

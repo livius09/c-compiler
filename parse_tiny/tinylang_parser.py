@@ -277,27 +277,33 @@ class parserc:
                 else:
                     self.expecter(folowing, ["=",";"])
 
+
     def     ident_parse(self,first:Token):
-        ttmp: Token= self.advance()
-        tdict = {"kind":"asing", "acces": self.acces_parse(first,ttmp), "val":{} }
-        ttmp = str(self.advance().val) # type: ignore levi is sexy
+        second_token : Token = self.advance() 
+        second_token_val = second_token.val
+
         
-        if ttmp == "=":
+        tdict = {"kind":"asing", "acces": self.acces_parse(first,second_token), "val":{} }
+        #ttmp = str(self.advance().val) # type: ignore levi is sexy
+        #print("tmp "+str(second_token))
+        
+        
+        if second_token_val == "=":
             tdict["val"] = self.parM()
             self.advance()
 
-        elif ttmp == "+" and self.peek().val == "+":
+        elif second_token_val == "+" and self.peek().val == "+":
             tdict["val"] = {"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
 
-        elif ttmp == "-" and self.peek().val == "-":
+        elif second_token_val == "-" and self.peek().val == "-":
            tdict["val"]= {"kind": "binexp", "op": "-", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
 
-        elif ttmp in basicop and self.peek().val == "=":
+        elif second_token_val in basicop and self.peek().val == "=":
             rightval=self.parM()
             self.advance()
-            tdict["val"]={"kind": "binexp", "op": ttmp, "left": {"kind": "Identifier", "name": first.val} , "right": rightval }
+            tdict["val"]={"kind": "binexp", "op": second_token_val, "left": {"kind": "Identifier", "name": first.val} , "right": rightval }
         else:
-            print(f"badiadadan: {ttmp}")
+            raise SyntaxError(f"Unexpected Token type in asing {second_token.type}:{second_token.val} on {self.liner(second_token)}")
 
         return tdict
 
@@ -422,11 +428,16 @@ class parserc:
     
     def acces_parse(self, token:Token, nexttoken:Token):
 
+
+
         acces = {}
 
         base: str= token.val
 
         acclist = []
+
+        print("next")
+        print(nexttoken)
 
 
         while True:
@@ -487,7 +498,10 @@ class parserc:
 
             nexttoken = self.peek()
 
-        acces={'kind': 'acces', "base": base, "access":acclist}   
+        acces = {'kind': 'acces', "base": base, "access" : acclist}   
+
+        
+        
 
         return acces
 

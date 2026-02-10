@@ -31,6 +31,7 @@ things that still need to be done:
     - [ ] find out what the fuck is hapening whit data and globals
     - [ ] rework type system for own types like struct
     - [ ] make types unasumemive
+    - [ ] uppdate to handel acces
 
 ### Docs:
     - [ ] update on locals and globals

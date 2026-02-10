@@ -26,7 +26,7 @@ print("tokenized:")
 print(tokens)
 
 
-Pparser = tlpars.parserc(tokens)
+Pparser = tlpars.parserc(tokens) # type: ignore # yeah it works so idk why it yaps
 
 parsed = Pparser.parse()
 
@@ -41,7 +41,7 @@ print(compiled)
 
 with open("out.txt","w") as file:
     file.write("data:\n")
-    for b in []:
+    for b in tcod.data:
         file.write("\t"+b+"\n")
     file.write("text:\n")
     for a in compiled:
