@@ -115,7 +115,7 @@ def get_pointer_mov_size(vartype:str) -> str:
     if is_ptr_type(vartype):
         return get_mov_size(vartype[:-1])
     else:
-        raise SyntaxError("get pointer mov size got a non pointer vartype: "+str(vartype))
+        raise SyntaxError("get pointer mov size got a non pointer vartype: " + str(vartype))
 
 
 def var_mem_asm(var_n:str,imp_contx:contextc) -> str:
@@ -135,4 +135,17 @@ def var_mem_asm(var_n:str,imp_contx:contextc) -> str:
         
     else:
         raise SyntaxError(f"var {var_n} has never been declared")
+    
+
+def form_acces(node:dict,contx:contextc) -> list[str]:
+    text :list[str] = []
+
+
+
+
+    return text
+
+
+#84680937534851968313
+    
     
