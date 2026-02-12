@@ -32,6 +32,7 @@ things that still need to be done:
     - [ ] rework type system for own types like struct
     - [ ] make types unasumemive
     - [ ] uppdate to handel acces
+    
 
 ### Docs:
     - [ ] update on locals and globals

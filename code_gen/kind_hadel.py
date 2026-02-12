@@ -153,10 +153,11 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     write_name :str= str(node['acces']["base"])
     val_type :str= str(node['val']['kind'])
 
+
     global data, global_vars
 
 
-
+    #first move the the to be store (the right side of "=") into rax
     if ut.var_decl(write_name,contex):
         if val_type == "literal":
             text.append(f"mov rax, {node['val']['val']}")   #there was a ut.var_mem_asm(node['val']['val'],context) here: how what why and how did i never notice
@@ -166,6 +167,9 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
         elif val_type == "identifier":
             text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex)}")
+
+        elif val_type == "acces":
+            text.extend(ut.form_acces(node["val"],contex))
 
         elif val_type == "Fcall":
             text.extend(gc.formulate_fcals(node['val'], contex))
@@ -199,8 +203,13 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                 
             else:
                 raise SyntaxError("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))
+            
+        else:
+            raise SyntaxError(f"read part has no valid type val_type: {val_type}")
         
         write_type :str= str(ut.get_var_dict(write_name,contex)['type'])
+
+        #then write rax into whats on the left side of the "="
 
         if ut.is_arr_type(write_type):
 
@@ -247,6 +256,9 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
         elif ut.is_n_type(write_type):
             text.append(f"mov {ut.var_mem_asm(write_name, contex)}, rax")
+
+        else:
+            raise SyntaxError(f"variable: {write_name} has no valid write to type")
 
 
 
