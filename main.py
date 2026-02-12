@@ -36,8 +36,17 @@ print(json.dumps(parsed,indent=4))
 start_contx = contextc(is_global=True)
 compiled = tcod.gen(parsed, start_contx)
 
-print("compiled:")
-print(compiled)
+print("\ncode gen: ")
+print("data: \n")
+for line in tcod.data:
+    print(line)
+
+print("\ntext:\n")
+
+for line in compiled:
+    print(line)
+
+
 
 with open("out.txt","w") as file:
     file.write("data:\n")

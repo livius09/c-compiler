@@ -2,3 +2,5 @@ data:
 	inam: 
 	 .byte 	 10
 text:
+	mov rax, 5
+	mov BYTE PTR [inam], rax

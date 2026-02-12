@@ -147,9 +147,10 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
 
             contex.locals[var_name] = tmp
 
+
 def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     text:list[str]=[]
-    write_name :str= str(node['name'])
+    write_name :str= str(node['acces']["base"])
     val_type :str= str(node['val']['kind'])
 
     global data, global_vars

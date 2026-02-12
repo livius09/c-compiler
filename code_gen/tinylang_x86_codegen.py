@@ -146,8 +146,8 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
     
     
     for node in a:
-        print("cur node:")
-        print(node)
+        #print("cur node:")
+        #print(node)
 
     
         if not isinstance(node, dict):
@@ -158,7 +158,7 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
             
             case "letinit":    #if its a let decl add the name and type to the vars dict if theyr already in there from and eror and generate the code for putting the value in
                 text.extend(kh.handle_letinit(node,contex))
-                print("data: " + str(data))
+                #print("data: " + str(data))
 
             case "letdec":
                 kh.handle_let_dec(node,contex)
@@ -195,7 +195,7 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
             
         #print("end of loop:")
 
-        print("data: "+str(data))
+        #print("data: "+str(data))
         #print(text)
 
     return text
