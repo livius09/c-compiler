@@ -130,6 +130,17 @@ size in bytes of the whole thing
 for the globals
     {x:{type:n32, size:4}, arr:{type:n16[], len:4, size:8}}
 
+### structs:
+user declared types in the form of structs
+    { 
+        "human":{
+                "size":9 ,
+                "mebers":
+                        {"age":"un8", "money":"n64"}    
+                }
+    }
+
+
 ### example:
 [{"kind": "letdec", "var_type": "n8", "name": "num", "val": {"kind": "literal", "val": 2}}, 
 {"kind": "letdec", "var_type": "n8~", "name": "ptr", "val": {"kind": "refrence", "name": "num"}}, 

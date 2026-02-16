@@ -1,2 +1,7 @@
-let n8 inam = 10;
-inam = 2+3;
+let un8 num = 13+3;
+let n8 mum = num;
+
+struct human{
+    let n8 age;
+    let n8 money;
+}

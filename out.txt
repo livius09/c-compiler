@@ -1,6 +1,9 @@
 data:
-	inam: 
-	 .byte 	 10
+	num: 
+	 .byte 	 16
+	mum: 
+	 .byte 
+ 0
 text:
-	mov rax, 5
-	mov BYTE PTR [inam], rax
+	mov rax , BYTE PTR [num]
+	mov BYTE PTR [mum] , rax

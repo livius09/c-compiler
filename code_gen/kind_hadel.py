@@ -115,7 +115,7 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
     else:
 
         
-        tmp={}
+        tmp = {}
         size = None
         tmp['type'] = vartype
         varlen = 1
@@ -279,14 +279,14 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
     if contex.is_global:
         params :list[str]= node["param"]
 
-        if len(params) > len(ut.regs):
+        if len(params) > len(ut.fregs):
             raise SyntaxError("to many args in function: " + fname)
         else:
             gc.functions[fname]= params
             return_type :str= str(node["ret_type"])
 
 
-            text.append(f".{fname}:")
+            text.append(f".{fname}:")       #placing a lable for the func
             text.append("push rbp")         #seting up new stack frame
             text.append("mov rbp, rsp")
 
@@ -308,7 +308,7 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
 
                 loc_cont.locals[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs}
 
-                text.append(f"mov {ut.var_mem_asm(cur_name, loc_cont)}, {ut.regs[i]}")
+                text.append(f"mov {ut.var_mem_asm(cur_name, loc_cont)}, {ut.fregs[i]}")
 
             
             
@@ -383,7 +383,20 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
     return text
 
 
+def handel_struct_dec(node:dict ,contex:ut.contextc)-> None:
+    sname:str = node["name"]
+    members= {}
 
+
+    for member in node["members"]:
+        if member["kind"] == "letdec":
+            members[member["name"]] = member["var_type"]
+        else:
+            raise SyntaxError(f"members can only be declared whit a letdec and not whith: {member["kind"]}")
+
+
+    ut.struct[sname] = {"size":len(members), "members":members}
+   
 
 
 def handle_while(node:dict,contex:ut.contextc) -> list[str]:
