@@ -394,8 +394,10 @@ def handel_struct_dec(node:dict ,contex:ut.contextc)-> None:
         else:
             raise SyntaxError(f"members can only be declared whit a letdec and not whith: {member["kind"]}")
 
+    #todo work on struct specific ofset
 
-    ut.struct[sname] = {"size":len(members), "members":members}
+
+    ut.structs[sname] = {"size":len(members), "members":members}
    
 
 

@@ -136,7 +136,7 @@ user declared types in the form of structs
         "human":{
                 "size":9 ,
                 "mebers":
-                        {"age":"un8", "money":"n64"}    
+                        {"age":{"type":"un8","ofs":0}, "money":{"type":"n64", "ofs":8}}    
                 }
     }
 

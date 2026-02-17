@@ -26,7 +26,7 @@ mov_sizes: dict[int, str] = {1:"BYTE PTR", 2:"WORD PTR", 4:"DWORD PTR", 8:"QWORD
 
 types: dict[str, int]={"n8":1,"n16":2,"n32":4,"n64":8,"un8":1,"un16":2,"un32":4,"un64":8,   "n8~":8,"n16~":8,"n32~":8,"n64~":8,"un8~":8,"un16~":8,"un32~":8,"un64~":8}
 
-struct = {}
+structs = {}
 
 def size_lookup(lok_type:str) -> int:
     
