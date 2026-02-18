@@ -172,6 +172,9 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
   
             case "func_dec":
                 text.extend(kh.handle_func_def(node,contex))
+
+            case "struct_dec":
+                kh.handel_struct_dec(node,contex)
                 
             
             case "if":

@@ -383,21 +383,24 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
     return text
 
 
-def handel_struct_dec(node:dict ,contex:ut.contextc)-> None:
+def handel_struct_dec(node:dict ,context:ut.contextc)-> None:
     sname:str = node["name"]
     members= {}
 
+    struct_context = ut.contextc()
 
     for member in node["members"]:
         if member["kind"] == "letdec":
-            members[member["name"]] = member["var_type"]
+            ofs = ut.alingment_gen(member["var_type"],struct_context)
+
+            members[member["name"]] = {"type":member["var_type"],"ofs": ofs}
         else:
             raise SyntaxError(f"members can only be declared whit a letdec and not whith: {member["kind"]}")
 
-    #todo work on struct specific ofset
-
-
-    ut.structs[sname] = {"size":len(members), "members":members}
+    ut.structs[sname] = {"size":struct_context.offset, "members":members}
+    
+    print("structs: ")
+    print(ut.structs)
    
 
 
