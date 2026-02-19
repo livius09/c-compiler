@@ -18,16 +18,16 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asi
     nodetype = str(node['kind'])
     
     if nodetype == "identifier":
-        return [f"mov rax, {ut.var_mem_asm(node['name'],loc_conx)}"]
+        return [f"mov rax, {loc_conx.var_mem_asm(node['name'])}"]
     
     if nodetype == "literal":
         return [f"mov rax, {node['val']}"]
 
     if nodetype == "refrence":
-        return [f"lea rax, {ut.var_mem_asm(node['name'],loc_conx)}"]
+        return [f"lea rax, {loc_conx.var_mem_asm(node['name'])}"]
     
     if nodetype == "derefrence":
-       return [f"mov rax, {ut.var_mem_asm(node['name'],loc_conx)}",  # rax = address of pointee
+       return [f"mov rax, {loc_conx.var_mem_asm(node['name'])}",  # rax = address of pointee
                 "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
@@ -102,7 +102,7 @@ def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code
             elif curtype == "identifier":
                 
                 varname = str(params[i]['name'])
-                vartype: str = ut.get_var_type(varname, conx)
+                vartype: str = conx.get_var_type(varname)
 
                 if dectypes[i] == vartype:
                     code.append(f"mov {ut.fregs[i]}, [{varname}]")

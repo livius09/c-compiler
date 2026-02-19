@@ -11,7 +11,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
 
     global data, global_vars
 
-    if ut.var_decl(var_name,contex):
+    if contex.is_var_decl(var_name):
         raise SyntaxError(f"variable: {var_name} has already been declared")
 
     tmp={}
@@ -39,7 +39,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         
     else:
        
-        tmp['ofs'] = ut.alingment_gen(vartype, contex, varlen)
+        tmp['ofs'] = contex.alingment_gen(vartype, varlen)
         contex.locals[var_name] = tmp
 
 
@@ -56,7 +56,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \t {node['val']['val']}")
         else:
-            text.append(f"mov {ut.var_mem_asm(var_name, contex)}, {node['val']['val']}")
+            text.append(f"mov {contex.var_mem_asm(var_name)}, {node['val']['val']}")
 
         if(debug):
             print("got there")
@@ -66,33 +66,33 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
             
-        text.append(f"mov rax , {ut.var_mem_asm(node['val']['name'], contex)}")
-        text.append(f"mov {ut.var_mem_asm(var_name, contex)} , rax")
+        text.append(f"mov rax , {contex.var_mem_asm(node['val']['name'])}")
+        text.append(f"mov {contex.var_mem_asm(var_name)} , rax")
 
     elif val_type == "binexp":
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
         text.extend(gc.formulate_math(node['val'],contex))
-        text.append(f"mov {ut.var_mem_asm(var_name, contex)}, rax")
+        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")
 
     elif val_type == "refrence":
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
-        text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex)}")
-        text.append(f"mov {ut.var_mem_asm(var_name, contex)}, rax")
+        text.append(f"lea rax, {contex.var_mem_asm(node['val']['name'])}")
+        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")
 
     elif val_type == "derefrence":
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
-        text.append(f"mov rax, {ut.var_mem_asm(node['name'], contex)}")  # rax = address of pointee
+        text.append(f"mov rax, {contex.var_mem_asm(node['name'])}")  # rax = address of pointee
         text.append("mov rax, [rax]")                                    # rax = value at that address
-        text.append(f"mov {ut.var_mem_asm(var_name,contex)}, rax")       #
+        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")       #
 
     elif ut.is_arr_type(vartype):
-        ut.get_var_dict(var_name,contex)['type'] = vartype
+        contex.get_var_dict(var_name)['type'] = vartype
         if ut.is_arr_type(vartype):
             gc.data.append(var_name+":")
             for nana in node['val']:
@@ -110,7 +110,7 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
 
     global data, global_vars
 
-    if (ut.var_decl(var_name,contex)):
+    if (contex.is_var_decl(var_name)):
         raise SyntaxError(f"variable: {var_name} has already been declared")
     else:
 
@@ -145,7 +145,7 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
             print(gc.global_vars)
         else:
             
-            tmp['ofs'] = ut.alingment_gen(vartype, contex,varlen)
+            tmp['ofs'] = contex.alingment_gen(vartype, varlen)
 
             contex.locals[var_name] = tmp
 
@@ -160,7 +160,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
 
     #first move the the to be store (the right side of "=") into rax
-    if ut.var_decl(write_name,contex):
+    if contex.is_var_decl(write_name):
         if val_type == "literal":
             text.append(f"mov rax, {node['val']['val']}")   #there was a ut.var_mem_asm(node['val']['val'],context) here: how what why and how did i never notice
                                                             #i need to do a lot more testing
@@ -168,7 +168,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
             text.extend(gc.formulate_math(node['val'],contex))
 
         elif val_type == "identifier":
-            text.append(f"mov rax, {ut.var_mem_asm(node['val']['name'], contex)}")
+            text.append(f"mov rax, {contex.var_mem_asm(node['val']['name'])}")
 
         elif val_type == "acces":
             text.extend(ut.form_acces(node["val"],contex))
@@ -177,11 +177,11 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
             text.extend(gc.formulate_fcals(node['val'], contex))
 
         elif val_type == "refrence":
-            text.append(f"lea rax, {ut.var_mem_asm(node['val']['name'], contex)}")
+            text.append(f"lea rax, {contex.var_mem_asm(node['val']['name'])}")
 
         elif val_type == "derefrence":
-            text.append(f"mov rdx, {ut.var_mem_asm(node['val']['name'], contex)}")
-            text.append(f"mov rax, {ut.get_pointer_mov_size(ut.get_var_type(node['val']['name'],contex))} [rdx]") #get mov size of the actal contents of the pointer |: Damm
+            text.append(f"mov rdx, {contex.var_mem_asm(node['val']['name'])}")
+            text.append(f"mov rax, {ut.get_pointer_mov_size(contex.get_var_type(node['val']['name']))} [rdx]") #get mov size of the actal contents of the pointer |: Damm
 
         elif val_type=="arrac":
             
@@ -190,14 +190,14 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
             if arr_ac_kind == "literal":
                 read_name :str= str(node["val"]['name'])
                 pos :int= int(node["val"]["pos"]["val"])
-                pos*=ut.size_lookup(ut.get_var_type(read_name,contex))
+                pos*=ut.size_lookup(contex.get_var_type(read_name))
                 text.append(f"mov rax, {read_name}[rip+{pos}]")
 
             elif  arr_ac_kind == "identifier":
                 #mov eax, lala[0+rax*4]
                 read_name :str= str(node["val"]['name'])
-                size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
-                text.append(f"mov rax, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
+                size = ut.size_lookup(contex.get_var_type(node["val"]["name"]))
+                text.append(f"mov rax, {contex.var_mem_asm(node['val']['pos']['name'])}")
                 text.append(f"mov rax, {read_name}[0+rax*{size}]")
 
 
@@ -209,7 +209,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
         else:
             raise SyntaxError(f"read part has no valid type val_type: {val_type}")
         
-        write_type :str= str(ut.get_var_dict(write_name,contex)['type'])
+        write_type :str= str(contex.get_var_dict(write_name)['type'])
 
         #then write rax into whats on the left side of the "="
 
@@ -227,7 +227,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                     #mov eax, lala[0+rax*4]
                     read_name :str= str(node["val"]['name'])
                     size: int = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
-                    text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'] , contex)}")
+                    text.append(f"mov rdx, {contex.var_mem_asm(node['val']['pos']['name'])}")
                     text.append(f"mov {write_name}[0+rdx*{size}], rax")
 
             elif write_name in contex.locals.keys():
@@ -243,21 +243,21 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                     #[rbp-ofs+rax*size]
                     ofs :int= int(contex.locals[write_name]['ofs'])
                     read_name :str= str(node["val"]['name'])
-                    size = ut.size_lookup(ut.get_var_type(node["val"]["name"],contex))
-                    text.append(f"mov rdx, {ut.var_mem_asm(node['val']['pos']['name'], contex)}")
-                    text.append(f"mov {ut.var_mem_asm(write_name, contex)} [rbp-{ofs}+rdx*{size}], rax")
+                    size = ut.size_lookup(contex.get_var_type(node["val"]["name"]))
+                    text.append(f"mov rdx, {contex.var_mem_asm(node['val']['pos']['name'])}")
+                    text.append(f"mov {contex.var_mem_asm(write_name)} [rbp-{ofs}+rdx*{size}], rax")
 
             else:
                 raise SyntaxError(f"variable {write_name} has never been declared")
 
         
         elif ut.is_ptr_type(write_type):
-            text.append(f"mov rdx, {ut.var_mem_asm(write_name, contex)}")
+            text.append(f"mov rdx, {contex.var_mem_asm(write_name)}")
             text.append(f"mov [rdx], rax ")
             
 
         elif ut.is_n_type(write_type):
-            text.append(f"mov {ut.var_mem_asm(write_name, contex)}, rax")
+            text.append(f"mov {contex.var_mem_asm(write_name)}, rax")
 
         else:
             raise SyntaxError(f"variable: {write_name} has no valid write to type")
@@ -305,12 +305,12 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
                 cur_size: int = ut.size_lookup(cur_type)
 
                 
-                cur_ofs: int = ut.alingment_gen(cur_type,loc_cont)
+                cur_ofs: int = loc_cont.alingment_gen(cur_type)
 
 
                 loc_cont.locals[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs}
 
-                text.append(f"mov {ut.var_mem_asm(cur_name, loc_cont)}, {ut.fregs[i]}")
+                text.append(f"mov {loc_cont.var_mem_asm(cur_name)}, {ut.fregs[i]}")
 
             
             
@@ -361,7 +361,7 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
         if(debug):
             print("identy exp")
 
-        text.append(f"cmp {ut.var_mem_asm(node['exp']['name'],contex)},0")
+        text.append(f"cmp {contex.var_mem_asm(node['exp']['name'])},0")
         text.append(f"je {falsel}")
 
     else:
@@ -393,7 +393,7 @@ def handel_struct_dec(node:dict ,context:ut.contextc)-> None:
 
     for member in node["members"]:
         if member["kind"] == "letdec":
-            ofs = ut.alingment_gen(member["var_type"],struct_context)
+            ofs = struct_context.alingment_gen(member["var_type"])
 
             members[member["name"]] = {"type":member["var_type"],"ofs": ofs}
         else:
@@ -429,7 +429,7 @@ def handle_while(node:dict,contex:ut.contextc) -> list[str]:
         if(debug):
             print("identy exp")
 
-        text.append(f"cmp {ut.var_mem_asm(node['exp']['name'],contex)},0")
+        text.append(f"cmp {contex.var_mem_asm(node['exp']['name'])},0")
         text.append(f"jne .L{startla}")
 
     else:
@@ -474,7 +474,7 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
         if(debug):
             print("identy exp")
 
-        text.append(f"cmp {ut.var_mem_asm(node['exp']['name'],contex)},0")
+        text.append(f"cmp {contex.var_mem_asm(node['exp']['name'])},0")
         text.append(f"jne .L{startla}")
 
     else:

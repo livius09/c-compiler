@@ -86,38 +86,63 @@ class contextc():
             if is_arr_type(vartype):
                 cg.global_vars[name]['len'] = var_len
         else:
-            self.offset += alingment_gen(vartype,self,var_len)
+            self.offset += self.alingment_gen(vartype,  var_len)
             self.locals[name] = {"type": vartype, "size": size, "ofs": self.offset}
             if is_arr_type(vartype):
                 self.locals[name]['len'] = var_len
 
-def alingment_gen(var_type:str, cur_conx:contextc, dlen:int=1)->int:
-    size: int = size_lookup(var_type)
-    if cur_conx.offset % size != 0:
-        cur_conx.offset += size - (cur_conx.offset % size)
+    def is_var_decl(self, var_n:str) -> bool:      #checks if a var has already been declared
+        if var_n in self.locals.keys():
+            return True
+        elif var_n in cg.global_vars.keys():
+            return True
+        else:
+            return False
 
-    cur_conx.offset += size * dlen
-
-    return cur_conx.offset  
-
-def var_decl(var_n:str, loc_conx:contextc) -> bool:      #checks if a var has already been declared
-    if var_n in loc_conx.locals.keys():
-        return True
-    elif var_n in cg.global_vars.keys():
-        return True
-    else:
-        return False
-
-def get_var_dict(var_n:str,contex:contextc) -> dict:
-    if var_n in contex.locals.keys():
-        return contex.locals[var_n]
-    elif var_n in cg.global_vars.keys():
-        return cg.global_vars[var_n]
-    else:
-        raise SyntaxError(f"var {var_n} doese not exist")
+    def get_var_type(self,var_n:str) -> str:
+        return self.get_var_dict(var_n)['type']
     
-def get_var_type(var_n:str,contex:contextc) -> str:
-    return get_var_dict(var_n,contex)['type']
+
+    def get_var_dict(self, var_n:str) -> dict:
+        if var_n in self.locals.keys():
+            return self.locals[var_n]
+        elif var_n in cg.global_vars.keys():
+            return cg.global_vars[var_n]
+        else:
+            raise SyntaxError(f"var {var_n} doese not exist") 
+
+    def alingment_gen(self, var_type:str, dlen:int=1)->int:
+        size: int = size_lookup(var_type)
+        if self.offset % size != 0:
+            self.offset += size - (self.offset % size)
+
+        self.offset += size * dlen
+
+        return self.offset  
+    
+    def var_mem_asm(self,var_n:str) -> str:
+        if var_n in self.locals.keys():
+            var_type = str(self.locals[var_n]['type'])
+            if is_n_type(var_type):
+                return f"{get_mov_size(var_type)} [rbp-{self.locals[var_n]['ofs']}]"
+            else:
+                raise SyntaxError(str(var_type)+"not implemented")
+            
+        elif var_n in cg.global_vars.keys():
+            var_type = str(cg.global_vars[var_n]['type'])
+            if is_n_type(var_type):
+                return f"{get_mov_size(var_type)} [{var_n}]"
+            else:
+                raise SyntaxError(str(var_type)+"not implemented")
+            
+        else:
+            raise SyntaxError(f"var {var_n} has never been declared")
+
+
+
+
+    
+
 
 def get_pointer_mov_size(vartype:str) -> str:
     if is_ptr_type(vartype):
@@ -126,23 +151,7 @@ def get_pointer_mov_size(vartype:str) -> str:
         raise SyntaxError("get pointer mov size got a non pointer vartype: " + str(vartype))
 
 
-def var_mem_asm(var_n:str,imp_contx:contextc) -> str:
-    if var_n in imp_contx.locals.keys():
-        var_type = str(imp_contx.locals[var_n]['type'])
-        if is_n_type(var_type):
-            return f"{get_mov_size(var_type)} [rbp-{imp_contx.locals[var_n]['ofs']}]"
-        else:
-            raise SyntaxError(str(var_type)+"not implemented")
-        
-    elif var_n in cg.global_vars.keys():
-        var_type = str(cg.global_vars[var_n]['type'])
-        if is_n_type(var_type):
-            return f"{get_mov_size(var_type)} [{var_n}]"
-        else:
-            raise SyntaxError(str(var_type)+"not implemented")
-        
-    else:
-        raise SyntaxError(f"var {var_n} has never been declared")
+
     
 
 def form_acces(node:dict,contx:contextc) -> list[str]:

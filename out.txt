@@ -1,4 +1,4 @@
 data:
 	levi: 
-	.zero 2
+	.zero  2
 text:
