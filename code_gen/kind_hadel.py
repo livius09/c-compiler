@@ -114,7 +114,6 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
         raise SyntaxError(f"variable: {var_name} has already been declared")
     else:
 
-        
         tmp = {}
         size = None
         tmp['type'] = vartype
@@ -141,6 +140,9 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
 
         if contex.is_global:
             gc.global_vars[var_name] = tmp
+            gc.data.append(f"{var_name}: \n\t.zero  {ut.size_lookup(vartype)}")
+
+            print(gc.global_vars)
         else:
             
             tmp['ofs'] = ut.alingment_gen(vartype, contex,varlen)
@@ -233,8 +235,8 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                     #ofs - i*size
                     
                     pos :int= int(node["pos"]["val"])
-                    pos*=ut.size_lookup(contex.locals[write_name]['type'])
-                    pos-= (contex.locals[write_name]['ofs'])
+                    pos*=ut.size_lookup(str(contex.locals[write_name]['type']))
+                    pos-= int(contex.locals[write_name]['ofs'])
                     text.append(f"mov {ut.get_mov_size(write_type)} [rbp-{pos}], rax")
 
                 elif node["pos"]["kind"] == "identifier":
@@ -399,8 +401,8 @@ def handel_struct_dec(node:dict ,context:ut.contextc)-> None:
 
     ut.structs[sname] = {"size":struct_context.offset, "members":members}
     
-    print("structs: ")
-    print(ut.structs)
+    #print("structs: ")
+    #print(ut.structs)
    
 
 

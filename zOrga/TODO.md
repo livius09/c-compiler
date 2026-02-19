@@ -27,10 +27,10 @@ things that still need to be done:
     - [x] handle if(1){}
 
     - [ ] loc arr init
-    - [ ] fix global data init
-    - [ ] find out what the fuck is hapening whit data and globals
-    - [ ] rework type system for own types like struct
-    - [ ] make types unasumemive
+    - [x] fix global data init
+    - [x] find out what the fuck is hapening whit data and globals
+    - [x] rework type system for own types like struct
+    - [x] make types unasumemive
     - [ ] uppdate to handel acces
     
 

@@ -1,9 +1,4 @@
 data:
-	num: 
-	 .byte 	 16
-	mum: 
-	 .byte 
- 0
+	levi: 
+	.zero 2
 text:
-	mov rax , BYTE PTR [num]
-	mov BYTE PTR [mum] , rax

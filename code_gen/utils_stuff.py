@@ -35,8 +35,12 @@ def size_lookup(lok_type:str) -> int:
             return types[lok_type[:-2]]
         else:
             return types[lok_type]
+        
+    elif lok_type in structs.keys():
+        return int(structs[lok_type]["size"])
     else:
         raise SyntaxError(f"var type {lok_type} doese not exist")
+    
     
 def  init_size(var_t:str) -> str:
     return init_sized[size_lookup(var_t)]
@@ -68,10 +72,10 @@ label_gen = label_generator()
 
 class contextc():
     def __init__(self, is_global:bool=False):
-        self.locals = {}
+        self.locals: dict[str,dict[str,str|int]] = {}
         self.is_global: bool = is_global
-        self.offset = 0
-        self.ret_type= "void"
+        self.offset:int = 0
+        self.ret_type = "void"
         self.expoint = None
 
     def declare_var(self, name:str, vartype:str, var_len:int=1 ) -> None:

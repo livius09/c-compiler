@@ -8,6 +8,11 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.0.7:
+  fixed a long standing bug were global inits never wrote to data
+  codegen now registers structs and initializes them corectly
+  updated docs for a new struct description that is used in codegen to acces members and keep tract of structs
+  
 #### v01.0.6:
   updated main.py to use the new lexer and parser
 

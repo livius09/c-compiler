@@ -1,7 +1,6 @@
-let un8 num = 13+3;
-let n8 mum = num;
-
 struct human{
     let n8 age;
     let n8 money;
 }
+
+let human levi;
