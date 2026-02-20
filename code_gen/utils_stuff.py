@@ -141,9 +141,6 @@ class contextc():
 
 
 
-    
-
-
 def get_pointer_mov_size(vartype:str) -> str:
     if is_ptr_type(vartype):
         return get_mov_size(vartype[:-1])

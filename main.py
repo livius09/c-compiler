@@ -56,4 +56,3 @@ with open("out.txt","w") as file:
     for a in compiled:
         file.write("\t"+a+"\n")
     file.close
-

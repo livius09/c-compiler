@@ -279,13 +279,13 @@ class parserc:
 
 
     def     ident_parse(self,first:Token):
-        second_token : Token = self.advance() 
-        second_token_val = second_token.val
-
         
-        tdict = {"kind":"asing", "acces": self.acces_parse(first,second_token), "val":{} }
+        tdict = {"kind":"asing", "acces": self.acces_parse(first), "val":{} }
         #ttmp = str(self.advance().val) # type: ignore levi is sexy
         #print("tmp "+str(second_token))
+
+        second_token : Token = self.advance()
+        second_token_val = second_token.val
         
         
         if second_token_val == "=":
@@ -426,8 +426,7 @@ class parserc:
 
         return {"kind":"function_dec", "name": fname , "param": fparams, "ret_type": ftype, "body": body}
     
-    def acces_parse(self, token:Token, nexttoken:Token):
-
+    def acces_parse(self, token:Token):
 
 
         acces = {}
@@ -436,14 +435,19 @@ class parserc:
 
         acclist = []
 
-        #print("next")
-        #print(nexttoken)
-
-
+        
         while True:
 
+            nexttoken = self.peek()
+            print("next")
+            print(nexttoken)
+
             if nexttoken.val == ".":
+                self.advance()
                 name: str = self.advance().val
+
+                print("name:")
+                print(name)
 
                 modifier: str = self.peek().val
 
@@ -496,7 +500,7 @@ class parserc:
                 break
 
 
-            nexttoken = self.peek()
+            
 
         acces = {'kind': 'acces', "base": base, "access" : acclist}   
 
@@ -504,6 +508,7 @@ class parserc:
         
 
         return acces
+
 
     def expecter(self,val:Token,expected:list[str]):
         if val.val not in expected:

@@ -10,9 +10,6 @@ functions :dict[str,list[str]]= {}          #"print":["char[]","n64"]    contain
 
 data:list[str] = []         #data section of asm
 
-#test 
-def get_data():
-    return data
 
 def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asing, cond
     nodetype = str(node['kind'])

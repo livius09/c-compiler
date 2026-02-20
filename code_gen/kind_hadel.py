@@ -142,7 +142,8 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
             gc.global_vars[var_name] = tmp
             gc.data.append(f"{var_name}: \n\t.zero  {ut.size_lookup(vartype)}")
 
-            print(gc.global_vars)
+            if debug:
+                print(gc.global_vars)
         else:
             
             tmp['ofs'] = contex.alingment_gen(vartype, varlen)
