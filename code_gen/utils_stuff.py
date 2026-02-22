@@ -137,7 +137,38 @@ class contextc():
             
         else:
             raise SyntaxError(f"var {var_n} has never been declared")
+        
+    
 
+
+    def form_get_acces(self, node:dict) -> list[str]:
+        text :list[str] = []
+        
+
+
+
+        return text
+
+
+    def form_set_acces(self, node:dict) -> list[str]:
+        text :list[str] = []
+        ofs :int = 0
+        
+
+
+
+        return text
+
+
+
+def walk_offset(node:dict) -> int:
+    ofs :int = 0
+
+
+    return ofs
+
+
+    
 
 
 
@@ -149,15 +180,7 @@ def get_pointer_mov_size(vartype:str) -> str:
 
 
 
-    
 
-def form_acces(node:dict,contx:contextc) -> list[str]:
-    text :list[str] = []
-    
-
-
-
-    return text
 
 
 #84680937534851968313

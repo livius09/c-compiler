@@ -172,7 +172,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
             text.append(f"mov rax, {contex.var_mem_asm(node['val']['name'])}")
 
         elif val_type == "acces":
-            text.extend(ut.form_acces(node["val"],contex))
+            text.extend(.form_get_acces(node["val"],contex))
 
         elif val_type == "Fcall":
             text.extend(gc.formulate_fcals(node['val'], contex))
