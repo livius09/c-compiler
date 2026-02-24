@@ -152,7 +152,7 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
 
 
 def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
-    text:list[str]=[]
+    text:list[str] = []
     write_name :str= str(node['acces']["base"])
     val_type :str= str(node['val']['kind'])
 
@@ -172,7 +172,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
             text.append(f"mov rax, {contex.var_mem_asm(node['val']['name'])}")
 
         elif val_type == "acces":
-            text.extend(.form_get_acces(node["val"],contex))
+            text.extend(contex.form_get_acces(node["val"]))
 
         elif val_type == "Fcall":
             text.extend(gc.formulate_fcals(node['val'], contex))
@@ -210,7 +210,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
         else:
             raise SyntaxError(f"read part has no valid type val_type: {val_type}")
         
-        write_type :str= str(contex.get_var_dict(write_name)['type'])
+        write_type :str= contex.get_var_type(write_name)
 
         #then write rax into whats on the left side of the "="
 
@@ -259,6 +259,10 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
         elif ut.is_n_type(write_type):
             text.append(f"mov {contex.var_mem_asm(write_name)}, rax")
+
+        elif node['acces']["kind"] == "acces":
+           print(node['acces'])
+           text.extend(contex.form_set_acces(node["acces"]))
 
         else:
             raise SyntaxError(f"variable: {write_name} has no valid write to type")

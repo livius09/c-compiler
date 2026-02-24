@@ -55,7 +55,7 @@ in the may contain funtion_dec
 
 #### if:
 well a if |:
-the else body is optional but this makes it one ast variante now two
+the else body is optional but this makes it one ast variante not two
 
     {"kind":"if", "exp":binexp, "body":[*node] "else_body":[*node]}
 

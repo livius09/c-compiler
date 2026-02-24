@@ -28,26 +28,33 @@ class parserc:
             if self._eof():
                 raise SyntaxError("Unexpected end of input")
 
-            token = self.advance()
+            f_token = self.advance()
 
             # Stop parsing if we hit a semicolon or closing bracket
-            if token.type == "SYMBOL" and token.val in [";", ")", ",","]"]:
+            if f_token.type == "SYMBOL" and f_token.val in [";", ")", ",","]"]:
                 # Step back one so the parent parser can handle it
                 self.pos -= 1
                 raise StopIteration("End of expression")
 
-            if token.type == "INT":
-                return {"kind": "literal", "val": int(token.val)}
-            elif token.type == "IDENTIFIER":
-                name: str = token.val
+            if f_token.type == "INT":
+                return {"kind": "literal", "val": int(f_token.val)}
+            
+            elif f_token.type == "IDENTIFIER":
+                name: str = f_token.val
+
                 if name in self.constants:
                     return {"kind": "literal", "val": self.constants[name]}
+                
+                elif self.peek().val == ".":
+                    print("hello from brazil")
+                    return self.acces_parse(f_token)
+                
                 return {"kind": "identifier", "name": name}
             
-            elif token.type == "char":
-                return {"kind": "literal", "val": ord(token.val)} 
+            elif f_token.type == "char":
+                return {"kind": "literal", "val": ord(f_token.val)} 
             
-            elif token.val == "(":
+            elif f_token.val == "(":
 
                 fparams = []
                 while True:
@@ -60,16 +67,16 @@ class parserc:
                     elif seper.val == ")":
                         break
                     else:
-                        self.expecter(seper, [",",","])
+                        self.expecter(seper, [",", ")"])
 
                     print("inside of funcdec loop")
 
 
-                return {"kind":"fcall", "name": token.val, "param": fparams}  # type: ignore
+                return {"kind":"fcall", "name": f_token.val, "param": fparams}  # type: ignore
             
             
             else:
-                raise ValueError(f"Unexpected token in expression: {token}")
+                raise ValueError(f"Unexpected token in expression: {f_token}")
 
         def get_precedence(op:str) -> int:
             return {
@@ -282,10 +289,12 @@ class parserc:
         
         tdict = {"kind":"asing", "acces": self.acces_parse(first), "val":{} }
         #ttmp = str(self.advance().val) # type: ignore levi is sexy
-        #print("tmp "+str(second_token))
+        
 
         second_token : Token = self.advance()
         second_token_val = second_token.val
+
+        #print("tmp "+str(second_token))
         
         
         if second_token_val == "=":
@@ -435,6 +444,7 @@ class parserc:
 
         acclist = []
 
+
         
         while True:
 
@@ -505,7 +515,8 @@ class parserc:
         acces = {'kind': 'acces', "base": base, "access" : acclist}   
 
         
-        
+        print("finished acces: ")
+        print(acces)
 
         return acces
 

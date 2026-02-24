@@ -104,7 +104,8 @@ class contextc():
     
 
     def get_var_dict(self, var_n:str) -> dict:
-        if var_n in self.locals.keys():
+
+        if var_n in self.locals.keys():     #locals first if a var is in "both" 
             return self.locals[var_n]
         elif var_n in cg.global_vars.keys():
             return cg.global_vars[var_n]
@@ -143,9 +144,10 @@ class contextc():
 
     def form_get_acces(self, node:dict) -> list[str]:
         text :list[str] = []
-        
+        ofs :int = 0
+        ofs, lasttype =  self.walk_offset(node)
 
-
+        text.append(f"mov rax, {get_mov_size(lasttype)} PTR [rbp-{ofs}]")
 
         return text
 
@@ -153,22 +155,46 @@ class contextc():
     def form_set_acces(self, node:dict) -> list[str]:
         text :list[str] = []
         ofs :int = 0
-        
+        ofs, lasttype =  self.walk_offset(node)
 
-
+        text.append(f"mov {get_mov_size(lasttype)} PTR [rbp-{ofs}] , rax")
 
         return text
 
+    #TODO improve make dinamic posible
+    #TODO needs refactor
+    def walk_offset(self,node:dict) :
+        ofs :int = 0
+
+        curtype :str = self.get_var_type(node["base"])
+
+        for x in node["access"]:
+            kind= x["kind"]
+
+            if kind == "field":
+                field :str = x["name"]
+                try:
+                    ofs += structs[curtype]["members"][field]["ofs"]
+                    curtype = structs[curtype]["members"][field]["type"]
+                except KeyError as e:
+                    raise SyntaxError(f"field: {field} does not exist in struct: {curtype}")
+                
+            #TODO very bad
+            elif kind == "index":
+                if x["expr"]["kind"] == "literal":
+                    ofs += x["expr"]["val"] * size_lookup(curtype)
+
+                
+            elif kind == "fcall":
+                raise NotImplementedError("struct methods are not jet implemented ")
+            
+            else:
+                raise SyntaxError(f"defective access: {x}")
+            
 
 
-def walk_offset(node:dict) -> int:
-    ofs :int = 0
+        return (ofs , curtype)
 
-
-    return ofs
-
-
-    
 
 
 
@@ -177,7 +203,6 @@ def get_pointer_mov_size(vartype:str) -> str:
         return get_mov_size(vartype[:-1])
     else:
         raise SyntaxError("get pointer mov size got a non pointer vartype: " + str(vartype))
-
 
 
 
