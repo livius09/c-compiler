@@ -1,6 +1,4 @@
 data:
-	levi: 
-	.zero  2
+	arr: 
+	.zero  16
 text:
-	mov rax, BYTE PTR PTR [rbp-1]
-	mov BYTE PTR PTR [rbp-1] , rax

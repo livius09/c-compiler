@@ -241,13 +241,18 @@ class parserc:
         
     def let_parse(self):
         ttype:Token = self.advance()
+        arrlen = -1
         if ttype.type == "TYPE" or ttype.type == "IDENTIFIER":
-            if self.peek()=="[":
+            if self.peek().val == "[":
                 self.advance()
-                if self.peek() == "]":  #means that its just an arr type
+
+                ttype.val = str(ttype.val)+"[]"
+                
+                if self.peek().val == "]":  #means that its just an arr type
                     pass
                 else:                   #means we have an arr size declaration
-                    aarlen= self.parM()["val"]
+                    arrlen= self.parM()["val"]
+                    self.expecter(self.advance(),["]"])
                     
                     
             tname: Token= self.advance()
@@ -278,8 +283,15 @@ class parserc:
                     return {"kind":"letinit", "name": tname.val, "var_type":ttype.val, "val":val }
                     
                 elif folowing.val == ";":
-                    self.expecter(self.advance(), ["=",";"])
-                    return {"kind":"letdec", "name": tname.val, "var_type" : ttype.val}
+                    self.advance()
+
+                    base = {"kind":"letdec", "name": tname.val, "var_type" : ttype.val}
+
+                    #if its an arrle let dec add the len stated in the type
+                    if arrlen!=-1:  
+                        base["len"] = arrlen
+
+                    return base
                 
                 else:
                     self.expecter(folowing, ["=",";"])
@@ -449,74 +461,47 @@ class parserc:
         while True:
 
             nexttoken = self.peek()
-            print("next")
-            print(nexttoken)
+    
 
-            if nexttoken.val == ".":
-                self.advance()
-                name: str = self.advance().val
-
-                print("name:")
-                print(name)
-
-                modifier: str = self.peek().val
-
-                if modifier == "[":
-                    self.advance()
-                    index = self.parM()
-                    self.expecter(self.advance(), ["]"])
-                    acclist.append({'kind': 'arrac', 'name': name, 'pos': index})
-
-                elif modifier == "(":
-                    self.advance()
-
-                    fparams = []
-                    while True:
-                        fparams.append(self.parM())
-
-                        seper: Token = self.advance()
-
-                        if seper.val == ",":
-                            pass
-                        elif seper.val == ")":
-                            fparams = []
-                            while True:
-                                fparams.append(self.parM())
-
-                                seper = self.advance()
-
-                                if seper.val == ",":
-                                    pass
-                                elif seper.val == ")":
-                                    break
-                                else:
-                                    self.expecter(seper, [",",","])
-                                
-
-                                print("inside of funcdec loop")
-
-                            acclist.append({"kind":"fcall", "name": name, "param": fparams})
-                        else:
-                            self.expecter(seper, [",",","])
-                        
-
-                        print("end of funcdec loop")
-
-
-                else:
-                    acclist.append({"kind":"field",  "name": name})
-
-            else:
+            if nexttoken.val != ".":
                 break
 
+            self.advance()
+            name: str = self.advance().val
 
-            
+            modifier: str = self.peek().val
 
+            if modifier == "[":
+                self.advance()
+                index = self.parM()
+                self.expecter(self.advance(), ["]"])
+                acclist.append({'kind': 'arrac', 'name': name, 'pos': index})
+
+            elif modifier == "(":
+                self.advance()
+
+                fparams = []
+
+                while True:
+                    fparams.append(self.parM())
+
+                    seper: Token = self.advance()
+
+                    if seper.val == ",":
+                        pass
+                    elif seper.val == ")":
+                        break
+                    else:
+                        self.expecter(seper, [",","]"])
+
+                acclist.append({"kind": "fcall", "name": name, "param": fparams})    
+
+
+            else:
+                acclist.append({"kind":"field",  "name": name})
+
+    
         acces = {'kind': 'acces', "base": base, "access" : acclist}   
-
-        
-        print("finished acces: ")
-        print(acces)
 
         return acces
 

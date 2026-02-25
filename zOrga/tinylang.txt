@@ -79,8 +79,8 @@ exp:
     let n8~ ptr = $e;
     ~ptr = 2;
 
-    let n16 arra[10];
-    let n16 arrab = [1, 2+2, 3+num, 4, 5, 6, 7];
+    let n16[10] arra;
+    let n16[10] arrab = [1, 2+2, 3+num, 4, 5, 6, 7];
 
     arra[0] = 10;
     arra[1] = 10+1;

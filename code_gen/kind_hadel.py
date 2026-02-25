@@ -104,7 +104,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
 
 
 
-def handle_let_dec(node:dict,contex:ut.contextc) -> None:
+def handle_let_dec(node:dict, contex:ut.contextc) -> None:
     var_name :str= str(node['name'])
     vartype :str= str(node['var_type'])
 
@@ -123,11 +123,7 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
             tmp["type"] = vartype
             varlen :int= int(node['len'])
             size = varlen * ut.size_lookup(vartype)
-            
-            tmp['len'] = varlen
-
-            gc.data.append(f"{var_name}:")
-            gc.data.append(f"\t.zero\t{size}")
+            print("hello")
 
 
 
@@ -140,10 +136,11 @@ def handle_let_dec(node:dict,contex:ut.contextc) -> None:
 
         if contex.is_global:
             gc.global_vars[var_name] = tmp
-            gc.data.append(f"{var_name}: \n\t.zero  {ut.size_lookup(vartype)}")
+            gc.data.append(f"{var_name}: \n\t.zero  {tmp['size']}")
 
             if debug:
                 print(gc.global_vars)
+
         else:
             
             tmp['ofs'] = contex.alingment_gen(vartype, varlen)
