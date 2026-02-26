@@ -1,4 +1,8 @@
 data:
-	arr: 
-	.zero  16
+	arr2:
+	arr2:
+		.byte 	1
+		.byte 	2
+		.byte 	3
+		.byte 	4
 text:

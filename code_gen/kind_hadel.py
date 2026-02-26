@@ -27,10 +27,6 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         arrsize: int = varlen * ut.size_lookup(vartype)
         
         tmp['size'] = arrsize
-        tmp['len'] = varlen
-
-        gc.data.append(f"{var_name}:")  
-        
         
 
     if contex.is_global:
@@ -88,17 +84,27 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
         text.append(f"mov rax, {contex.var_mem_asm(node['name'])}")  # rax = address of pointee
-        text.append("mov rax, [rax]")                                    # rax = value at that address
-        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")       #
+        text.append("mov rax, [rax]")                                # rax = value at that address
+        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")      #
 
     elif ut.is_arr_type(vartype):
         contex.get_var_dict(var_name)['type'] = vartype
-        if ut.is_arr_type(vartype):
+        
+        if contex.is_global:
             gc.data.append(var_name+":")
+
             for nana in node['val']:
                 if nana["kind"] == "literal":
                     size = ut.size_lookup(vartype)
                     gc.data.append(f"\t{ ut.init_sized[size]} \t{nana['val']}")
+                else:
+                    raise SyntaxError(f"array initation values have to be know at runtime cant be: {nana}")
+                
+        else:
+            #local arr initation
+            for nana in node["val"]:
+                pass
+
 
     return text
 

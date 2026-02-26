@@ -46,7 +46,7 @@ class parserc:
                     return {"kind": "literal", "val": self.constants[name]}
                 
                 elif self.peek().val == ".":
-                    print("hello from brazil")
+                    
                     return self.acces_parse(f_token)
                 
                 return {"kind": "identifier", "name": name}
@@ -233,7 +233,7 @@ class parserc:
         
     def advance(self)-> Token:
         if self.pos <= self.size:
-            tmp=self.source[self.pos]
+            tmp = self.source[self.pos]
             self.pos+=1
             return tmp
         else:
@@ -249,7 +249,7 @@ class parserc:
                 ttype.val = str(ttype.val)+"[]"
                 
                 if self.peek().val == "]":  #means that its just an arr type
-                    pass
+                    self.advance() #comsumes the closing ]
                 else:                   #means we have an arr size declaration
                     arrlen= self.parM()["val"]
                     self.expecter(self.advance(),["]"])
@@ -264,7 +264,7 @@ class parserc:
                     self.advance()
                     if self.peek().val == "{":
                         #array init
-                        self.advance() #consume [
+                        self.advance() #consume {
                         arrvals = []
                         while True:
                             arrvals.append( self.parM() )
@@ -272,6 +272,7 @@ class parserc:
                             if sep.val == ",":
                                 continue
                             elif sep.val == "}":
+                                self.advance() #consume ;
                                 break
                             else:
                                 self.expecter(sep, [",","}"])
@@ -295,6 +296,8 @@ class parserc:
                 
                 else:
                     self.expecter(folowing, ["=",";"])
+            else:
+                raise SyntaxError(f"unexpected token: {tname} as let parse name")
 
 
     def     ident_parse(self,first:Token):
@@ -561,6 +564,7 @@ class parserc:
                         raise SyntaxError(f"Unexpected keyword {first.val} on {self.liner(first)}")
                     
             case _:
+                print("EROR:")
                 print("Astlist:")
                 print(self.astlist)
 
