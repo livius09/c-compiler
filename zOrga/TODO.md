@@ -6,6 +6,7 @@ things that still need to be done:
 - [ ] casts
 - [ ] imports
 - [ ] ARRAYS ! (clear definition, for both ways)
+- [ ] acces
 
 ### Tokenize:
 - [x] exp in arr acess

@@ -111,6 +111,9 @@ class contextc():
             return cg.global_vars[var_n]
         else:
             raise SyntaxError(f"var {var_n} doese not exist") 
+        
+    def get_var_ofs(self, var_n:str) -> int:
+        return int(self.locals[var_n]['ofs'])
 
     def alingment_gen(self, var_type:str, dlen:int=1)->int:
         size: int = size_lookup(var_type)

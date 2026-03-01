@@ -86,7 +86,8 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         text.append(f"mov rax, {contex.var_mem_asm(node['name'])}")  # rax = address of pointee
         text.append("mov rax, [rax]")                                # rax = value at that address
         text.append(f"mov {contex.var_mem_asm(var_name)}, rax")      #
-
+    
+    #initializing arrs
     elif ut.is_arr_type(vartype):
         contex.get_var_dict(var_name)['type'] = vartype
         
@@ -102,9 +103,27 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
                 
         else:
             #local arr initation
+            i=0
+            arr_type_size= ut.size_lookup(str(contex.get_var_type(vartype)))
+            ofs= contex.get_var_ofs(var_name)
+            val_to_mov:str=""
             for nana in node["val"]:
-                pass
+                if nana["kind"] == "literal":
+                    val_to_mov = node['val']["val"]
 
+                elif nana["kind"] == "identifier":
+                    text.append(f"mov rax, {contex.var_mem_asm(nana["name"])}")
+                    val_to_mov="rax"
+
+                else:
+                    raise SyntaxError(f"can only use literal and identifier as array init not: {nana["kind"]}")
+                
+                pos :int = i * arr_type_size - ofs
+              
+                text.append(f"mov {vartype} PTR [rbp-{pos}], {val_to_mov}")
+                
+                i+=1
+ 
 
     return text
 
@@ -240,7 +259,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
                     
                     pos :int= int(node["pos"]["val"])
                     pos*=ut.size_lookup(str(contex.locals[write_name]['type']))
-                    pos-= int(contex.locals[write_name]['ofs'])
+                    pos-= contex.get_var_ofs(write_name)
                     text.append(f"mov {ut.get_mov_size(write_type)} [rbp-{pos}], rax")
 
                 elif node["pos"]["kind"] == "identifier":

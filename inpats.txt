@@ -1,1 +1,5 @@
 let n8[] arr2 = {1,2,3,4};
+
+func int main(){
+    let n8[] arr = {1,2,3,4};
+}
