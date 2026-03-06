@@ -318,6 +318,7 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
             text.append(f".{fname}:")       #placing a lable for the func
             text.append("push rbp")         #seting up new stack frame
             text.append("mov rbp, rsp")
+            text.append("")
 
 
             loc_para = {}
@@ -341,9 +342,10 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
 
             
             
-            text.extend(gc.gen(node["body"],loc_cont)) #gen a new funct whit its own locals
+            text.extend(gc.gen(node["body"],loc_cont)) #gen a new funct whit its own context
 
-            text.extend(["pop   rbp","ret"])
+            text.append("")
+            text.extend(["pop rbp","ret"])
 
             return text
     else:

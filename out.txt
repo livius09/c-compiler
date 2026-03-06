@@ -1,9 +1,10 @@
 data:
-	var: 
-	 .byte 	 1
-	rar: 
-	 .byte 
- 0
+	num: 
+	 .byte 	 21
 text:
-	mov rax , BYTE PTR [var]
-	mov BYTE PTR [rar] , rax
+	mov rax, BYTE PTR [num]
+	push rax
+	mov rax, 1
+	pop rbx
+	add rax, rbx
+	mov BYTE PTR [num], rax

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-basicop = ["+", "-", "*", "/", "<",">", "&", "|", "^"]
+basicop: list[str] = ["+", "-", "*", "/", "<",">", "&", "|", "^"]
+accesop: list[str] = [".","[","("]
 
 
 @dataclass
@@ -183,7 +184,7 @@ class parserc:
                 return {"kind": "literal", "val": 0}
 
             while not self._eof():
-                next_token = self.peek()
+                next_token: Token = self.peek()
 
                 # Stop at semicolon or other terminators
                 if next_token.type == "SYMBOL" and next_token.val in [";", ")", ","]:
@@ -286,7 +287,7 @@ class parserc:
                 elif folowing.val == ";":
                     self.advance()
 
-                    base = {"kind":"letdec", "name": tname.val, "var_type" : ttype.val}
+                    base: dict[str, int|str|dict] = {"kind":"letdec", "name": tname.val, "var_type" : ttype.val}
 
                     #if its an arrle let dec add the len stated in the type
                     if arrlen!=-1:  
@@ -317,15 +318,22 @@ class parserc:
             self.advance()
 
         elif second_token_val == "+" and self.peek().val == "+":
-            tdict["val"] = {"kind": "binexp", "op": "+", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
+            self.advance()
+            self.advance()
+
+            tdict["val"] = {"kind": "binexp", "op": "+", "left": {"kind": "identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
 
         elif second_token_val == "-" and self.peek().val == "-":
-           tdict["val"]= {"kind": "binexp", "op": "-", "left": {"kind": "Identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
+           self.advance()
+           self.advance()
+           
+           tdict["val"]= {"kind": "binexp", "op": "-", "left": {"kind": "identifier", "name": first.val} , "right": {"kind":"literal", "val": 1}}
 
         elif second_token_val in basicop and self.peek().val == "=":
+            self.advance() #consume =
             rightval=self.parM()
             self.advance()
-            tdict["val"]={"kind": "binexp", "op": second_token_val, "left": {"kind": "Identifier", "name": first.val} , "right": rightval }
+            tdict["val"]={"kind": "binexp", "op": second_token_val, "left": {"kind": "identifier", "name": first.val} , "right": rightval }
         else:
             raise SyntaxError(f"Unexpected Token type in asing {second_token.type}:{second_token.val} on {self.liner(second_token)}")
 
@@ -344,6 +352,7 @@ class parserc:
         body = self.parse_block()
 
         return {"kind":"while", "exp" : cond, "body" : body}
+    
     
     def if_parse(self):
         
@@ -415,6 +424,7 @@ class parserc:
 
         return {"kind":"for",  "init":initexp,"exp":testexp, "incexp":incexp , "body": body}
     
+
     def func_parse(self):
         ftype = self.advance()
 
@@ -425,6 +435,11 @@ class parserc:
 
         fparams = []
         while True:
+
+            if self.peek().val == ")":
+                self.advance()
+                break
+
             fparams.append({
                 "type": self.advance().val,
                 "name": self.advance().val
@@ -434,13 +449,8 @@ class parserc:
 
             if seper.val == ",":
                 pass
-            elif seper.val == ")":
-                break
             else:
                 self.expecter(seper, [",",")"])
-            
-
-            print("inside of funcdec loop")
 
 
         body = self.parse_block()
@@ -448,7 +458,7 @@ class parserc:
 
         
 
-        return {"kind":"function_dec", "name": fname , "param": fparams, "ret_type": ftype, "body": body}
+        return {"kind":"func_dec", "name": fname.val , "param": fparams, "ret_type": ftype.val, "body": body}
     
     def acces_parse(self, token:Token):
 
