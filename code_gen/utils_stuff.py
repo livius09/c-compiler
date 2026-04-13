@@ -142,37 +142,52 @@ class contextc():
         else:
             raise SyntaxError(f"var {var_n} has never been declared")
         
+    def isvarlocal(self, varn:str):
+        return varn in self.locals.keys()
+        
     
-
+    #TODO rework ts
 
     def form_get_acces(self, node:dict) -> list[str]:
         text :list[str] = []
-        ofs :int = 0
-        ofs, lasttype =  self.walk_offset(node)
 
-        text.append(f"mov rax, {get_mov_size(lasttype)} PTR [rbp-{ofs}]")
+        text.append(f"mov rax, {self.walk_offset(node,text)}")
 
         return text
 
 
     def form_set_acces(self, node:dict) -> list[str]:
         text :list[str] = []
-        ofs :int = 0
-        ofs, lasttype =  self.walk_offset(node)
 
-        text.append(f"mov {get_mov_size(lasttype)} PTR [rbp-{ofs}] , rax")
+        text.append(f"mov {self.walk_offset(node,text)} , rax")
 
         return text
 
     #TODO improve make dinamic posible
     #TODO needs refactor
-    def walk_offset(self,node:dict) :
-        ofs :int = 0
 
-        curtype :str = self.get_var_type(node["base"])
+    def walk_offset(self,node:dict,text:list[str]) :
+        ofs :int = 0
+        discrete_ofs = 0
+
+        issimple : bool = True
+        hasvar :bool = False
+        
+        
+        base = node["base"]
+        curtype :str = self.get_var_type(base)
+
+        islocal = self.isvarlocal(base)
+
+        if islocal:
+            ofs = self.get_var_ofs(base)
 
         for x in node["access"]:
-            kind= x["kind"]
+            kind = x["kind"]
+
+            if hasvar:
+                raise SyntaxError("acces can only have a var at the last point of acces")
+
 
             if kind == "field":
                 field :str = x["name"]
@@ -183,9 +198,22 @@ class contextc():
                     raise SyntaxError(f"field: {field} does not exist in struct: {curtype}")
                 
             #TODO very bad
-            elif kind == "index":
-                if x["expr"]["kind"] == "literal":
-                    ofs += x["expr"]["val"] * size_lookup(curtype)
+            elif kind == "arrac":
+                arrackind = x["pos"]["kind"]
+                if arrackind == "literal":
+                    ofs += x["pos"]["val"] * size_lookup(curtype)
+                    discrete_ofs += x["pos"]["val"]
+                    
+                elif arrackind == "identifier":
+                    hasvar=True
+                    issimple=False
+                    text.append(f"mov rbx, {self.var_mem_asm(x['pos']["name"])}")
+
+                    if discrete_ofs != 0:
+                        text.append(f"add rbx, {discrete_ofs}")
+
+                else:
+                    raise NotImplemented(f"{arrackind} is not avaible as a array acces method")
 
                 
             elif kind == "fcall":
@@ -194,9 +222,18 @@ class contextc():
             else:
                 raise SyntaxError(f"defective access: {x}")
             
+        if islocal:
+            if issimple:
+                return f"{get_mov_size(curtype)} [rbp-{ofs}]"
+            else:
+                return f"{get_mov_size(curtype)} [rbp-{ofs}+rbx*{size_lookup(curtype)}]"
+        else:
+            if issimple:
+                return f"{get_mov_size(curtype)} {base}[rip+{ofs}]"
+            else:
+                return f"{get_mov_size(curtype)} {base}[rbp-{ofs}+rbx*{size_lookup(curtype)}]"
 
-
-        return (ofs , curtype)
+            
 
 
 

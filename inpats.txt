@@ -1,3 +1,7 @@
-let n8[5] num;
+let n8 nun = 3;
+func n8 Main(){
+    let n8 num = 1;
 
-let n8 mun = num[1];
+    let n8 na = num-1;
+
+}

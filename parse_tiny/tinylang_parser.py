@@ -46,7 +46,7 @@ class parserc:
                 if name in self.constants:
                     return {"kind": "literal", "val": self.constants[name]}
                 
-                elif self.peek().val == ".":
+                elif self.peek().val in accesop:
                     
                     return self.acces_parse(f_token)
                 
@@ -54,26 +54,6 @@ class parserc:
             
             elif f_token.type == "char":
                 return {"kind": "literal", "val": ord(f_token.val)} 
-            
-            elif f_token.val == "(":
-
-                fparams = []
-                while True:
-                    fparams.append(self.parM())
-
-                    seper = self.advance()
-
-                    if seper.val == ",":
-                        pass
-                    elif seper.val == ")":
-                        break
-                    else:
-                        self.expecter(seper, [",", ")"])
-
-                    print("inside of funcdec loop")
-
-
-                return {"kind":"fcall", "name": f_token.val, "param": fparams}  # type: ignore
             
             
             else:
@@ -297,6 +277,7 @@ class parserc:
                 
                 else:
                     self.expecter(folowing, ["=",";"])
+
             else:
                 raise SyntaxError(f"unexpected token: {tname} as let parse name")
 
@@ -462,33 +443,33 @@ class parserc:
     
     def acces_parse(self, token:Token):
 
-
         acces = {}
 
-        base: str= token.val
+        base: str = token.val
 
         acclist = []
-
 
         
         while True:
 
-            nexttoken = self.peek()
+            modifier = self.peek().val
     
 
-            if nexttoken.val != ".":
+            if modifier not in accesop:
                 break
-
+            
             self.advance()
-            name: str = self.advance().val
+           
 
-            modifier: str = self.peek().val
 
-            if modifier == "[":
-                self.advance()
+            if modifier == ".":
+                name: str = self.advance().val
+                acclist.append({"kind":"field",  "name": name})
+
+            elif modifier == "[":
                 index = self.parM()
                 self.expecter(self.advance(), ["]"])
-                acclist.append({'kind': 'arrac', 'name': name, 'pos': index})
+                acclist.append({'kind': 'arrac', 'pos': index})
 
             elif modifier == "(":
                 self.advance()
@@ -507,11 +488,8 @@ class parserc:
                     else:
                         self.expecter(seper, [",","]"])
 
-                acclist.append({"kind": "fcall", "name": name, "param": fparams})    
-
-
-            else:
-                acclist.append({"kind":"field",  "name": name})
+                acclist.append({"kind": "fcall", "param": fparams})    
+                
 
     
         acces = {'kind': 'acces', "base": base, "access" : acclist}   
@@ -612,7 +590,10 @@ tester = [ Token("KEYWORD", "let", 0,3) ,  Token("TYPE", "un16", 0,8) ,  Token("
 
 moretest = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam", 0,12) ,  Token("SYMBOL", "{", 0,14) ,  Token("KEYWORD", "let", 1,7) ,  Token("TYPE", "un8", 1,11) ,  Token("IDENTIFIER", "age", 1,15) ,  Token("SYMBOL", ";", 1,16) ,  Token("SYMBOL", "}", 2,1) ,  Token("KEYWORD", "let", 4,3) ,  Token("IDENTIFIER", "wonam", 4,9) ,  Token("IDENTIFIER", "maria", 4,15) ,  Token("SYMBOL", ";", 4,16) ,  Token("IDENTIFIER", "maria", 6,5) ,  Token("SYMBOL", ".", 6,6) ,  Token("IDENTIFIER", "age", 6,9) ,  Token("OP", "=", 6,11) ,  Token("INT", "20", 6,14) ,  Token("SYMBOL", ";", 6,15) ]
 
-if __name__ == "main":
-    Pparser = parserc(moretest)
+acctest: list[Token] = [ Token("SYMBOL", ".", 4,4) ,  Token("IDENTIFIER", "xea", 4,7) ,  Token("SYMBOL", "[", 4,8) ,  Token("INT", "1", 4,9) ,  Token("SYMBOL", "]", 4,10) ,  Token("SYMBOL", ".", 4,11) ,  Token("IDENTIFIER", "e", 4,12) ,Token("SYMBOL", ";", 1,16)]
 
-    print(Pparser.parse())
+print(__name__)
+if __name__ == "__main__":
+    Pparser = parserc(acctest)
+
+    print(Pparser.acces_parse(Token("IDENTIFIER", "num", 4,3) ))

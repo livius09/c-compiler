@@ -14,7 +14,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     if contex.is_var_decl(var_name):
         raise SyntaxError(f"variable: {var_name} has already been declared")
 
-    tmp={}
+    tmp = {}
     tmp["type"] = vartype
 
     size = None
@@ -72,6 +72,14 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         text.extend(gc.formulate_math(node['val'],contex))
         text.append(f"mov {contex.var_mem_asm(var_name)}, rax")
 
+    elif val_type == "acces":
+
+        if contex.is_global:
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
+            
+        text.extend(contex.form_get_acces(node["val"]))
+        text.append(f"mov {contex.var_mem_asm(var_name)} , rax")
+
     elif val_type == "refrence":
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
@@ -103,7 +111,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
                 
         else:
             #local arr initation
-            i=0
+            i = 0
             arr_type_size= ut.size_lookup(str(contex.get_var_type(vartype)))
             ofs= contex.get_var_ofs(var_name)
             val_to_mov:str=""
@@ -123,6 +131,8 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
                 text.append(f"mov {vartype} PTR [rbp-{pos}], {val_to_mov}")
                 
                 i+=1
+    else:
+        raise SyntaxError(f"invalid letinit type: {val_type}")
  
 
     return text
@@ -148,8 +158,6 @@ def handle_let_dec(node:dict, contex:ut.contextc) -> None:
             tmp["type"] = vartype
             varlen :int= int(node['len'])
             size = varlen * ut.size_lookup(vartype)
-            print("hello")
-
 
 
         else:
@@ -236,45 +244,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
         #then write rax into whats on the left side of the "="
 
-        if ut.is_arr_type(write_type):
-
-            if write_name in gc.global_vars.keys():
-                if node["pos"]["kind"] == "literal":
-                    
-                    pos :int= int(node["pos"]["val"])
-                    pos*=ut.size_lookup(gc.global_vars[write_name]['type'])
-                    
-                    text.append(f"mov  [rip+{pos}], rax")
-
-                elif  node["pos"]["kind"] == "identifier":
-                    #mov eax, lala[0+rax*4]
-                    read_name :str= str(node["val"]['name'])
-                    size: int = ut.size_lookup(gc.global_vars[node["val"]["name"]]["type"])
-                    text.append(f"mov rdx, {contex.var_mem_asm(node['val']['pos']['name'])}")
-                    text.append(f"mov {write_name}[0+rdx*{size}], rax")
-
-            elif write_name in contex.locals.keys():
-                if node["pos"]["kind"] == "literal":
-                    #ofs - i*size
-                    
-                    pos :int= int(node["pos"]["val"])
-                    pos*=ut.size_lookup(str(contex.locals[write_name]['type']))
-                    pos-= contex.get_var_ofs(write_name)
-                    text.append(f"mov {ut.get_mov_size(write_type)} [rbp-{pos}], rax")
-
-                elif node["pos"]["kind"] == "identifier":
-                    #[rbp-ofs+rax*size]
-                    ofs :int= int(contex.locals[write_name]['ofs'])
-                    read_name :str= str(node["val"]['name'])
-                    size = ut.size_lookup(contex.get_var_type(node["val"]["name"]))
-                    text.append(f"mov rdx, {contex.var_mem_asm(node['val']['pos']['name'])}")
-                    text.append(f"mov {contex.var_mem_asm(write_name)} [rbp-{ofs}+rdx*{size}], rax")
-
-            else:
-                raise SyntaxError(f"variable {write_name} has never been declared")
-
-        
-        elif ut.is_ptr_type(write_type):
+        if ut.is_ptr_type(write_type):
             text.append(f"mov rdx, {contex.var_mem_asm(write_name)}")
             text.append(f"mov [rdx], rax ")
             
