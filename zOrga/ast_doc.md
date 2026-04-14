@@ -78,6 +78,11 @@ well just the return expresion
 
     {"kind":"ret", "val": (binexp || int)}
 
+#### asm
+to be able to incorperate asm into the code for syscalls
+
+    {"kind":"asm","text":asemblyText}
+
 ### Secondary:
 these are inside val or binexp
 

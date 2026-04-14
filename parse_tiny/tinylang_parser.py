@@ -495,6 +495,14 @@ class parserc:
         acces = {'kind': 'acces', "base": base, "access" : acclist}   
 
         return acces
+    
+    def parse_asm(self) -> dict[str, str]:
+        text: Token = self.advance()
+        if text.type != "STR":
+            raise SyntaxError("asm has to be string")
+        
+        self.expecter(self.advance(),[";"])
+        return {"kind":"asm", "text":text.val}
 
 
     def expecter(self,val:Token,expected:list[str]):
@@ -541,6 +549,9 @@ class parserc:
                     
                     case "struct":
                         return self.struct_parse()
+                    
+                    case "asm":
+                        return self.parse_asm()
 
                     
                     case _:

@@ -12,6 +12,7 @@ myvar = pi+2;
 
 -----------------------
 
+
 let u8 myvar = 10;
 let u8 myvar2 = 5;
 let u8 tmp;
@@ -27,7 +28,9 @@ tmp = myvar | myvar2;
 tmp = myvar ^ myvar2;
 tmp = 2*3+5;
 
+
 -----------------------
+
 
 let un8 myvar = 0;
 
@@ -81,6 +84,10 @@ flag = num<=num2;
 flag = num>=num2;
 
 flag = 1==1;
+flag = 1==0;
+flag = 1!=1;
+flag = 1!=0;
+
 
 -----------------------
 
@@ -92,6 +99,7 @@ myvar = ~ptr;
 
 
 -----------------------
+
 
 let u8 myvar;
 
@@ -109,6 +117,13 @@ myvar = maria.age;
 
 
 -----------------------
+
+
+asm "mov rax, 1";
+
+
+-----------------------
+
 
 
 

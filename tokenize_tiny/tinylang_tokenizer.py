@@ -69,10 +69,12 @@ class Tokenizerc:
 
 
     def _consume_string(self) -> None:
-        self.pos+= 1
+        self._advance()
         tmp: str = ""
         while(not self._eof() and self._peek() != '"'):
             tmp += self._advance()
+
+        self._advance()
 
         self.tokens.append(Token("STR", tmp, self.line, self.col))
 
@@ -154,7 +156,7 @@ class Tokenizerc:
 
 symbols:set[str] = {",","(",")","{","}",";","[","]","."}
 operators: set[str]={"+", "-", "*", "/", "=", "<",">", "==", "!=", "!", "<<", ">>",">=","<=", "&", "|", "^", "~", "$"}
-keywords: set[str] = {"let", "const", "return", "for", "while", "break", "if", "else", "func", "struct"}
+keywords: set[str] = {"let", "const", "return", "for", "while", "break", "if", "else", "func", "struct","asm"}
 
 types: set[str] = {"n8","n16","n32","n64","un8","un16","un32","un64", "void",     
                    "n8~", "n16~", "n32~", "n64~", "un8~", "un16~", "un32~", "un64~"} 

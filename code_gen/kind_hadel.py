@@ -482,3 +482,6 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
         text.append(f'{ut.looplockup[node["exp"]["op"]]} .L{startla}')
 
     return text
+
+def handle_asm(node:dict,contex:ut.contextc) -> list[str]:
+    return [node["text"]]

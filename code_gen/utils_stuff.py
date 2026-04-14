@@ -233,9 +233,6 @@ class contextc():
             else:
                 return f"{get_mov_size(curtype)} {base}[rbp-{ofs}+rbx*{size_lookup(curtype)}]"
 
-            
-
-
 
 
 def get_pointer_mov_size(vartype:str) -> str:

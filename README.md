@@ -8,6 +8,10 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.1.0:
+  fully fleshed out the acces and structs
+  also added asm for latter std_lib
+
 #### v01.0.7:
   fixed a long standing bug were global inits never wrote to data
   codegen now registers structs and initializes them corectly

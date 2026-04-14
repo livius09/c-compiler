@@ -189,6 +189,9 @@ def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in c
             case "ret":
                 text.extend(formulate_math(node["val"],contex))
             
+            case "asm":
+                text.extend(kh.handle_asm(node,contex))
+            
 
             case _:
                 raise SyntaxError("AST Defective: "+str(node['kind']))

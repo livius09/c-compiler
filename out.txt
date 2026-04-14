@@ -1,18 +1,10 @@
 data:
-	nun: 
-	 .byte 	 3
 text:
 	.Main:
 	push rbp
 	mov rbp, rsp
 	
-	mov BYTE PTR [rbp-1], 1
-	mov rax, BYTE PTR [rbp-1]
-	push rax
 	mov rax, 1
-	pop rbx
-	sub rax, rbx
-	mov BYTE PTR [rbp-2], rax
 	
 	pop rbp
 	ret
