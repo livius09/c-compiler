@@ -1,3 +1,0 @@
-func n8 Main(){
-    asm "mov rax, 1";
-}

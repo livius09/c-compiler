@@ -12,15 +12,20 @@ import tokenize_tiny.tinylang_tokenizer as ttok
 import parse_tiny.tinylang_parser as tlpars
 import code_gen.tinylang_x86_codegen as tcod
 from code_gen.utils_stuff import contextc
+from Prepocesor.preprocesor import preprocesor;
 import json
 import datetime
 
-with open("inpats.txt","r") as rawf:
-    raw = rawf.read()
+with open("Zin/inpats.txt","r") as rawf:
+    raw: list[str] = rawf.readlines()
+
+
+preprocesor= preprocesor(raw)
+preporaw = preprocesor.preproces()
 
 tok_start: datetime.datetime = datetime.datetime.now()
 
-Tokenize = ttok.Tokenizerc(raw)
+Tokenize = ttok.Tokenizerc(preporaw)
 Tokenize.Tokenize()
 
 tok_end: datetime.datetime = datetime.datetime.now()
@@ -60,7 +65,7 @@ for line in compiled:
 
 
 
-with open("out.txt","w") as file:
+with open("Zout/Main.asm","w") as file:
     file.write("data:\n")
     for b in tcod.data:
         file.write("\t"+b+"\n")

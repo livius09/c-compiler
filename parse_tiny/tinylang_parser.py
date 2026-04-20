@@ -503,6 +503,14 @@ class parserc:
         
         self.expecter(self.advance(),[";"])
         return {"kind":"asm", "text":text.val}
+    
+    def parse_import(self) -> dict[str, str]:
+        text: Token = self.advance()
+        if text.type != "STR":
+            raise SyntaxError("import has to be string")
+        
+        self.expecter(self.advance(),[";"])
+        return {"kind":"asm", "text":text.val}
 
 
     def expecter(self,val:Token,expected:list[str]):
@@ -552,6 +560,9 @@ class parserc:
                     
                     case "asm":
                         return self.parse_asm()
+                    
+                    case "import":
+                        return self.parse_import()
 
                     
                     case _:
