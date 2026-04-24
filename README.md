@@ -8,6 +8,9 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.2.0:
+  made imports posible also fixe a problem in parsing returns and fixed a flaw in form_get_acces making fcalls posible again
+
 #### v01.1.0:
   fully fleshed out the acces and structs
   also added asm for latter std_lib

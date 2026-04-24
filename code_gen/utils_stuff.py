@@ -151,7 +151,13 @@ class contextc():
     def form_get_acces(self, node:dict) -> list[str]:
         text :list[str] = []
 
-        text.append(f"mov rax, {self.walk_offset(node,text)}")
+        kind = node["access"][0]["kind"]
+
+        if kind == "fcall":
+            cg.formulate_fcals({"kind":"fcall","name":node["base"],"para":node["access"][0]["param"]},self)
+        else:
+        
+            text.append(f"mov rax, {self.walk_offset(node,text)}")
 
         return text
 

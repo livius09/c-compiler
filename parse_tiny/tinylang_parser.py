@@ -421,23 +421,28 @@ class parserc:
                 self.advance()
                 break
 
+            
+
             fparams.append({
                 "type": self.advance().val,
                 "name": self.advance().val
             })
+            
 
-            seper = self.advance()
+            seper: Token = self.peek()
 
             if seper.val == ",":
-                pass
+                self.advance()
+                
             else:
                 self.expecter(seper, [",",")"])
 
+        
 
         body = self.parse_block()
 
 
-        
+        print("dingdong")
 
         return {"kind":"func_dec", "name": fname.val , "param": fparams, "ret_type": ftype.val, "body": body}
     
@@ -550,7 +555,6 @@ class parserc:
                         return self.const_parse()
                         
                     case "return":
-                        self.advance()
                         retval=self.parM()
                         self.expecter(self.advance(),[";"])
                         return   {"kind":"ret", "val": retval }

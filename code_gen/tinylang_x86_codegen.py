@@ -4,9 +4,10 @@ import json
 
 
 
-global global_vars, functions, data
+global global_vars, functions, data,imported
 global_vars = {}        #"x":{"type":"n8", "size":1, }    contains the var name as key and type as value
-functions :dict[str,list[str]]= {}          #"print":["char[]","n64"]    contains the function name as key and the value is the types of the parameter in order
+functions :dict[str,dict[str,str|list[str]]]= {}          #"print":["char[]","n64"]    contains the function name as key and the value is the types of the parameter in order
+imported :dict[str,dict[str,str|list[str]]]= {}
 
 data:list[str] = []         #data section of asm
 
@@ -85,9 +86,13 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asi
 def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code for function calls and checking the parameter types
     code:list[str]=[]
     fname = str(node['name'])
-    if fname in functions.keys():
+    
+    if fname in functions.keys() or fname in imported.keys():
         params = list(node['para'])
-        dectypes: list[str] = functions[fname]
+        if fname in functions.keys():
+            dectypes: str | list[str] = functions[fname]["para"]
+        else:
+            dectypes : str | list[str] = imported[fname]["para"]
         
         for i in range(len(params)):
 
@@ -137,10 +142,12 @@ def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code
 
 
 
-def gen(a:list[dict],contex:ut.contextc)-> list[str]:   #local or global is in contex  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+def gen(a:list[dict],contex:ut.contextc,imports:dict = {})-> list[str]:   #local or global is in contex  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text:list[str]=[]         #text section so the actual executed asm
 
-    
+    if imports != {}:
+        imported=imports
+        
     
     for node in a:
         #print("cur node:")

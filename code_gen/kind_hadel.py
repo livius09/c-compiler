@@ -281,8 +281,9 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
         if len(params) > len(ut.fregs):
             raise SyntaxError("to many args in function: " + fname)
         else:
-            gc.functions[fname]= params
             return_type :str= str(node["ret_type"])
+            gc.functions[fname] = {"rett":return_type,"para":params}
+            
 
 
             text.append(f".{fname}:")       #placing a lable for the func

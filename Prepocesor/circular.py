@@ -6,7 +6,7 @@ class node:
         return self.file + ":" + str(self.children)
     
 
-def find_circular(node:node,prev:list) -> bool:
+def find_circular(node:node,prev:list=[]) -> bool:
     
     if(node.file in prev):
         return True
@@ -21,7 +21,7 @@ def find_circular(node:node,prev:list) -> bool:
 
 
         
-
-tree =  node("A",[node("B",[node("A",[])])])
-print(tree)
-print(find_circular(tree,[]))
+if __name__ == "__main__":
+    tree =  node("A",[node("B",[node("A",[])])])
+    print(tree)
+    print(find_circular(tree))

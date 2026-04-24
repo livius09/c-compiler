@@ -1,0 +1,3 @@
+func n8 add(n8 a,n8 b){
+    return a+b;
+}

@@ -1,0 +1,5 @@
+#coment
+##import stdt
+
+let n8 var;
+var = add(1,2);
