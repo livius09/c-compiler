@@ -101,6 +101,7 @@ def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code
             if curtype == "binexp":
                 code.extend(formulate_math(params[i]["val"], conx))
                 code.append(f"mov {ut.fregs[i]}, rax")
+                
             elif curtype == "identifier":
                 
                 varname = str(params[i]['name'])
@@ -113,7 +114,7 @@ def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code
                     raise TypeError(f"expected type {dectypes[i]} but got {vartype} on arg {i} of function call {fname}")
 
             elif curtype == "literal":
-                code.append(f"mov {ut.fregs[i]} {params[i]['val']}")
+                code.append(f"mov {ut.fregs[i]}, {params[i]['val']}")
 
         code.append(f"call .{fname}")
         
