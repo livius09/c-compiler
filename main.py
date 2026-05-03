@@ -101,7 +101,7 @@ def compile_down_up(nedo:node):
 
 preprocesor = preprocesor("Main")
 print("Preprocesing: ")
-print("imports:")
+print("imports: ")
 imports : node = preprocesor.preproces()
 print(imports)
 

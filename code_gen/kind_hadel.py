@@ -287,12 +287,11 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
 
 
             text.append(f".{fname}:")       #placing a lable for the func
-            text.append("push rbp")         #seting up new stack frame
-            text.append("mov rbp, rsp")
+            text.append("  push rbp")         #seting up new stack frame
+            text.append("  mov rbp, rsp")
             text.append("")
 
 
-            loc_para = {}
             loc_cont = ut.contextc()
             loc_cont.ret_type = return_type
 
@@ -309,14 +308,17 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
 
                 loc_cont.locals[cur_name] = {'type':cur_type, "size": cur_size, "ofs":cur_ofs}
 
-                text.append(f"mov {loc_cont.var_mem_asm(cur_name)}, {ut.fregs[i]}")
-
-            
-            
-            text.extend(gc.gen(node["body"],loc_cont)) #gen a new funct whit its own context
+                text.append(f"  mov {loc_cont.var_mem_asm(cur_name)}, {ut.fregs[i]}")
 
             text.append("")
-            text.extend(["pop rbp","ret"])
+
+
+            
+            
+            text.extend(("  "+line) for line in (gc.gen(node["body"],loc_cont))) #gen a new funct whit its own context
+
+            text.append("")
+            text.extend(["  pop rbp","  ret"])
 
             return text
     else:

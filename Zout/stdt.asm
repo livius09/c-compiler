@@ -1,16 +1,15 @@
 data:
 text:
 	.add:
-	push rbp
-	mov rbp, rsp
+	  push rbp
+	  mov rbp, rsp
 	
-	mov BYTE PTR [rbp-1], edi
-	mov BYTE PTR [rbp-2], esi
-	mov rax, BYTE PTR [rbp-1]
-	push rax
-	mov rax, BYTE PTR [rbp-2]
-	pop rbx
-	add rax, rbx
+	  mov BYTE PTR [rbp-1], edi
+	  mov BYTE PTR [rbp-2], esi
 	
-	pop rbp
-	ret
+	  mov rax, BYTE PTR [rbp-1]
+	  mov rbx, BYTE PTR [rbp-2]
+	  add rax, rbx
+	
+	  pop rbp
+	  ret

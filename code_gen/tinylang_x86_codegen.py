@@ -12,35 +12,52 @@ imported :dict[str,dict[str,str|list[str]]]= {}
 data:list[str] = []         #data section of asm
 
 
-def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",): #asing, cond
+def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",reg:str="rax"): #asing, cond
     nodetype = str(node['kind'])
     
     if nodetype == "identifier":
-        return [f"mov rax, {loc_conx.var_mem_asm(node['name'])}"]
+        return [f"mov {reg}, {loc_conx.var_mem_asm(node['name'])}"]
     
     if nodetype == "literal":
-        return [f"mov rax, {node['val']}"]
+        return [f"mov {reg}, {node['val']}"]
 
-    if nodetype == "refrence":
-        return [f"lea rax, {loc_conx.var_mem_asm(node['name'])}"]
+
+    #if nodetype == "refrence":
+    #    return [f"lea rax, {loc_conx.var_mem_asm(node['name'])}"]
     
-    if nodetype == "derefrence":
-       return [f"mov rax, {loc_conx.var_mem_asm(node['name'])}",  # rax = address of pointee
-                "mov rax, [rax]"]             # rax = value at that address
+    #if nodetype == "derefrence":
+    #   return [f"mov rax, {loc_conx.var_mem_asm(node['name'])}",  # rax = address of pointee
+    #            "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
-        return formulate_fcals(node,loc_conx)
+        tmp:list[str]=[]
+        tmp.append("push rax")
+        tmp.extend(formulate_fcals(node,loc_conx))
+        tmp.append("mov rbx, rax")
+        tmp.append("pop rax")
+        return tmp
 
     if nodetype == "binexp":
         code :list[str]= []
         cmpops: list[str]=["==","!=","<",">","<=",">="]
+        sim = ["literal","identifier"]
+        
+        issimple: bool = node['left']["kind"] in sim and node['left']["kind"] in sim
+        
+        if(issimple):
+            code += formulate_math(node['left'], loc_conx, mcontext,"rax")
+            code += formulate_math(node['right'], loc_conx, mcontext,"rbx")
 
-        code += formulate_math(node['left'], loc_conx, mcontext)
-        code.append("push rax")
-        code += formulate_math(node['right'], loc_conx, mcontext)
-        code.append("pop rbx")
+        else:
+            code += formulate_math(node['left'], loc_conx, mcontext)
+            code.append("push rax")
+
+            code += formulate_math(node['right'], loc_conx, mcontext)
+            code.append("pop rbx")
+        
 
         op = str( node['op'])
+
         if op == "+":
             code.append("add rax, rbx")
         elif op == "-":
