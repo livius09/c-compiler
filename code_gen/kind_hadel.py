@@ -4,10 +4,73 @@ import json
 
 debug = False
 
+def handle_load(node:dict,contex:ut.contextc,val_type:str,reg:str="rax")-> list[str]:
+    if debug:
+        print("load")
+        print(node)
+
+    tmp:list[str] = []
+    match val_type:
+        case "identifier":
+            tmp.append(f"mov {reg}, {contex.var_mem_asm(node['name'])}")
+
+        case "literal":
+            tmp.append(f"mov {reg}, {node['val']}")
+        
+        case "binexp":
+            tmp.extend(gc.formulate_math(node,contex, reg))
+
+        case "acces":
+            tmp.extend(contex.form_get_acces(node["val"]))
+
+        case "uniexp":
+            tmp.extend(handel_uniexp(node,contex))
+
+        case "Fcall":
+            tmp.extend(gc.formulate_fcals(node['val'], contex))
+        
+        case _:
+            raise NotImplementedError("no way to load: " + val_type)
+
+
+    return tmp
+
+#takes the only the uniexp node
+#{"kind": "uniexp", "op": "*ops", "val": *node }
+def handel_uniexp(node:dict,contex:ut.contextc) -> list[str]:
+    if True:
+        print("uniexp")
+        print(node)
+
+    tmp:list[str]=[]
+    val_type :str= node["val"]["kind"]
+
+    tmp.extend(handle_load(node["val"],contex,val_type))
+
+    op:str = node["op"]
+
+    match op:
+        case "!":
+            tmp.append("cmp rax, 0")
+            tmp.append("sete rax")
+        case "§":
+            tmp.append("not rax")
+        case "~":
+            tmp.append(f"mov rax, {ut.get_pointer_mov_size(contex.get_var_type(node['val']['name']))} [rax]")                                # rax = value at that address
+        case "$":
+            tmp.append(f"lea rax, {contex.var_mem_asm(node['val']['name'])}")
+        case _:
+            raise NotImplementedError("no way to uniexp: " + op)
+
+    return tmp
+
+
+
 def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     text :list[str]= []
     var_name :str= str(node['name'])
     vartype  :str= str(node['var_type'])
+    needs_asm :bool = True
 
     global data, global_vars
 
@@ -39,15 +102,20 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         contex.locals[var_name] = tmp
 
 
-    if  ut.is_n_type(vartype):
+    val_type = ""
+    if  ut.is_n_type(vartype) or True:
         val_type :str= str(node['val']['kind'])
     else:
-        val_type = ""
+        raise SyntaxError("say walahi")
+
+    
+        
 
     if(debug):
-        print("val type: "+str(val_type))
+        print("val type: " + str(val_type))
 
     if val_type == "literal":
+        needs_asm=False
         
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \t {node['val']['val']}")
@@ -61,43 +129,33 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     elif val_type == "identifier":
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
-            
-        text.append(f"mov rax , {contex.var_mem_asm(node['val']['name'])}")
-        text.append(f"mov {contex.var_mem_asm(var_name)} , rax")
+           
+        text.extend(handle_load(node,contex,val_type)) 
 
     elif val_type == "binexp":
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
 
-        text.extend(gc.formulate_math(node['val'],contex))
-        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")
+        text.extend(handle_load(node,contex,val_type))
+
+    elif val_type == "uniexp":
+        if contex.is_global:
+            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
+
+        text.extend(handle_load(node["val"],contex,val_type))
+    
 
     elif val_type == "acces":
 
         if contex.is_global:
             gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
             
-        text.extend(contex.form_get_acces(node["val"]))
-        text.append(f"mov {contex.var_mem_asm(var_name)} , rax")
-
-    elif val_type == "refrence":
-        if contex.is_global:
-            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
-
-        text.append(f"lea rax, {contex.var_mem_asm(node['val']['name'])}")
-        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")
-
-    elif val_type == "derefrence":
-        if contex.is_global:
-            gc.data.append(f"{var_name}: \n\t {ut.init_size(vartype)} \n 0")
-
-        text.append(f"mov rax, {contex.var_mem_asm(node['name'])}")  # rax = address of pointee
-        text.append("mov rax, [rax]")                                # rax = value at that address
-        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")      #
+        text.extend(handle_load(node,contex,val_type))
     
     #initializing arrs
     elif ut.is_arr_type(vartype):
         contex.get_var_dict(var_name)['type'] = vartype
+        needs_asm = False
         
         if contex.is_global:
             gc.data.append(var_name+":")
@@ -131,8 +189,12 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
                 text.append(f"mov {vartype} PTR [rbp-{pos}], {val_to_mov}")
                 
                 i+=1
+
     else:
         raise SyntaxError(f"invalid letinit type: {val_type}")
+    
+    if needs_asm:
+        text.append(f"mov {contex.var_mem_asm(var_name)}, rax")
  
 
     return text
@@ -158,7 +220,6 @@ def handle_let_dec(node:dict, contex:ut.contextc) -> None:
             tmp["type"] = vartype
             varlen :int= int(node['len'])
             size = varlen * ut.size_lookup(vartype)
-
 
         else:
             size = ut.size_lookup(vartype)
@@ -192,53 +253,7 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
     #first move the the to be store (the right side of "=") into rax
     if contex.is_var_decl(write_name):
-        if val_type == "literal":
-            text.append(f"mov rax, {node['val']['val']}")   #there was a ut.var_mem_asm(node['val']['val'],context) here: how what why and how did i never notice
-                                                            #i need to do a lot more testing
-        elif val_type == "binexp":
-            text.extend(gc.formulate_math(node['val'],contex))
-
-        elif val_type == "identifier":
-            text.append(f"mov rax, {contex.var_mem_asm(node['val']['name'])}")
-
-        elif val_type == "acces":
-            text.extend(contex.form_get_acces(node["val"]))
-
-        elif val_type == "Fcall":
-            text.extend(gc.formulate_fcals(node['val'], contex))
-
-        elif val_type == "refrence":
-            text.append(f"lea rax, {contex.var_mem_asm(node['val']['name'])}")
-
-        elif val_type == "derefrence":
-            text.append(f"mov rdx, {contex.var_mem_asm(node['val']['name'])}")
-            text.append(f"mov rax, {ut.get_pointer_mov_size(contex.get_var_type(node['val']['name']))} [rdx]") #get mov size of the actal contents of the pointer |: Damm
-
-        elif val_type=="arrac":
-            
-            #{'kind': 'asing', 'name': 'num', 'val': {'kind': 'arrac', 'name': 'ncm', 'pos': {'kind': 'literal', 'val': 1}}}
-            arr_ac_kind = node["val"]["pos"]["kind"]
-            if arr_ac_kind == "literal":
-                read_name :str= str(node["val"]['name'])
-                pos :int= int(node["val"]["pos"]["val"])
-                pos*=ut.size_lookup(contex.get_var_type(read_name))
-                text.append(f"mov rax, {read_name}[rip+{pos}]")
-
-            elif  arr_ac_kind == "identifier":
-                #mov eax, lala[0+rax*4]
-                read_name :str= str(node["val"]['name'])
-                size = ut.size_lookup(contex.get_var_type(node["val"]["name"]))
-                text.append(f"mov rax, {contex.var_mem_asm(node['val']['pos']['name'])}")
-                text.append(f"mov rax, {read_name}[0+rax*{size}]")
-
-
-            #add binexp 
-                
-            else:
-                raise SyntaxError("array aces indicies can only be vars or literals not: " + str(arr_ac_kind))
-            
-        else:
-            raise SyntaxError(f"read part has no valid type val_type: {val_type}")
+        text.extend(handle_load(node["val"],contex,val_type))
         
         write_type :str= contex.get_var_type(write_name)
 

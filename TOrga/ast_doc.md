@@ -118,10 +118,15 @@ a binary operation betwen left and right specified by the op
 
     {"kind": "binexp", "op": "*ops", "left": *node , "right": *node}
 
-#### unary expresion:
-a unary opperation like !, ~ or &
 
-    {"kind": "uniexp", "op": "*ops", "exp": *node }
+#### unary expresion:
+a unary opperation like !, ~, $ or §
+!...bolean inversion
+~...resolve pointer
+$...get addres
+§...bitwise inversion
+
+    {"kind": "uniexp", "op": "*ops", "val": *node }
 
 
 

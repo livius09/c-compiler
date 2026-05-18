@@ -14,23 +14,16 @@ data:list[str] = []         #data section of asm
 
 def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",reg:str="rax"): #asing, cond
     nodetype = str(node['kind'])
+    loadable = ["identifier", "literal","acces","uniexp"]
     
-    if nodetype == "identifier":
-        return [f"mov {reg}, {loc_conx.var_mem_asm(node['name'])}"]
     
-    if nodetype == "literal":
-        return [f"mov {reg}, {node['val']}"]
+    if nodetype in loadable:
+        return kh.handle_load(node,loc_conx,nodetype)
 
-
-    #if nodetype == "refrence":
-    #    return [f"lea rax, {loc_conx.var_mem_asm(node['name'])}"]
-    
-    #if nodetype == "derefrence":
-    #   return [f"mov rax, {loc_conx.var_mem_asm(node['name'])}",  # rax = address of pointee
-    #            "mov rax, [rax]"]             # rax = value at that address
     
     if nodetype == "Fcall":
         tmp:list[str]=[]
+
         tmp.append("push rax")
         tmp.extend(formulate_fcals(node,loc_conx))
         tmp.append("mov rbx, rax")

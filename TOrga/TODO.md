@@ -16,6 +16,7 @@ things that still need to be done:
 
 ### Parse:
 - [ ] make types unasumemive
+- [ ] fold logic expresions whit 1 and 0
 
 
 ### Codegen:
@@ -33,6 +34,7 @@ things that still need to be done:
     - [x] rework type system for own types like struct
     - [x] make types unasumemive
     - [x] uppdate to handel acces
+    - [ ] get rid of get_pointer size (: (its always a QWORD)
     
 
 ### Docs:

@@ -8,6 +8,11 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.3.0:
+  made uniexp meaning nots, bitwise inversion and pointer logic
+  also fixed up pointers so that they now work
+  also unified loading whit handle_load()
+
 #### v01.2.0:
   made imports posible also fixe a problem in parsing returns and fixed a flaw in form_get_acces making fcalls posible again
 

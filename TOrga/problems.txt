@@ -1,0 +1,17 @@
+there are some structural problems:
+
+Overall:
+    -bad error mesages
+     well actuly theyr ok but not really telling of what the problem really is
+
+Tokenizer:
+    -lowkey pretty fine nothing big really
+
+Parser:
+    -peeking whitout consuming
+
+Codegen:
+    -giving around the context so much
+    -no node autocomplete
+    -node typos
+    -not really defined nodes on some functions

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 basicop: list[str] = ["+", "-", "*", "/", "<",">", "&", "|", "^"]
 accesop: list[str] = [".","[","("]
+unaryop: list[str] = [ "!", "~", "$", "§"]
 
 
 @dataclass
@@ -29,13 +30,16 @@ class parserc:
             if self._eof():
                 raise SyntaxError("Unexpected end of input")
 
-            f_token = self.advance()
+            f_token: Token = self.advance()
 
             # Stop parsing if we hit a semicolon or closing bracket
             if f_token.type == "SYMBOL" and f_token.val in [";", ")", ",","]"]:
                 # Step back one so the parent parser can handle it
                 self.pos -= 1
-                raise StopIteration("End of expression")
+                return {}
+            
+            if f_token.type == "OP" and f_token.val in unaryop:
+                return {"kind":"uniexp", "op": f_token.val, "val": parse_primary() } # type: ignore
 
             if f_token.type == "INT":
                 return {"kind": "literal", "val": int(f_token.val)}
@@ -157,9 +161,10 @@ class parserc:
 
         def parse_expression(precedence:int=0) -> dict[str,int|dict|str]:
 
-            try:
-                left = parse_primary()
-            except StopIteration:
+            
+            left = parse_primary()
+            
+            if(left=={}):
                 # End of expression, return empty literal or None
                 return {"kind": "literal", "val": 0}
 
@@ -180,7 +185,7 @@ class parserc:
 
                 self.advance()  # consume operator
                 right = parse_expression(op_prec + 1)
-                left = fold_constants(left, op, right)
+                left = fold_constants(left, op, right) 
 
             return left # type: ignore
 
@@ -316,6 +321,9 @@ class parserc:
             self.advance()
             tdict["val"]={"kind": "binexp", "op": second_token_val, "left": {"kind": "identifier", "name": first.val} , "right": rightval }
         else:
+            print("ERROR")
+            print("ast")
+            print(self.astlist)
             raise SyntaxError(f"Unexpected Token type in asing {second_token.type}:{second_token.val} on {self.liner(second_token)}")
 
         return tdict
@@ -536,6 +544,7 @@ class parserc:
 
             case "KEYWORD":
                 match first.val:
+
                     case "let":
                         return self.let_parse()
                         
@@ -609,17 +618,3 @@ class parserc:
             #print(stmt)
             self.astlist.append(stmt) # type: ignore
         return self.astlist
-
-testlist = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam_t", 0,14) ,  Token("SYMBOL", "{", 0,15) ,  Token("KEYWORD", "let", 1,7) ,  Token("TYPE", "un8", 1,11) ,  Token("IDENTIFIER", "age", 1,15) ,  Token("SYMBOL", ";", 1,16) ,  Token("KEYWORD", "let", 2,7) ,  Token("TYPE", "un16", 2,12) ,  Token("IDENTIFIER", "num", 2,16) , Token("SYMBOL", ";", 2,22) ,  Token("SYMBOL", "}", 3,1) ]
-
-tester = [ Token("KEYWORD", "let", 0,3) ,  Token("TYPE", "un16", 0,8) ,  Token("IDENTIFIER", "num", 0,12) ,  Token("SYMBOL", ";", 0,13) ]
-
-moretest = [ Token("KEYWORD", "struct", 0,6) ,  Token("IDENTIFIER", "wonam", 0,12) ,  Token("SYMBOL", "{", 0,14) ,  Token("KEYWORD", "let", 1,7) ,  Token("TYPE", "un8", 1,11) ,  Token("IDENTIFIER", "age", 1,15) ,  Token("SYMBOL", ";", 1,16) ,  Token("SYMBOL", "}", 2,1) ,  Token("KEYWORD", "let", 4,3) ,  Token("IDENTIFIER", "wonam", 4,9) ,  Token("IDENTIFIER", "maria", 4,15) ,  Token("SYMBOL", ";", 4,16) ,  Token("IDENTIFIER", "maria", 6,5) ,  Token("SYMBOL", ".", 6,6) ,  Token("IDENTIFIER", "age", 6,9) ,  Token("OP", "=", 6,11) ,  Token("INT", "20", 6,14) ,  Token("SYMBOL", ";", 6,15) ]
-
-acctest: list[Token] = [ Token("SYMBOL", ".", 4,4) ,  Token("IDENTIFIER", "xea", 4,7) ,  Token("SYMBOL", "[", 4,8) ,  Token("INT", "1", 4,9) ,  Token("SYMBOL", "]", 4,10) ,  Token("SYMBOL", ".", 4,11) ,  Token("IDENTIFIER", "e", 4,12) ,Token("SYMBOL", ";", 1,16)]
-
-print(__name__)
-if __name__ == "__main__":
-    Pparser = parserc(acctest)
-
-    print(Pparser.acces_parse(Token("IDENTIFIER", "num", 4,3) ))

@@ -134,10 +134,10 @@ class contextc():
             
         elif var_n in cg.global_vars.keys():
             var_type = str(cg.global_vars[var_n]['type'])
-            if is_n_type(var_type):
+            if is_n_type(var_type) or is_ptr_type(var_type):
                 return f"{get_mov_size(var_type)} [{var_n}]"
             else:
-                raise SyntaxError(str(var_type)+"not implemented")
+                raise SyntaxError(str(var_type)+" var_mem_asm not implemented")
             
         else:
             raise SyntaxError(f"var {var_n} has never been declared")
