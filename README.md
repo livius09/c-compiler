@@ -8,6 +8,10 @@ more about the lang in zOrga tinylang.txt
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
 
+#### v01.3.1
+  fixed and finished up uniexp also cleaned up a bit of the output in acces hadle
+  implemented the handle_store function 
+
 #### v01.3.0:
   made uniexp meaning nots, bitwise inversion and pointer logic
   also fixed up pointers so that they now work

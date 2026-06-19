@@ -35,8 +35,36 @@ def handle_load(node:dict,contex:ut.contextc,val_type:str,reg:str="rax")-> list[
 
     return tmp
 
+
+
+def handle_store(node:dict,contex:ut.contextc,val_type:str,reg:str="rax")-> list[str]:
+    if debug:
+        print("store")
+        print(node)
+
+    tmp:list[str] = []
+    match val_type:
+        case "identifier":
+            tmp.append(f"mov {contex.var_mem_asm(node['name'])}, {reg}")
+
+        case "acces":
+            tmp.extend(contex.form_set_acces(node))
+
+        case "uniexp":
+            #handle uniexp is for loading and for storing there only exist one uniexp that needs to be handle so i will do it here
+            if node["op"] == "~":
+                tmp.append(f"mov rdx, {contex.var_mem_asm(node['val']["val"])}")
+                tmp.append(f"mov {ut.get_pointer_mov_size(contex.get_var_type(node['val']['name']))} [rdx], rax")                              # rax = value at that address
+
+            else:
+                raise SyntaxError("storing whit a uniexp is only posible whit storing somethign to a pointer addr")
+
+    return tmp
+
+
+    
 #takes the only the uniexp node
-#{"kind": "uniexp", "op": "*ops", "val": *node }
+#{"kind": "uniexp", "op": "*op", "val": *node }
 def handel_uniexp(node:dict,contex:ut.contextc) -> list[str]:
     if True:
         print("uniexp")
@@ -253,27 +281,16 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
 
     #first move the the to be store (the right side of "=") into rax
     if contex.is_var_decl(write_name):
+     
         text.extend(handle_load(node["val"],contex,val_type))
         
         write_type :str= contex.get_var_type(write_name)
 
         #then write rax into whats on the left side of the "="
 
-        if ut.is_ptr_type(write_type):
-            text.append(f"mov rdx, {contex.var_mem_asm(write_name)}")
-            text.append(f"mov [rdx], rax ")
-            
+        store_type :str = str(node["acces"]["kind"])
 
-        elif ut.is_n_type(write_type):
-            text.append(f"mov {contex.var_mem_asm(write_name)}, rax")
-
-        elif node['acces']["kind"] == "acces":
-           print(node['acces'])
-           text.extend(contex.form_set_acces(node["acces"]))
-
-        else:
-            raise SyntaxError(f"variable: {write_name} has no valid write to type")
-
+        text.extend(handle_store(node["acces"],contex,store_type))
 
 
         return text
@@ -343,12 +360,12 @@ def handle_func_def(node:dict,contex:ut.contextc) -> list[str]:
 def handle_if(node: dict, contex: ut.contextc) -> list[str]:
     has_else: bool = ("else_body" in node)  # Does this if have an else branch?
     text: list[str] = []
-    higest_if: bool = (contex.expoint is None)  # Are we the outermost if?
+    is_higest_if: bool = (contex.expoint is None)  # Are we the outermost if?
 
-    exitl = next(ut.label_gen) if higest_if else contex.expoint #determine the exit poing for the whole ifs
+    exitl = next(ut.label_gen) if is_higest_if else contex.expoint #determine the exit poing for the whole ifs
 
     # If outermost if, exit label in context so nested ifs use it
-    if higest_if:
+    if is_higest_if:
         contex.expoint = exitl # type: ignore
     
 
@@ -366,7 +383,7 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
 
 
         # If this was the outermost if, close the chain and reset context
-        if higest_if:
+        if is_higest_if:
             contex.expoint = None
             text.append(f".L{exitl}:")
 
@@ -395,7 +412,7 @@ def handle_if(node: dict, contex: ut.contextc) -> list[str]:
         text.extend(gc.gen(node["else_body"], contex))
 
     # If this was the outermost if, close the chain and reset context
-    if higest_if:
+    if is_higest_if:
         contex.expoint = None
         text.append(f".L{exitl}:")
 

@@ -33,7 +33,7 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",reg:str
     if nodetype == "binexp":
         code :list[str]= []
         cmpops: list[str]=["==","!=","<",">","<=",">="]
-        sim = ["literal","identifier"]
+        sim: list[str] = ["literal","identifier"]
         
         issimple: bool = node['left']["kind"] in sim and node['left']["kind"] in sim
         

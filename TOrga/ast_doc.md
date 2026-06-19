@@ -122,9 +122,10 @@ a binary operation betwen left and right specified by the op
 #### unary expresion:
 a unary opperation like !, ~, $ or §
 !...bolean inversion
+§...bitwise inversion
 ~...resolve pointer
 $...get addres
-§...bitwise inversion
+
 
     {"kind": "uniexp", "op": "*ops", "val": *node }
 
@@ -136,9 +137,11 @@ pos indicates the ofset to rbp
 size in bytes of the whole thing
     {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], ofs:10, len:4, size:8}}
 
+
 ### globals:
 for the globals
     {x:{type:n32, size:4}, arr:{type:n16[], len:4, size:8}}
+
 
 ### structs:
 user declared types in the form of structs

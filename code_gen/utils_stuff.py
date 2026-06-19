@@ -173,7 +173,7 @@ class contextc():
     #TODO needs refactor
 
     def walk_offset(self,node:dict,text:list[str]) :
-        ofs :int = 0
+        ofs :int|str = 0
         discrete_ofs = 0
 
         issimple : bool = True
@@ -230,12 +230,18 @@ class contextc():
             
         if islocal:
             if issimple:
+                
                 return f"{get_mov_size(curtype)} [rbp-{ofs}]"
             else:
                 return f"{get_mov_size(curtype)} [rbp-{ofs}+rbx*{size_lookup(curtype)}]"
         else:
             if issimple:
-                return f"{get_mov_size(curtype)} {base}[rip+{ofs}]"
+                if ofs == 0:
+                    ofs=""
+                else:
+                    ofs=f"+{ofs}"
+
+                return f"{get_mov_size(curtype)} {base}[rip{ofs}]"
             else:
                 return f"{get_mov_size(curtype)} {base}[rbp-{ofs}+rbx*{size_lookup(curtype)}]"
 
