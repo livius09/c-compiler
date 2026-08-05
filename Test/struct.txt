@@ -1,0 +1,14 @@
+
+let u8 myvar;
+
+struct human{
+    let n8 age;
+    let n64 money;
+}
+
+let human maria;
+
+maria.age = 10;
+maria.money = 1000;
+
+myvar = maria.age;

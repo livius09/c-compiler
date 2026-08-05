@@ -20,12 +20,12 @@ import datetime
 
 
 
-def compile(file:str):
-    print(f"started compiling {file}")
+def compile(in_file:str):
+    print(f"started compiling {in_file}")
 
     tok_start: datetime.datetime = datetime.datetime.now()
 
-    with open(f"Zin/{file}.txt","r") as rawf:
+    with open(in_file,"r") as rawf:
         raw: str = rawf.read()
 
 
@@ -71,7 +71,7 @@ def compile(file:str):
 
 
 
-    with open(f"Zout/{file}.asm","w") as fileOut:
+    with open(f"Zout/{in_file.split("/")[1].split(".")[0]}.asm","w") as fileOut:
         fileOut.write("data:\n")
         for b in tcod.data:
             fileOut.write("\t"+b+"\n")
@@ -99,16 +99,18 @@ def compile_down_up(nedo:node):
     return export
 
 
-preprocesor = preprocesor("Main")
-print("Preprocesing: ")
-print("imports: ")
-imports : node = preprocesor.preproces()
-print(imports)
+def full_compile(file_name:str):
+    preprocesore = preprocesor(file_name)
+    print("Preprocesing: ")
+    print("imports: ")
+    imports : node = preprocesore.preproces()
+    print(imports)
 
-if find_circular(imports):
-    raise ImportError("")
+    if find_circular(imports):
+        raise ImportError("found circular dependencys")
 
-compile_down_up(imports)
+    compile_down_up(imports)
 
 
-
+if __name__ == "__main__":
+    full_compile("Zin/Main.txt")

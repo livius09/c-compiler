@@ -1,0 +1,8 @@
+
+let un8 myvar = 0;
+
+func un8 add(un8 a, un8 b){
+    return a+b;
+}
+
+myvar = add(1,4);

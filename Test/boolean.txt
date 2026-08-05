@@ -1,0 +1,19 @@
+
+
+let n8 flag;
+
+let n8 num = 3;
+let n8 num2 = 5;
+
+
+flag = num==num2;
+flag = num!=num2;
+flag = num<num2;
+flag = num>num2;
+flag = num<=num2;
+flag = num>=num2;
+
+flag = 1==1;
+flag = 1==0;
+flag = 1!=1;
+flag = 1!=0;

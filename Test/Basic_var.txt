@@ -1,0 +1,2 @@
+let un8 myvar;
+let un8 myvar2 = 10;

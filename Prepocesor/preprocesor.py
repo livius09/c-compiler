@@ -28,10 +28,10 @@ class preprocesor:
     def preproces(self) -> node:
 
         try:
-            with open(f"Zin/{self.start}.txt","r") as rawf:
+            with open(f"{self.start}","r") as rawf:
                 self.raw = rawf.readlines()
         except FileNotFoundError:
-            raise FileNotFoundError(f"{self.start}.txt cant be imported because it was not found")
+            raise FileNotFoundError(f"{self.start} cant be imported because it was not found")
 
         i=0
         while(i<len(self.raw)):
