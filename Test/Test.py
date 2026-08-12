@@ -7,7 +7,7 @@ from main import full_compile
 
 full_compile("Test/Basic_var.txt")
 full_compile("Test/math.txt")
-full_compile("Test/.txt")
+full_compile("Test/arr.txt")
 full_compile("Test/.txt")
 full_compile("Test/.txt")
 full_compile("Test/.txt")
