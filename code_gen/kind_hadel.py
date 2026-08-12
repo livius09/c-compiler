@@ -66,7 +66,7 @@ def handle_store(node:dict,contex:ut.contextc,val_type:str,reg:str="rax")-> list
 #takes the only the uniexp node
 #{"kind": "uniexp", "op": "*op", "val": *node }
 def handel_uniexp(node:dict,contex:ut.contextc) -> list[str]:
-    if True:
+    if debug:
         print("uniexp")
         print(node)
 
