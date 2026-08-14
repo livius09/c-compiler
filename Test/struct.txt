@@ -1,5 +1,5 @@
 
-let u8 myvar;
+let un8 myvar;
 
 struct human{
     let n8 age;

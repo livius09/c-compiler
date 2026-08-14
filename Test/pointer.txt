@@ -1,5 +1,5 @@
 
 let n8 myvar = 5;
-let n8~ ptr = $e;
+let n8~ ptr = $myvar;
 ~ptr = 2;
 myvar = ~ptr;

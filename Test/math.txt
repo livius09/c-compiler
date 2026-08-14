@@ -1,7 +1,6 @@
-
-let u8 myvar = 10;
-let u8 myvar2 = 5;
-let u8 tmp;
+let un8 myvar = 10;
+let un8 myvar2 = 5;
+let un8 tmp;
 
 tmp = myvar + myvar2;
 tmp = myvar - myvar2;

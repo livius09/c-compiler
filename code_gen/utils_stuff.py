@@ -72,11 +72,14 @@ label_gen = label_generator()
 
 class contextc():
     def __init__(self, is_global:bool=False):
-        self.locals: dict[str,dict[str,str|int]] = {}
         self.is_global: bool = is_global
+        self.locals: dict[str,dict[str,str|int]] = {}
         self.offset:int = 0
         self.ret_type = "void"
         self.expoint = None
+
+    def __str__(self) -> str:
+        return f"Context:\nglobal:{self.is_global}\nlocals:\n{self.locals}\nofs: {self.offset}"
 
     def declare_var(self, name:str, vartype:str, var_len:int=1 ) -> None:
         size: int = size_lookup(vartype) * var_len

@@ -34,7 +34,8 @@ things that still need to be done:
     - [x] rework type system for own types like struct
     - [x] make types unasumemive
     - [x] uppdate to handel acces
-    - [ ] get rid of get_pointer size (: (its always a QWORD)
+    - [ ] get rid of get_pointer size (: (its always a QWORD)(gang you stupid)
+    - [x] implement "<<" and ">>" in codegen
     
 
 ### Docs:

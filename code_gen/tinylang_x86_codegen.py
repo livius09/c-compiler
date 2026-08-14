@@ -1,6 +1,5 @@
 import code_gen.kind_hadel as kh
 import code_gen.utils_stuff as ut
-import json
 
 
 
@@ -8,7 +7,6 @@ global global_vars, functions, data,imported
 global_vars = {}        #"x":{"type":"n8", "size":1, }    contains the var name as key and type as value
 functions :dict[str,dict[str,str|list[str]]]= {}          #"print":["char[]","n64"]    contains the function name as key and the value is the types of the parameter in order
 imported :dict[str,dict[str,str|list[str]]]= {}
-
 data:list[str] = []         #data section of asm
 
 
@@ -72,6 +70,10 @@ def formulate_math(node:dict, loc_conx:ut.contextc, mcontext:str="asing",reg:str
             code.append("or rax, rbx")
         elif op == "^":
             code.append("xor rax, rbx")
+        elif op == "<<":
+            code.append("sal rax, rbx")
+        elif op == ">>":
+            code.append("sal rax, rbx")
         elif op in cmpops:
             code.append("cmp rax, rbx")
             if mcontext == "asing":
@@ -153,20 +155,28 @@ def formulate_fcals(node:dict,conx:ut.contextc) -> list[str]:    #genertate code
 
 
 
-def gen(a:list[dict],contex:ut.contextc,imports:dict = {})-> list[str]:   #local or global is in contex  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
+def gen(a:list[dict],contex:ut.contextc,fresh:bool=False,imports:dict = {})-> list[str]:   #local or global is in contex  #local_vars {x:{type:n32, ofs:2, size:4}, arr:{type:n16[], osf:10,len:4,size:8}}
     text:list[str]=[]         #text section so the actual executed asm
 
+    #reseting the globals for each fresh compile
+    global global_vars,functions,imported,data
+    if fresh:
+        global_vars = {}        
+        functions = {}
+        imported = {}
+        data=[]
+    
     if imports != {}:
-        imported=imports
-        
+        imported=imports     
     
     for node in a:
         #print("cur node:")
         #print(node)
+        
 
     
         if not isinstance(node, dict):
-            raise TypeError(f"gc.gen() got unexpected type: {type(node)} {node!r}")
+            raise TypeError(f"gc.gen() got unexpected type: {type(node)} : {node}")
     
 
         match node['kind']:
@@ -225,12 +235,10 @@ def gen(a:list[dict],contex:ut.contextc,imports:dict = {})-> list[str]:   #local
 
 
          
-         
-cost = [{'var_type': 'n8', 'name': 'thing', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 4}}]
 
-test = [{'var_type': 'n64', 'name': 'global', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 3}}, {'kind': 'func_dec', 'name': 'Main', 'ret_type': 'void', 'param': [], 'body': [{'var_type': 'n64', 'name': 'local', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 2}}, {'kind': 'asing', 'name': 'local', 'val': {'kind': 'binexp', 'op': '+', 'left': {'kind': 'identifier', 'name': 'global'}, 'right': {'kind': 'literal', 'val': 1}}}]}]
+if __name__ == "__main__":          
+    cost = [{'var_type': 'n8', 'name': 'thing', 'kind': 'letinit', 'val': {'kind': 'literal', 'val': 4}}]
 
-if __name__ == "__main__":
     start_contx = ut.contextc(is_global=True)
     out: list[str] = gen(cost, start_contx)
     

@@ -1,4 +1,3 @@
-
 let n64 num;
 
 while(num<100){

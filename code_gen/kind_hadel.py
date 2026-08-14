@@ -21,7 +21,7 @@ def handle_load(node:dict,contex:ut.contextc,val_type:str,reg:str="rax")-> list[
             tmp.extend(gc.formulate_math(node,contex, reg))
 
         case "acces":
-            tmp.extend(contex.form_get_acces(node["val"]))
+            tmp.extend(contex.form_get_acces(node))
 
         case "uniexp":
             tmp.extend(handel_uniexp(node,contex))
@@ -54,7 +54,7 @@ def handle_store(node:dict,contex:ut.contextc,val_type:str,reg:str="rax")-> list
             #handle uniexp is for loading and for storing there only exist one uniexp that needs to be handle so i will do it here
             if node["op"] == "~":
                 tmp.append(f"mov rdx, {contex.var_mem_asm(node['val']["val"])}")
-                tmp.append(f"mov {ut.get_pointer_mov_size(contex.get_var_type(node['val']['name']))} [rdx], rax")                              # rax = value at that address
+                tmp.append(f"mov {ut.get_pointer_mov_size(contex.get_var_type(node['val']['val']))} [rdx], rax")                              # rax = value at that address
 
             else:
                 raise SyntaxError("storing whit a uniexp is only posible whit storing somethign to a pointer addr")
@@ -112,13 +112,16 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
     varlen = 1
 
 
+    val_type = ""
+
     if ut.is_arr_type(vartype):
-        
         varlen :int= int(node['len'])
         arrsize: int = varlen * ut.size_lookup(vartype)
         
         tmp['size'] = arrsize
-        
+    
+    elif  ut.is_n_type(vartype) or ut.is_ptr_type(vartype):
+        val_type :str= str(node['val']['kind'])
 
     if contex.is_global:
         
@@ -130,11 +133,7 @@ def handle_letinit(node:dict,contex:ut.contextc) -> list[str]:
         contex.locals[var_name] = tmp
 
 
-    val_type = ""
-    if  ut.is_n_type(vartype) or True:
-        val_type :str= str(node['val']['kind'])
-    else:
-        raise SyntaxError("say walahi")
+    
 
     
         
@@ -272,7 +271,14 @@ def handle_let_dec(node:dict, contex:ut.contextc) -> None:
 
 def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     text:list[str] = []
-    write_name :str= str(node['acces']["base"])
+
+    write_name :str=""
+
+    if node['acces']["kind"] == "acces":
+        write_name = str(node['acces']["base"])
+    else:
+        write_name = str(node['acces']["val"]["val"])
+
     val_type :str= str(node['val']['kind'])
 
 
@@ -283,8 +289,6 @@ def handle_asing(node:dict,contex:ut.contextc) -> list[str]:
     if contex.is_var_decl(write_name):
      
         text.extend(handle_load(node["val"],contex,val_type))
-        
-        write_type :str= contex.get_var_type(write_name)
 
         #then write rax into whats on the left side of the "="
 
@@ -486,7 +490,8 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
         print("init:")
         print(json.dumps(node["init"],indent=4))
 
-    text.extend(gc.gen(node["init"], contex))
+    text.extend(gc.gen([node["init"]], contex))
+    
 
     text.append(f"jmp .L{endla}")
     text.append(f".L{startla}")
@@ -497,7 +502,7 @@ def handle_for(node:dict,contex:ut.contextc) -> list[str]:
         print("incexp:")
         print(json.dumps(node["incexp"],indent=4))
 
-    text.extend(gc.gen(node["incexp"], contex))
+    text.extend(gc.gen([node["incexp"]], contex))
 
     text.append(f".L{endla}")
 

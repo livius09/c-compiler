@@ -287,16 +287,18 @@ class parserc:
                 raise SyntaxError(f"unexpected token: {tname} as let parse name")
 
 
-    def     ident_parse(self,first:Token):
+    def     ident_parse(self,first:Token,prefix:Token|None = None):
+        if prefix==None:
+            acc = self.acces_parse(first)
+        else:
+            acc= {"kind": "uniexp", "op": prefix.val, "val": {"kind": "Identifier", "val": first.val} }
         
-        tdict = {"kind":"asing", "acces": self.acces_parse(first), "val":{} }
+        tdict = {"kind":"asing", "acces": acc, "val":{} }
         #ttmp = str(self.advance().val) # type: ignore levi is sexy
         
 
         second_token : Token = self.advance()
         second_token_val = second_token.val
-
-        #print("tmp "+str(second_token))
         
         
         if second_token_val == "=":
@@ -396,15 +398,13 @@ class parserc:
 
         initexp = self.parse_statement()
 
-        self.expecter(self.advance(),[";"])
+        # ; already consumed by the let statement
 
-        testexp = self.parse_statement()
+        testexp = self.parM()
 
         self.expecter(self.advance(),[";"])
 
         incexp = self.parse_statement()
-
-        self.expecter(self.advance(),[";"])
 
         self.expecter(self.advance(),[")"])
 
@@ -542,6 +542,10 @@ class parserc:
             case "IDENTIFIER":
                 return self.ident_parse(first)
 
+            case "OP":
+                second=self.advance()
+                return self.ident_parse(second,first)
+
             case "KEYWORD":
                 match first.val:
 
@@ -616,5 +620,6 @@ class parserc:
         while not self._eof():
             stmt = self.parse_statement()
             #print(stmt)
-            self.astlist.append(stmt) # type: ignore
+            if stmt != None:
+                self.astlist.append(stmt) # type: ignore
         return self.astlist

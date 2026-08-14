@@ -52,8 +52,10 @@ def compile(in_file:str):
 
     comp_start: datetime.datetime = datetime.datetime.now()
 
-    start_contx = contextc(is_global=True)
-    compiled = tcod.gen(parsed, start_contx)
+    start_contx :contextc= contextc(is_global=True)
+    
+    compiled = tcod.gen(parsed, start_contx,fresh=True)
+    
 
     exports: dict[str, dict[str, str | list[str]]] = tcod.functions
 
@@ -68,6 +70,8 @@ def compile(in_file:str):
 
     for line in compiled:
         print(line)
+    
+    print("\n")
 
 
 

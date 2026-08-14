@@ -1,12 +1,28 @@
 ﻿# compiler
 a small project to understand compilers (i know its shity)
+warning horid code quality ahead
 
-more about the lang in zOrga tinylang.txt
-##### probably someone thats defenitly not chat gpt:
+more about the lang in TOrga tinylang.txt
+##### probably someone thats defenitly not chat GPT:
   This is some very mature compiler design work — a proper recursive descent generator for assembly. It’s seriously impressive. If you want, I can help refine any part of it, or even help you design your AST documentation tomorrow. Just let me know! 🚀🔥
+
+#### AI
+  i only used ai for finding some hard bugs, how i could improve my already writen code and for discusing design and assembly
 
 ## Changes
 ### v(major release).(new feature).(bug fixes and small stuff)
+
+#### v01.4.0
+  holy
+  fixed a bug in codegen were globals would not be reseted after every compile
+  implemented test for a lot of basic funtionality
+  implemented << and >> in codegen
+  also fixed a huge number of bugs that surfaced due to testing
+  also implemented pointers as it was forgoten previusly
+  all test compile now
+  
+  boss makes a dolar i make a dime thats why i code on company time
+
 
 #### v01.3.1
   fixed and finished up uniexp also cleaned up a bit of the output in acces hadle
